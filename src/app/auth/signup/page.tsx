@@ -15,7 +15,7 @@ export default function SignupPage() {
   const [country, setCountry] = useState("");
   const [err, setErr] = useState("");
   const { setUser } = useAuth();
-  const { locale } = useLang();
+  const { locale, t } = useLang();
   const router = useRouter();
 
   async function submit(e: React.FormEvent) {
@@ -35,7 +35,7 @@ export default function SignupPage() {
 
   return (
     <section className="sec" style={{ maxWidth: 420 }}>
-      <h1 style={{ fontSize: "2rem" }}>Sign up</h1>
+      <h1 style={{ fontSize: "2rem" }}>{t("nav.signup")}</h1>
       <p className="mut">
         Create a buyer account. To sell, submit an application — approval is up
         to admin.

@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
   const { setUser } = useAuth();
-  const { locale } = useLang();
+  const { locale, t } = useLang();
   const router = useRouter();
 
   async function submit(e: React.FormEvent) {
@@ -37,7 +37,7 @@ export default function LoginPage() {
 
   return (
     <section className="sec" style={{ maxWidth: 420 }}>
-      <h1 style={{ fontSize: "2rem" }}>Log in</h1>
+      <h1 style={{ fontSize: "2rem" }}>{t("nav.login")}</h1>
       <form className="card" onSubmit={submit}>
         <label>Email</label>
         <input
@@ -56,7 +56,7 @@ export default function LoginPage() {
         {err ? <p className="err">{err}</p> : null}
         <div style={{ marginTop: 14 }}>
           <button className="btn" type="submit">
-            Log in
+            {t("nav.login")}
           </button>
         </div>
       </form>

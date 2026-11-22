@@ -1,4 +1,5 @@
 import type { LocaleCode } from "./locales";
+import { CATALOG_TITLES } from "./catalog";
 
 type ListingLike = {
   id: number;
@@ -515,13 +516,22 @@ function applyPhrases(text: string, locale: LocaleCode): string {
   return localizeText(text, locale);
 }
 
+function catalogTitle(title: string, locale: LocaleCode): string | undefined {
+  const exact = CATALOG_TITLES[title]?.[locale];
+  if (exact) return exact;
+  const key = Object.keys(CATALOG_TITLES).find((k) => title.startsWith(k));
+  const mapped = key ? CATALOG_TITLES[key]?.[locale] : undefined;
+  if (key && mapped) return mapped + title.slice(key.length);
+  return undefined;
+}
+
 export function localizeListing<T extends ListingLike>(
   listing: T,
   locale: LocaleCode
 ): T {
   if (locale === "en") return listing;
   const ov = LISTING_OVERRIDES[listing.id]?.[locale];
-  const title = ov?.title || applyPhrases(listing.title, locale);
+  const title = ov?.title || catalogTitle(listing.title, locale) || applyPhrases(listing.title, locale);
   const desc = ov?.desc || applyPhrases(listing.desc, locale);
   const teaser = ov?.teaser || applyPhrases(listing.teaser, locale);
   const niche = ov?.niche || applyPhrases(listing.niche, locale);

@@ -3,6 +3,7 @@
 import { useAuth } from "./AuthProvider";
 import { BrandLogo } from "./BrandLogo";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { ThemeToggle } from "./ThemeToggle";
 import { useLang } from "./LanguageProvider";
 import { LocaleLink as Link } from "./LocaleLink";
 
@@ -22,32 +23,32 @@ export function StoreHeader() {
         <nav className="sf-nav">
           <BrandLogo size={38} />
           <span className="sp" />
+          <ThemeToggle />
           <LanguageSwitcher compact />
-          <div className="nav-box" role="navigation" aria-label="Primary">
-            <Link href="/listings">{t("nav.listings")}</Link>
-            <Link href="/listings?cat=freelance">{t("nav.services")}</Link>
-            <Link href="/?view=sellers">{t("nav.sellers")}</Link>
-            <Link href="/create-deal">{t("nav.createDeal")}</Link>
-            <Link href="/apply">{t("nav.sell")}</Link>
-            <Link href="/chats">{t("nav.chats")}</Link>
-            <Link href="/orders">{t("nav.orders")}</Link>
-            <Link href="/blog">{t("nav.blog")}</Link>
-            <Link href="/help">{t("nav.help")}</Link>
-          </div>
-          {user ? (
-            <div className="nav-actions">
-              <Link className="btn s" href={dash}>
-                {user.role === "admin" ? t("nav.admin") : t("nav.dashboard")}
-              </Link>
-              <button className="btn s o" type="button" onClick={() => logout()}>
-                {t("nav.logout")}
-              </button>
-            </div>
-          ) : (
-            <Link className="btn s nav-login" href="/auth/login">
-              {t("nav.login")}
+          <div className="nav-actions">
+            <Link className="nav-chip" href="/create-deal">
+              {t("nav.createDeal")}
             </Link>
-          )}
+            {user ? (
+              <>
+                <Link className="btn s" href={dash}>
+                  {user.role === "admin" ? t("nav.admin") : t("nav.dashboard")}
+                </Link>
+                <button className="btn s o" type="button" onClick={() => logout()}>
+                  {t("nav.logout")}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link className="btn s o" href="/auth/signup">
+                  {t("nav.signup")}
+                </Link>
+                <Link className="btn s nav-login" href="/auth/login">
+                  {t("nav.login")}
+                </Link>
+              </>
+            )}
+          </div>
         </nav>
       </div>
     </header>

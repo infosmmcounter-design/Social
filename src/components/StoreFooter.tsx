@@ -16,12 +16,8 @@ export function StoreFooter() {
             </p>
           </div>
           <div className="footer-links">
-            <Link href="/help">{t("nav.help")}</Link>
             <Link href="/privacy">{t("nav.privacy")}</Link>
-            <Link href="/listings">{t("nav.listings")}</Link>
-            <Link href="/listings?cat=freelance">{t("nav.services")}</Link>
             <Link href="/blog">{t("nav.blog")}</Link>
-            <Link href="/create-deal">{t("nav.createDeal")}</Link>
           </div>
         </div>
         <p className="sm mut" style={{ marginTop: 18 }}>
