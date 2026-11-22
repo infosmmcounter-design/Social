@@ -1757,7 +1757,7 @@ export default function AdminPage() {
 
           <h3 style={{ marginTop: 28 }}>Change admin password</h3>
           <p className="sm mut">
-            Live pe pehle default <code>admin123</code> change kar dein.
+            Change this password before the site goes live.
           </p>
           <label>Current password</label>
           <input

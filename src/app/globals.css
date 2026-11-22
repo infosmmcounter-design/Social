@@ -1,7 +1,7 @@
 :root {
   color-scheme: light;
   /* Soft black + gold landing feel */
-  --bg: #fbf8f1;
+  --bg: #ffffff;
   --s: #ffffff;
   --s2: #f7f1df;
   --line: #eadfbf;
@@ -34,10 +34,7 @@ html {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(1000px 520px at 12% -12%, rgba(230, 195, 92, 0.2), transparent 58%),
-    radial-gradient(800px 400px at 100% 0%, rgba(20, 20, 20, 0.04), transparent 55%),
-    linear-gradient(180deg, #fcfaf4 0%, var(--bg) 40%, #f8f4ea 100%);
+  background: #ffffff;
   color: var(--ink);
   font: 400 16px/1.6 "Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, sans-serif;
 }
@@ -84,7 +81,7 @@ h3 {
 header.sf-header {
   position: sticky;
   top: env(safe-area-inset-top, 0px);
-  background: rgba(250, 247, 239, 0.92);
+  background: #ffffff;
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
   z-index: 5;
