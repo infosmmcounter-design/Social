@@ -38,22 +38,41 @@ export async function loadRawStore(): Promise<StoreData | null> {
   }
 }
 
+export function friendlyStoreError(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (/EROFS|EACCES|ENOENT|read-only|EPERM/i.test(msg)) {
+    return "Live login needs a database. In Vercel, add DATABASE_URL from Neon, then Redeploy. Without that, accounts cannot be saved.";
+  }
+  if (/postgres|neon|ECONN|authentication|connect|fetch failed|timeout/i.test(msg)) {
+    return "Database connection failed. Check the Neon DATABASE_URL on Vercel, then Redeploy.";
+  }
+  return "The store could not be opened. Add DATABASE_URL on Vercel and Redeploy.";
+}
+
 export async function saveRawStore(data: StoreData): Promise<void> {
   if (hasDatabase()) {
-    const sql = await ensurePgTable();
-    // neon serializes plain objects into jsonb
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const value = data as any;
-    await sql`
-      INSERT INTO sf_kv (key, value, updated_at)
-      VALUES (${KEY}, ${value}, now())
-      ON CONFLICT (key) DO UPDATE
-      SET value = EXCLUDED.value, updated_at = now()
-    `;
+    try {
+      const sql = await ensurePgTable();
+      // neon serializes plain objects into jsonb
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const value = data as any;
+      await sql`
+        INSERT INTO sf_kv (key, value, updated_at)
+        VALUES (${KEY}, ${value}, now())
+        ON CONFLICT (key) DO UPDATE
+        SET value = EXCLUDED.value, updated_at = now()
+      `;
+    } catch (e) {
+      throw new Error(friendlyStoreError(e));
+    }
     return;
   }
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(STORE_PATH, JSON.stringify(data, null, 2), "utf8");
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    await fs.writeFile(STORE_PATH, JSON.stringify(data, null, 2), "utf8");
+  } catch (e) {
+    throw new Error(friendlyStoreError(e));
+  }
 }
 
 export function persistenceMode(): "postgres" | "file" {
