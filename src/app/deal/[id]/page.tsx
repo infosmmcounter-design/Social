@@ -51,7 +51,7 @@ function DealInner() {
   const search = useSearchParams();
   const emailQ = search.get("email") || "";
   const { user } = useAuth();
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const [order, setOrder] = useState<Order | null>(null);
   const [seller, setSeller] = useState<{
     name: string;
@@ -202,9 +202,15 @@ function DealInner() {
           stars: about === "seller" ? stars : sellerStars,
           text: about === "seller" ? review : sellerReview,
           about,
+          locale,
+          email: emailQ || order?.buyerEmail,
         },
       });
-      setMsg("Review posted");
+      setMsg(
+        about === "seller"
+          ? "Public seller review posted in your selected language."
+          : "Buyer review posted."
+      );
       if (about === "seller") setReview("");
       else setSellerReview("");
     } catch (e) {
@@ -525,27 +531,30 @@ function DealInner() {
 
       {order.status === "completed" && isBuyer ? (
         <div className="card f" style={{ marginTop: 16 }}>
-          <h3>Review the seller</h3>
-          <label>Rating</label>
+          <h3>{t("reviews.reviewSeller")}</h3>
+          <p className="sm mut">{t("reviews.publicNote")}</p>
+          <label>{t("reviews.rating")}</label>
           <select
             value={stars}
             onChange={(e) => setStars(Number(e.target.value))}
           >
             {[5, 4, 3, 2, 1].map((n) => (
               <option key={n} value={n}>
-                {n} stars
+                {n} ★
               </option>
             ))}
           </select>
-          <label>Your review</label>
+          <label>{t("reviews.yourReview")}</label>
           <textarea
             rows={3}
             value={review}
             onChange={(e) => setReview(e.target.value)}
+            placeholder={t("reviews.writeInYourLang")}
+            lang={locale}
           />
           <div style={{ marginTop: 10 }}>
             <button className="btn" onClick={() => postReview("seller")}>
-              Post review
+              {t("reviews.post")}
             </button>
           </div>
         </div>

@@ -38,38 +38,31 @@ function ListingsInner() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [q, setQ] = useState(sp.get("q") || "");
   const [cat, setCat] = useState(sp.get("cat") || "");
-  const rawType = sp.get("type") || "";
-  const [type, setType] = useState(
-    rawType === "freelance" || rawType === "gig" ? "service" : rawType
-  );
   const [sort, setSort] = useState("newest");
 
   useEffect(() => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (cat) params.set("cat", cat);
-    if (type) params.set("type", type);
     if (sort) params.set("sort", sort);
     params.set("lang", locale);
     api<{ listings: Listing[] }>(`/api/listings?${params}`)
       .then((d) => setListings(d.listings))
       .catch(() => setListings([]));
-  }, [q, cat, type, sort, locale]);
+  }, [q, cat, sort, locale]);
 
   const title = useMemo(() => {
-    if (type === "service") return t("nav.services");
-    if (type === "account") return t("home.accounts");
     if (cat) return CATEGORIES.find((c) => c[0] === cat)?.[1] || t("home.listings");
     return t("home.listings");
-  }, [cat, type, t]);
+  }, [cat, t]);
 
   return (
     <section className="sec">
       <h1 style={{ fontSize: "1.8rem" }}>{title}</h1>
-      {type === "service" ? (
+      {cat === "freelance" ? (
         <p className="mut">
-          Fiverr-style freelance gigs — YouTube, Facebook, Instagram, AI tools and
-          more. Pay into escrow; freelancers deliver in chat.
+          Freelance Services board — list gigs like YouTube editing, Instagram
+          growth, AI setup, and more. Buyers pay escrow; you deliver in chat.
         </p>
       ) : null}
       <div className="row" style={{ flexWrap: "wrap" }}>
@@ -80,20 +73,9 @@ function ListingsInner() {
           aria-label={t("home.search")}
         />
         <select
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-          aria-label="Type"
-          style={{ width: "auto" }}
-        >
-          <option value="">{t("home.all")}</option>
-          <option value="account">{t("home.accounts")}</option>
-          <option value="service">{t("home.services")}</option>
-          <option value="tool">Tools</option>
-        </select>
-        <select
           value={cat}
           onChange={(e) => setCat(e.target.value)}
-          aria-label="Platform"
+          aria-label="Category"
           style={{ width: "auto" }}
         >
           <option value="">{t("home.all")}</option>

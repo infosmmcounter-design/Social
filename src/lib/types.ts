@@ -80,7 +80,13 @@ export type Category =
   | "instagram"
   | "x"
   | "ai"
-  | "other";
+  | "other"
+  | "freelance";
+
+/** Browse board: Fiverr-style gigs live under the Freelance Services category. */
+export function isFreelanceCategory(cat: string | undefined | null): boolean {
+  return cat === "freelance";
+}
 
 export interface User {
   id: number;
@@ -136,8 +142,16 @@ export interface Listing {
   img: string;
   /** Extra gallery images (data URLs / https). */
   images: string[];
-  /** Units / orders available (0 = sold out). Freelance gigs often use a high number. */
+  /**
+   * Units available for accounts/tools (0 = sold out).
+   * Freelance gigs ignore stock for buyers — use soldCount instead.
+   */
   stock: number;
+  /**
+   * How many times this gig/listing was purchased (orders opened).
+   * Shown on Freelance Services as “X sold” / “purchased by customers”.
+   */
+  soldCount: number;
   /**
    * account = sell social account
    * service = Fiverr-style freelance gig (growth, editing, AI work…)
@@ -209,9 +223,16 @@ export interface PrivateRequest {
   createdAt: string;
 }
 
-/** Pre-deal 3-way chat: buyer ↔ named seller ↔ escrow (no order required). */
+/**
+ * Pre-deal chat threads:
+ * - seller = buyer ↔ named seller ↔ escrow
+ * - escrow = buyer ↔ SocialsFlip escrow only (Help & Support)
+ */
 export interface InquiryThread {
   id: number;
+  /** seller = marketplace seller chat; escrow = direct support with escrow */
+  kind: "seller" | "escrow";
+  /** 0 when kind is escrow (no seller party). */
   sellerId: number;
   listingId: number | null;
   buyerId: number | null;
@@ -233,9 +254,15 @@ export interface Review {
   about: "seller" | "buyer";
   buyerId: number | null;
   stars: number;
+  /** Review body as written by the author (kept in their selected language). */
   text: string;
   who: string;
   date: string;
+  /**
+   * Locale the author selected when posting (e.g. en, ar, ko).
+   * Public pages show the original text in this language — not auto-translated.
+   */
+  locale: string;
 }
 
 export interface BlogPost {
@@ -290,59 +317,31 @@ export const CATEGORIES: [Category, string][] = [
   ["instagram", "Instagram"],
   ["x", "X (Twitter)"],
   ["ai", "AI Tools"],
-  ["other", "Subscriptions & Other Services"],
+  ["freelance", "Freelance Services"],
+  ["other", "Subscriptions & Other"],
 ];
 
-/** UI labels for listing kinds (Fiverr-style services use `service`). */
+/** UI labels for listing kinds. */
 export const LISTING_TYPE_LABEL: Record<ListingType, string> = {
   account: "Account for sale",
-  service: "Freelance service",
+  service: "Freelance gig",
   tool: "Tool / subscription",
 };
 
 /**
- * Suggested freelance gig niches per platform (seller can still type custom).
- * Used as quick-pick chips when posting a freelance service.
+ * Quick-pick gig ideas when posting under Freelance Services
+ * (or legacy service listings).
  */
-export const FREELANCE_GIG_IDEAS: Record<Category, string[]> = {
-  youtube: [
-    "Channel growth & SEO",
-    "Thumbnail design",
-    "Video editing",
-    "Script writing",
-  ],
-  facebook: [
-    "Page management",
-    "Ad creatives",
-    "Community growth",
-    "Content calendar",
-  ],
-  tiktok: [
-    "Viral clips editing",
-    "Account growth",
-    "Trend research",
-    "Caption writing",
-  ],
-  instagram: [
-    "Reels editing",
-    "Organic growth",
-    "Story design",
-    "Hashtag research",
-  ],
-  x: ["Thread writing", "Audience growth", "Content calendar", "Engagement"],
-  ai: [
-    "Custom GPT / prompt pack",
-    "Automation setup",
-    "AI content system",
-    "Tool training",
-  ],
-  other: [
-    "Social media management",
-    "Brand kit",
-    "Consulting call",
-    "Custom freelance gig",
-  ],
-};
+export const FREELANCE_GIG_IDEAS: string[] = [
+  "YouTube thumbnail design",
+  "YouTube video editing",
+  "Instagram Reels editing",
+  "Facebook page management",
+  "TikTok growth / clips",
+  "AI content system setup",
+  "Social media management",
+  "Custom freelance gig",
+];
 
 export const DEAL_STATUS_LABEL: Record<DealStatus, string> = {
   awaiting_payment: "Awaiting Payment",

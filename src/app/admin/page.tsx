@@ -8,6 +8,7 @@ import { money } from "@/lib/constants";
 import {
   CATEGORIES,
   DEAL_STATUS_LABEL,
+  isFreelanceCategory,
   type CryptoWallet,
   type DealStatus,
 } from "@/lib/types";
@@ -70,6 +71,9 @@ export default function AdminPage() {
       status: string;
       listed: boolean;
       stock?: number;
+      soldCount?: number;
+      listingType?: string;
+      isFreelance?: boolean;
       seller?: { name: string; official?: boolean } | null;
     }[]
   >([]);
@@ -125,6 +129,7 @@ export default function AdminPage() {
       text: string;
       who: string;
       date: string;
+      locale?: string;
     }[]
   >([]);
   const [chats, setChats] = useState<
@@ -785,12 +790,23 @@ export default function AdminPage() {
                 </option>
               ))}
             </select>
-            <label>Category</label>
+            <label>Category board</label>
             <select
               value={newListing.cat}
-              onChange={(e) =>
-                setNewListing({ ...newListing, cat: e.target.value })
-              }
+              onChange={(e) => {
+                const cat = e.target.value;
+                const freelance = isFreelanceCategory(cat);
+                setNewListing({
+                  ...newListing,
+                  cat,
+                  listingType: freelance
+                    ? "service"
+                    : cat === "other" || cat === "ai"
+                      ? "tool"
+                      : "account",
+                  stock: freelance ? "25" : newListing.stock || "1",
+                });
+              }}
             >
               {CATEGORIES.map(([k, n]) => (
                 <option key={k} value={k}>
@@ -798,22 +814,28 @@ export default function AdminPage() {
                 </option>
               ))}
             </select>
-            <label>Type</label>
-            <select
-              value={newListing.listingType}
-              onChange={(e) =>
-                setNewListing({
-                  ...newListing,
-                  listingType: e.target.value,
-                  stock:
-                    e.target.value === "service" ? "25" : newListing.stock,
-                })
-              }
-            >
-              <option value="account">Account for sale</option>
-              <option value="service">Freelance service (Fiverr-style)</option>
-              <option value="tool">Tool / subscription</option>
-            </select>
+            {isFreelanceCategory(newListing.cat) ? (
+              <p className="sm mut">
+                Posts on the <b>Freelance Services</b> chip (same row as
+                YouTube, Facebook, TikTok…). Escrow gig with delivery days.
+              </p>
+            ) : (
+              <>
+                <label>Type</label>
+                <select
+                  value={newListing.listingType}
+                  onChange={(e) =>
+                    setNewListing({
+                      ...newListing,
+                      listingType: e.target.value,
+                    })
+                  }
+                >
+                  <option value="account">Account for sale</option>
+                  <option value="tool">Tool / subscription</option>
+                </select>
+              </>
+            )}
             <label>Title</label>
             <input
               value={newListing.title}
@@ -821,13 +843,13 @@ export default function AdminPage() {
                 setNewListing({ ...newListing, title: e.target.value })
               }
               placeholder={
-                newListing.listingType === "service"
+                isFreelanceCategory(newListing.cat)
                   ? "e.g. YouTube Thumbnail Pack (5 designs)"
                   : "e.g. YouTube 1K Subs Monetized Channel"
               }
             />
             <label>
-              {newListing.listingType === "service"
+              {isFreelanceCategory(newListing.cat)
                 ? "Gig niche / skill"
                 : "Niche"}
             </label>
@@ -837,12 +859,12 @@ export default function AdminPage() {
                 setNewListing({ ...newListing, niche: e.target.value })
               }
               placeholder={
-                newListing.listingType === "service"
+                isFreelanceCategory(newListing.cat)
                   ? "Thumbnail design, Reels editing…"
                   : "Gaming, Fashion, Tech…"
               }
             />
-            {newListing.listingType === "service" ? (
+            {isFreelanceCategory(newListing.cat) ? (
               <>
                 <label>Delivery days</label>
                 <input
@@ -916,36 +938,45 @@ export default function AdminPage() {
                 setNewListing({ ...newListing, price: e.target.value })
               }
             />
-            <label>Available stock</label>
-            <div className="row" style={{ marginBottom: 8 }}>
-              {STOCK_PRESETS.map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  className={`btn s ${
-                    String(n) === newListing.stock ? "" : "o"
-                  }`}
-                  onClick={() =>
-                    setNewListing({ ...newListing, stock: String(n) })
+            {isFreelanceCategory(newListing.cat) ? (
+              <p className="sm mut">
+                Freelance gigs have no stock inventory. Buyers see{" "}
+                <b>total sold / times purchased</b> instead.
+              </p>
+            ) : (
+              <>
+                <label>Available stock</label>
+                <div className="row" style={{ marginBottom: 8 }}>
+                  {STOCK_PRESETS.map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      className={`btn s ${
+                        String(n) === newListing.stock ? "" : "o"
+                      }`}
+                      onClick={() =>
+                        setNewListing({ ...newListing, stock: String(n) })
+                      }
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="number"
+                  min={0}
+                  value={newListing.stock}
+                  onChange={(e) =>
+                    setNewListing({ ...newListing, stock: e.target.value })
                   }
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-            <input
-              type="number"
-              min={0}
-              value={newListing.stock}
-              onChange={(e) =>
-                setNewListing({ ...newListing, stock: e.target.value })
-              }
-              placeholder="Or type any stock qty"
-            />
-            <p className="sm mut">
-              Example: same “1K monetized YT” offer with 50 units ready → stock
-              50. Each sale reduces by 1.
-            </p>
+                  placeholder="Or type any stock qty"
+                />
+                <p className="sm mut">
+                  Example: same “1K monetized YT” offer with 50 units ready →
+                  stock 50. Each sale reduces by 1.
+                </p>
+              </>
+            )}
             <label>Short teaser</label>
             <input
               value={newListing.teaser}
@@ -1020,7 +1051,7 @@ export default function AdminPage() {
                     privateHandle: "",
                     niche: "",
                     followers: "",
-                    stock: newListing.listingType === "service" ? "25" : "1",
+                    stock: isFreelanceCategory(newListing.cat) ? "25" : "1",
                     deliveryDays: "3",
                     revisions: "1",
                     img: "",
@@ -1044,13 +1075,18 @@ export default function AdminPage() {
                   <th>Listing</th>
                   <th>Owner</th>
                   <th>Price</th>
-                  <th>Available stock</th>
+                  <th>Stock / Sold</th>
                   <th>Status</th>
                   <th />
                 </tr>
               </thead>
               <tbody>
-                {listings.map((l) => (
+                {listings.map((l) => {
+                  const freelance =
+                    isFreelanceCategory(l.cat) ||
+                    l.isFreelance ||
+                    l.listingType === "service";
+                  return (
                   <tr key={l.id}>
                     <td>{l.title}</td>
                     <td>
@@ -1062,23 +1098,27 @@ export default function AdminPage() {
                     </td>
                     <td>{money(l.price)}</td>
                     <td>
-                      <input
-                        key={`${l.id}-${l.stock ?? 0}`}
-                        type="number"
-                        min={0}
-                        defaultValue={l.stock ?? 1}
-                        style={{ width: 72 }}
-                        onBlur={(e) => {
-                          const stock = Number(e.target.value);
-                          if (!Number.isFinite(stock) || stock < 0) return;
-                          run(`Stock → ${stock}`, async () => {
-                            await api("/api/admin/listings", {
-                              method: "PATCH",
-                              json: { id: l.id, action: "stock", stock },
+                      {freelance ? (
+                        <span className="sm">{l.soldCount ?? 0} sold</span>
+                      ) : (
+                        <input
+                          key={`${l.id}-${l.stock ?? 0}`}
+                          type="number"
+                          min={0}
+                          defaultValue={l.stock ?? 1}
+                          style={{ width: 72 }}
+                          onBlur={(e) => {
+                            const stock = Number(e.target.value);
+                            if (!Number.isFinite(stock) || stock < 0) return;
+                            run(`Stock → ${stock}`, async () => {
+                              await api("/api/admin/listings", {
+                                method: "PATCH",
+                                json: { id: l.id, action: "stock", stock },
+                              });
                             });
-                          });
-                        }}
-                      />
+                          }}
+                        />
+                      )}
                     </td>
                     <td>
                       <span className={`pill ${l.listed ? "g" : "w"}`}>
@@ -1138,7 +1178,8 @@ export default function AdminPage() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
             {!listings.length ? <p className="mut">No listings yet.</p> : null}
@@ -1401,8 +1442,8 @@ export default function AdminPage() {
               <tr>
                 <th>About</th>
                 <th>Stars</th>
-                <th>Who</th>
-                <th>Text</th>
+                <th>Who / Lang</th>
+                <th>Text (buyer language)</th>
                 <th />
               </tr>
             </thead>
@@ -1416,9 +1457,12 @@ export default function AdminPage() {
                   <td>
                     {r.who}
                     <br />
-                    <span className="mut sm">{r.date}</span>
+                    <span className="mut sm">
+                      {r.date}
+                      {r.locale ? ` · ${r.locale}` : ""}
+                    </span>
                   </td>
-                  <td>{r.text}</td>
+                  <td lang={r.locale || undefined}>{r.text}</td>
                   <td>
                     <button
                       className="btn s d"

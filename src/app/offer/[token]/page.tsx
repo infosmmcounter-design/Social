@@ -76,10 +76,19 @@ export default function OfferPage() {
   const catName = CATEGORIES.find((c) => c[0] === offer.cat)?.[1] || offer.cat;
   const fee = Math.round(offer.price * (settings.fee || 10)) / 100;
   const total = offer.price + fee;
+  const freelance = !!(
+    offer.cat === "freelance" ||
+    (listing as { isFreelance?: boolean; listingType?: string } | null)
+      ?.isFreelance ||
+    (listing as { listingType?: string } | null)?.listingType === "service"
+  );
   const soldOut =
-    offer.status !== "open" ||
-    listing?.soldOut ||
-    (listing?.stock !== undefined && listing.stock <= 0);
+    !freelance &&
+    (offer.status !== "open" ||
+      listing?.soldOut ||
+      (listing?.stock !== undefined && listing.stock <= 0));
+  const sold =
+    (listing as { soldCount?: number } | null)?.soldCount ?? 0;
 
   async function placeOrder() {
     setErr("");
@@ -123,9 +132,11 @@ export default function OfferPage() {
         </span>
         {offer.monetized ? <span className="pill g">Monetized</span> : null}
         <span className="pill">
-          {soldOut
-            ? t("common.soldOut")
-            : `${listing?.stock ?? offer.stock} ${t("common.available")}`}
+          {freelance
+            ? `${sold} ${t("freelance.sold")}`
+            : soldOut
+              ? t("common.soldOut")
+              : `${listing?.stock ?? offer.stock} ${t("common.available")}`}
         </span>
       </div>
 

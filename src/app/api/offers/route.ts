@@ -8,7 +8,7 @@ import {
 } from "@/lib/db";
 import { getCurrentUser, requireUser } from "@/lib/auth";
 import bcrypt from "bcryptjs";
-import type { Category, DealOffer } from "@/lib/types";
+import { isFreelanceCategory, type Category, type DealOffer } from "@/lib/types";
 import { avatarDataUrl, listingCoverDataUrl } from "@/lib/placeholders";
 import { localeFromRequest } from "@/lib/i18n/api-locale";
 import {
@@ -193,10 +193,15 @@ export async function POST(req: Request) {
         desc,
         img: listingCoverDataUrl(cat, title),
         images: [],
-        stock,
-        listingType: cat === "other" ? "service" : "account",
-        deliveryDays: cat === "other" ? 3 : 0,
-        revisions: cat === "other" ? 1 : 0,
+        stock: isFreelanceCategory(cat) ? 9999 : stock,
+        soldCount: 0,
+        listingType: isFreelanceCategory(cat)
+          ? "service"
+          : cat === "other"
+            ? "tool"
+            : "account",
+        deliveryDays: isFreelanceCategory(cat) ? 3 : 0,
+        revisions: isFreelanceCategory(cat) ? 1 : 0,
         // Offer-only: approved but not in public browse grid unless desired
         status: "approved",
         listed: false,

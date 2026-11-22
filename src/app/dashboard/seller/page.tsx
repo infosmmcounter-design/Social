@@ -9,8 +9,7 @@ import {
   CATEGORIES,
   DEAL_STATUS_LABEL,
   FREELANCE_GIG_IDEAS,
-  LISTING_TYPE_LABEL,
-  type Category,
+  isFreelanceCategory,
   type DealStatus,
 } from "@/lib/types";
 import { LocaleLink as Link } from "@/components/LocaleLink";
@@ -30,6 +29,9 @@ export default function SellerDashboard() {
       listed: boolean;
       cat: string;
       stock?: number;
+      soldCount?: number;
+      listingType?: string;
+      isFreelance?: boolean;
     }[]
   >([]);
   const [orders, setOrders] = useState<
@@ -83,10 +85,7 @@ export default function SellerDashboard() {
     revisions: "1",
     img: "",
   });
-  const isFreelanceForm = form.listingType === "service";
-  const gigIdeas =
-    FREELANCE_GIG_IDEAS[(form.cat as Category) || "other"] ||
-    FREELANCE_GIG_IDEAS.other;
+  const isFreelanceForm = isFreelanceCategory(form.cat);
   const [profile, setProfile] = useState({
     name: "",
     bio: "",
@@ -158,18 +157,22 @@ export default function SellerDashboard() {
     e.preventDefault();
     setMsg("");
     try {
+      const freelance = isFreelanceCategory(form.cat);
       await api("/api/listings", {
         method: "POST",
         json: {
           ...form,
+          listingType: freelance ? "service" : form.listingType || "account",
           price: Number(form.price),
-          stock: Math.max(0, Math.floor(Number(form.stock)) || 0),
+          stock: freelance
+            ? 9999
+            : Math.max(0, Math.floor(Number(form.stock)) || 0),
           deliveryDays: Number(form.deliveryDays) || 3,
           revisions: Number(form.revisions) || 1,
         },
       });
       setMsg(
-        isFreelanceForm
+        freelance
           ? "Freelance gig submitted for admin approval."
           : "Listing submitted for admin approval."
       );
@@ -278,28 +281,32 @@ export default function SellerDashboard() {
         </button>
       </form>
 
-      <h2 style={{ marginTop: 24 }}>Post a listing or freelance gig</h2>
+      <h2 style={{ marginTop: 24 }}>Post a listing</h2>
       <form className="card" onSubmit={createListing}>
-        <label>What are you offering?</label>
+        <label>Category board</label>
         <select
-          value={form.listingType}
+          value={form.cat}
           onChange={(e) => {
-            const listingType = e.target.value;
+            const cat = e.target.value;
+            const freelance = isFreelanceCategory(cat);
             setForm({
               ...form,
-              listingType,
-              stock: listingType === "service" ? "25" : form.stock || "1",
+              cat,
+              listingType: freelance ? "service" : "account",
+              stock: freelance ? "25" : form.stock || "1",
             });
           }}
         >
-          <option value="account">{LISTING_TYPE_LABEL.account}</option>
-          <option value="service">{LISTING_TYPE_LABEL.service}</option>
-          <option value="tool">{LISTING_TYPE_LABEL.tool}</option>
+          {CATEGORIES.map(([k, n]) => (
+            <option key={k} value={k}>
+              {n}
+            </option>
+          ))}
         </select>
         {isFreelanceForm ? (
           <p className="sm mut">
-            Fiverr-style gig: buyer pays escrow, you deliver work in chat
-            (thumbnails, editing, growth, AI setup…).
+            This posts on the <b>Freelance Services</b> board (with YouTube,
+            Facebook, TikTok…). Buyer pays escrow; you deliver in chat.
           </p>
         ) : null}
         <label>Title</label>
@@ -313,17 +320,6 @@ export default function SellerDashboard() {
           }
           required
         />
-        <label>Platform</label>
-        <select
-          value={form.cat}
-          onChange={(e) => setForm({ ...form, cat: e.target.value })}
-        >
-          {CATEGORIES.map(([k, n]) => (
-            <option key={k} value={k}>
-              {n}
-            </option>
-          ))}
-        </select>
         <label>{isFreelanceForm ? "Gig niche / skill" : "Niche"}</label>
         <input
           value={form.niche}
@@ -332,7 +328,7 @@ export default function SellerDashboard() {
         />
         {isFreelanceForm ? (
           <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
-            {gigIdeas.map((idea) => (
+            {FREELANCE_GIG_IDEAS.map((idea) => (
               <button
                 key={idea}
                 type="button"
@@ -407,22 +403,25 @@ export default function SellerDashboard() {
           value={form.teaser}
           onChange={(e) => setForm({ ...form, teaser: e.target.value })}
         />
-        <label>
-          {isFreelanceForm
-            ? "Orders you can take (stock)"
-            : "Available stock (identical units)"}
-        </label>
-        <input
-          type="number"
-          min={0}
-          value={form.stock}
-          onChange={(e) => setForm({ ...form, stock: e.target.value })}
-        />
-        <p className="sm mut">
-          {isFreelanceForm
-            ? "Each order uses 1 stock. Set high (e.g. 25–99) for ongoing gigs."
-            : "Example: five similar channels ready — set stock to 5."}
-        </p>
+        {!isFreelanceForm ? (
+          <>
+            <label>Available stock (identical units)</label>
+            <input
+              type="number"
+              min={0}
+              value={form.stock}
+              onChange={(e) => setForm({ ...form, stock: e.target.value })}
+            />
+            <p className="sm mut">
+              Example: five similar channels ready — set stock to 5.
+            </p>
+          </>
+        ) : (
+          <p className="sm mut">
+            No stock limit — buyers see how many times this gig was purchased
+            (total sold), not inventory.
+          </p>
+        )}
         <label>Cover image (upload or leave blank for auto)</label>
         <input
           type="file"
@@ -482,52 +481,64 @@ export default function SellerDashboard() {
             <tr>
               <th>Title</th>
               <th>Price</th>
-              <th>Available stock</th>
+              <th>Stock / Sold</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
-            {listings.map((l) => (
+            {listings.map((l) => {
+              const freelance =
+                isFreelanceCategory(l.cat) ||
+                l.isFreelance ||
+                l.listingType === "service";
+              return (
               <tr key={l.id}>
                 <td>
                   <Link href={`/listing/${l.id}`}>{l.title}</Link>
                 </td>
                 <td>{money(l.price)}</td>
                 <td>
-                  <input
-                    key={`${l.id}-${l.stock ?? 0}`}
-                    type="number"
-                    min={0}
-                    defaultValue={l.stock ?? 1}
-                    style={{ width: 72 }}
-                    aria-label={`Stock for ${l.title}`}
-                    onBlur={async (e) => {
-                      const stock = Number(e.target.value);
-                      if (!Number.isFinite(stock) || stock < 0) return;
-                      try {
-                        await api("/api/listings", {
-                          method: "PATCH",
-                          json: { id: l.id, stock },
-                        });
-                        setMsg(`Stock updated: ${l.title} → ${stock}`);
-                        await refresh();
-                      } catch (err) {
-                        setMsg(
-                          err instanceof Error ? err.message : "Stock update failed"
-                        );
-                      }
-                    }}
-                  />
+                  {freelance ? (
+                    <span className="sm">{l.soldCount ?? 0} sold</span>
+                  ) : (
+                    <input
+                      key={`${l.id}-${l.stock ?? 0}`}
+                      type="number"
+                      min={0}
+                      defaultValue={l.stock ?? 1}
+                      style={{ width: 72 }}
+                      aria-label={`Stock for ${l.title}`}
+                      onBlur={async (e) => {
+                        const stock = Number(e.target.value);
+                        if (!Number.isFinite(stock) || stock < 0) return;
+                        try {
+                          await api("/api/listings", {
+                            method: "PATCH",
+                            json: { id: l.id, stock },
+                          });
+                          setMsg(`Stock updated: ${l.title} → ${stock}`);
+                          await refresh();
+                        } catch (err) {
+                          setMsg(
+                            err instanceof Error
+                              ? err.message
+                              : "Stock update failed"
+                          );
+                        }
+                      }}
+                    />
+                  )}
                 </td>
                 <td>
                   <span className={`pill ${l.listed ? "g" : "w"}`}>
                     {l.status}
                     {l.listed ? " · live" : ""}
-                    {(l.stock ?? 1) <= 0 ? " · sold out" : ""}
+                    {!freelance && (l.stock ?? 1) <= 0 ? " · sold out" : ""}
                   </span>
                 </td>
               </tr>
-            ))}
+            );
+            })}
           </tbody>
         </table>
         {!listings.length ? <p className="mut">No listings yet.</p> : null}

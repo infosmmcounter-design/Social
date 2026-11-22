@@ -5,7 +5,7 @@ import { VerifiedTick } from "./VerifiedTick";
 import { useLang } from "./LanguageProvider";
 import { LocaleLink as Link } from "./LocaleLink";
 import { money, stars } from "@/lib/constants";
-import { CATEGORIES } from "@/lib/types";
+import { CATEGORIES, isFreelanceCategory } from "@/lib/types";
 
 type Props = {
   listing: {
@@ -17,6 +17,7 @@ type Props = {
     monetized?: boolean;
     followers?: string;
     stock?: number;
+    soldCount?: number;
     soldOut?: boolean;
     listingType?: string;
     isFreelance?: boolean;
@@ -42,9 +43,13 @@ export function ListingCard({ listing }: Props) {
     CATEGORIES.find((c) => c[0] === listing.cat)?.[1] || listing.cat;
   const s = listing.seller;
   const freelance =
-    listing.isFreelance || listing.listingType === "service";
+    isFreelanceCategory(listing.cat) ||
+    listing.isFreelance ||
+    listing.listingType === "service";
   const soldOut =
-    listing.soldOut || (listing.stock !== undefined && listing.stock <= 0);
+    !freelance &&
+    (listing.soldOut || (listing.stock !== undefined && listing.stock <= 0));
+  const sold = listing.soldCount ?? 0;
 
   return (
     <Link className="card lc" href={`/listing/${listing.id}`}>
@@ -55,10 +60,13 @@ export function ListingCard({ listing }: Props) {
         ) : (
           <CatIcon cat={listing.cat} size={56} />
         )}
-        {soldOut ? (
+        {freelance ? (
+          <span className="stock-badge">
+            {sold} {t("freelance.sold")}
+          </span>
+        ) : soldOut ? (
           <span className="stock-badge sold">{t("common.soldOut")}</span>
-        ) : null}
-        {!soldOut && listing.stock !== undefined && listing.stock > 0 ? (
+        ) : listing.stock !== undefined && listing.stock > 0 ? (
           <span className="stock-badge">
             {listing.stock} {t("common.available")}
           </span>

@@ -24,7 +24,8 @@ function canAccess(
   email?: string
 ) {
   if (user?.role === "admin") return true;
-  if (user && user.id === thread.sellerId) return true;
+  const kind = thread.kind || "seller";
+  if (kind === "seller" && user && user.id === thread.sellerId) return true;
   if (user && user.id === thread.buyerId) return true;
   if (
     user &&
@@ -50,12 +51,15 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Chat not found" }, { status: 404 });
     if (!canAccess(thread, user, email))
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    const seller = store.users.find((u) => u.id === thread.sellerId);
+    const seller =
+      (thread.kind || "seller") === "escrow"
+        ? null
+        : store.users.find((u) => u.id === thread.sellerId);
     const listing = thread.listingId
       ? store.listings.find((l) => l.id === thread.listingId)
       : null;
     return NextResponse.json({
-      inquiry: thread,
+      inquiry: { ...thread, kind: thread.kind || "seller" },
       seller: seller
         ? publicUser(seller, false, {
             revealDummy: !!(user && user.role === "admin"),
@@ -77,7 +81,9 @@ export async function GET(req: Request) {
     if (auth.error || !auth.user)
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     if (auth.user.role !== "admin") {
-      list = list.filter((t) => t.sellerId === auth.user!.id);
+      list = list.filter(
+        (t) => (t.kind || "seller") === "seller" && t.sellerId === auth.user!.id
+      );
     }
   } else if (email) {
     list = list.filter((t) => t.buyerEmail.toLowerCase() === email);
@@ -86,7 +92,9 @@ export async function GET(req: Request) {
       (t) =>
         t.buyerId === user.id ||
         t.buyerEmail.toLowerCase() === user.email.toLowerCase() ||
-        (user.role === "seller" && t.sellerId === user.id) ||
+        (user.role === "seller" &&
+          (t.kind || "seller") === "seller" &&
+          t.sellerId === user.id) ||
         user.role === "admin"
     );
   } else {
@@ -102,17 +110,25 @@ export async function GET(req: Request) {
         (a, b) =>
           new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       )
-      .map((t) => ({
-        ...t,
-        sellerName: sellers[t.sellerId]?.name || "Seller",
-        seller: sellers[t.sellerId] || null,
-        lastMsg: t.msgs[t.msgs.length - 1] || null,
-      })),
+      .map((t) => {
+        const kind = t.kind || "seller";
+        return {
+          ...t,
+          kind,
+          sellerName:
+            kind === "escrow"
+              ? "SocialsFlip Escrow"
+              : sellers[t.sellerId]?.name || "Seller",
+          seller: kind === "escrow" ? null : sellers[t.sellerId] || null,
+          lastMsg: t.msgs[t.msgs.length - 1] || null,
+        };
+      }),
   });
 }
 
 export async function POST(req: Request) {
   const body = await req.json();
+  const kind = body.kind === "escrow" ? "escrow" : "seller";
   const sellerId = Number(body.sellerId);
   const listingId = body.listingId != null ? Number(body.listingId) : null;
   const buyerEmail = String(body.email || "")
@@ -122,7 +138,13 @@ export async function POST(req: Request) {
   const firstMessage = String(body.message || body.text || "").trim();
   const subject = String(body.subject || "").trim();
 
-  if (!sellerId || !buyerEmail) {
+  if (!buyerEmail) {
+    return NextResponse.json(
+      { error: "Your email is required to start chat." },
+      { status: 400 }
+    );
+  }
+  if (kind === "seller" && !sellerId) {
     return NextResponse.json(
       { error: "Seller and your email are required to start chat." },
       { status: 400 }
@@ -134,6 +156,45 @@ export async function POST(req: Request) {
 
   try {
     await updateStore((data) => {
+      if (kind === "escrow") {
+        const existing = data.inquiries.find(
+          (t) =>
+            t.status === "open" &&
+            (t.kind || "seller") === "escrow" &&
+            (t.buyerEmail.toLowerCase() === buyerEmail ||
+              (!!user && t.buyerId === user.id))
+        );
+        if (existing) {
+          inquiryId = existing.id;
+          if (firstMessage) pushMsg(existing, firstMessage, "buyer");
+          return;
+        }
+
+        inquiryId = nextId(data);
+        const thread: InquiryThread = {
+          id: inquiryId,
+          kind: "escrow",
+          sellerId: 0,
+          listingId: null,
+          buyerId: user?.id ?? null,
+          buyerEmail,
+          buyerName: buyerName || user?.name || "Guest",
+          subject: subject || "Help & Support — Chat with Escrow",
+          status: "open",
+          msgs: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        pushMsg(
+          thread,
+          "Escrow support chat opened. You are talking directly with SocialsFlip escrow moderators — no seller in this room.",
+          "admin"
+        );
+        if (firstMessage) pushMsg(thread, firstMessage, "buyer");
+        data.inquiries.push(thread);
+        return;
+      }
+
       const seller = data.users.find(
         (u) =>
           u.id === sellerId &&
@@ -157,6 +218,7 @@ export async function POST(req: Request) {
       const existing = data.inquiries.find(
         (t) =>
           t.status === "open" &&
+          (t.kind || "seller") === "seller" &&
           t.sellerId === sellerId &&
           (listingId == null || t.listingId === listingId) &&
           (t.buyerEmail.toLowerCase() === buyerEmail ||
@@ -171,6 +233,7 @@ export async function POST(req: Request) {
       inquiryId = nextId(data);
       const thread: InquiryThread = {
         id: inquiryId,
+        kind: "seller",
         sellerId,
         listingId,
         buyerId: user?.id ?? null,
@@ -203,9 +266,12 @@ export async function POST(req: Request) {
 
   const store = await readStore();
   const inquiry = store.inquiries.find((t) => t.id === inquiryId)!;
-  const seller = store.users.find((u) => u.id === inquiry.sellerId);
+  const seller =
+    (inquiry.kind || "seller") === "escrow"
+      ? null
+      : store.users.find((u) => u.id === inquiry.sellerId);
   return NextResponse.json({
-    inquiry,
+    inquiry: { ...inquiry, kind: inquiry.kind || "seller" },
     seller: seller ? publicUser(seller) : null,
   });
 }

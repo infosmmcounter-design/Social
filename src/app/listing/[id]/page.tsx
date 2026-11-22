@@ -7,10 +7,11 @@ import { VerifiedTick } from "@/components/VerifiedTick";
 import { StartSellerChat } from "@/components/StartSellerChat";
 import { api } from "@/lib/api";
 import { money, stars } from "@/lib/constants";
-import { CATEGORIES } from "@/lib/types";
+import { CATEGORIES, isFreelanceCategory } from "@/lib/types";
 import { useAuth } from "@/components/AuthProvider";
 import { useLang } from "@/components/LanguageProvider";
 import { LocaleLink as Link } from "@/components/LocaleLink";
+import { PublicReview } from "@/components/PublicReview";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
 
 export default function ListingDetailPage() {
@@ -21,7 +22,13 @@ export default function ListingDetailPage() {
   const [data, setData] = useState<{
     listing: Record<string, unknown>;
     seller: Record<string, unknown> | null;
-    reviews: { stars: number; who: string; date: string; text: string }[];
+    reviews: {
+      stars: number;
+      who: string;
+      date: string;
+      text: string;
+      locale?: string;
+    }[];
   } | null>(null);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -42,7 +49,13 @@ export default function ListingDetailPage() {
     api<{
       listing: Record<string, unknown>;
       seller: Record<string, unknown> | null;
-      reviews: { stars: number; who: string; date: string; text: string }[];
+      reviews: {
+        stars: number;
+        who: string;
+        date: string;
+        text: string;
+        locale?: string;
+      }[];
       seo?: { title: string; description: string };
       feePct?: number;
     }>(`/api/listings/${id}?lang=${encodeURIComponent(locale)}`)
@@ -77,6 +90,7 @@ export default function ListingDetailPage() {
     img?: string;
     images?: string[];
     stock?: number;
+    soldCount?: number;
     soldOut?: boolean;
     listingType?: string;
     isFreelance?: boolean;
@@ -97,13 +111,20 @@ export default function ListingDetailPage() {
     reviewCount?: number;
     avatarUrl?: string;
   } | null;
-  const soldOut = l.soldOut || (l.stock !== undefined && l.stock <= 0);
   const gallery = [l.img, ...(l.images || [])].filter(Boolean) as string[];
 
   const fee = s?.official ? 0 : Math.round(l.price * feePct) / 100;
   const total = l.price + fee;
   const catName = CATEGORIES.find((c) => c[0] === l.cat)?.[1] || l.cat;
-  const freelance = !!(l.isFreelance || l.listingType === "service");
+  const freelance = !!(
+    isFreelanceCategory(l.cat) ||
+    l.isFreelance ||
+    l.listingType === "service"
+  );
+  const soldOut =
+    !freelance &&
+    (l.soldOut || (l.stock !== undefined && l.stock <= 0));
+  const sold = l.soldCount ?? 0;
 
   async function startDeal() {
     setErr("");
@@ -193,7 +214,11 @@ export default function ListingDetailPage() {
             <CatIcon cat={l.cat} size={14} />
             {catName}
           </span>{" "}
-          {soldOut ? (
+          {freelance ? (
+            <span className="pill g">
+              {sold} {t("freelance.sold")}
+            </span>
+          ) : soldOut ? (
             <span className="pill b">{t("common.soldOut")}</span>
           ) : (
             <span className="pill g">
@@ -286,20 +311,27 @@ export default function ListingDetailPage() {
           </h2>
           <p className="sm mut">{t("listing.guestNote")}</p>
           <div className="note sm">
-            <b>{t("listing.stockLabel")}:</b>{" "}
-            {soldOut
-              ? t("common.soldOut")
-              : `${l.stock ?? 1} ${t("common.available")}`}
-            <br />
-            {freelance ? t("freelance.sla") : t("listing.sla")}
             {freelance ? (
               <>
+                <b>{t("freelance.purchased")}:</b> {sold}{" "}
+                {t("freelance.soldTimes")}
+                <br />
+                {t("freelance.sla")}
                 <br />
                 <b>{t("freelance.delivery")}:</b> {l.deliveryDays || 3}{" "}
                 {t("freelance.days")} · <b>{t("freelance.revisions")}:</b>{" "}
                 {l.revisions ?? 1}
               </>
-            ) : null}
+            ) : (
+              <>
+                <b>{t("listing.stockLabel")}:</b>{" "}
+                {soldOut
+                  ? t("common.soldOut")
+                  : `${l.stock ?? 1} ${t("common.available")}`}
+                <br />
+                {t("listing.sla")}
+              </>
+            )}
           </div>
           {soldOut ? (
             <p className="err">{t("common.soldOut")}</p>
@@ -366,17 +398,14 @@ export default function ListingDetailPage() {
         </div>
       </div>
 
-      <h2 style={{ marginTop: 30 }}>Buyer reviews</h2>
+      <h2 style={{ marginTop: 30 }}>{t("reviews.buyerReviews")}</h2>
+      <p className="sm mut">{t("reviews.publicNote")}</p>
       {data.reviews.map((r, i) => (
-        <div className="card" key={i} style={{ marginBottom: 10 }}>
-          <span className="star">{stars(r.stars)}</span>{" "}
-          <span className="sm mut">
-            {r.who} · {r.date}
-          </span>
-          <p style={{ margin: "6px 0 0" }}>{r.text}</p>
-        </div>
+        <PublicReview key={i} review={r} />
       ))}
-      {!data.reviews.length ? <p className="mut">No reviews yet.</p> : null}
+      {!data.reviews.length ? (
+        <p className="mut">{t("reviews.none")}</p>
+      ) : null}
     </section>
   );
 }

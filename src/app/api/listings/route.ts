@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readStore, updateStore, nextId, publicListing, publicUser } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import type { Category } from "@/lib/types";
+import { isFreelanceCategory, type Category } from "@/lib/types";
 import { listingCoverDataUrl } from "@/lib/placeholders";
 import { localeFromRequest } from "@/lib/i18n/api-locale";
 import { localizeListing, localizeSeller } from "@/lib/i18n/content";
@@ -89,15 +89,17 @@ export async function POST(req: Request) {
       : [];
     const stock = Math.max(0, Number(body.stock ?? 1));
     const rawType = String(body.listingType || "").toLowerCase();
-    const listingType =
-      rawType === "service" || rawType === "freelance" || rawType === "gig"
+    const listingType = isFreelanceCategory(cat)
+      ? "service"
+      : rawType === "service" || rawType === "freelance" || rawType === "gig"
         ? "service"
         : rawType === "tool"
           ? "tool"
           : cat === "other"
-            ? "service"
+            ? "tool"
             : "account";
-    const isFreelance = listingType === "service";
+    const isFreelance =
+      isFreelanceCategory(cat) || listingType === "service";
     const deliveryDays = isFreelance
       ? Math.min(60, Math.max(1, Math.floor(Number(body.deliveryDays) || 3)))
       : 0;
@@ -118,7 +120,8 @@ export async function POST(req: Request) {
       desc: String(body.desc || ""),
       img,
       images,
-      stock: isFreelance ? Math.max(stock, 1) : stock,
+      stock: isFreelance ? 9999 : stock,
+      soldCount: Math.max(0, Math.floor(Number(body.soldCount) || 0)),
       listingType,
       deliveryDays,
       revisions,

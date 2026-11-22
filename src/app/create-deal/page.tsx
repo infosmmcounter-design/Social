@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { CATEGORIES } from "@/lib/types";
+import { CATEGORIES, isFreelanceCategory } from "@/lib/types";
 import { useAuth } from "@/components/AuthProvider";
 import { useLang } from "@/components/LanguageProvider";
 
@@ -22,6 +22,7 @@ export default function CreateDealPage() {
     niche: "",
     privateHandle: "",
   });
+  const freelance = isFreelanceCategory(form.cat);
   const [link, setLink] = useState("");
   const [tempPassword, setTempPassword] = useState("");
   const [msg, setMsg] = useState("");
@@ -99,7 +100,7 @@ export default function CreateDealPage() {
           onChange={(e) => setForm({ ...form, title: e.target.value })}
           placeholder="YouTube 1K monetized channel"
         />
-        <label>Platform</label>
+        <label>Category board</label>
         <select
           value={form.cat}
           onChange={(e) => setForm({ ...form, cat: e.target.value })}
@@ -110,51 +111,75 @@ export default function CreateDealPage() {
             </option>
           ))}
         </select>
-        <label>Niche</label>
+        <label>{freelance ? "Gig niche / skill" : "Niche"}</label>
         <input
           value={form.niche}
           onChange={(e) => setForm({ ...form, niche: e.target.value })}
         />
-        <label>Followers / subscribers</label>
-        <input
-          value={form.followers}
-          onChange={(e) => setForm({ ...form, followers: e.target.value })}
-        />
-        <label>
-          <input
-            type="checkbox"
-            checked={form.monetized}
-            onChange={(e) => setForm({ ...form, monetized: e.target.checked })}
-            style={{ width: "auto", marginRight: 8 }}
-          />
-          Monetized
-        </label>
+        {!freelance ? (
+          <>
+            <label>Followers / subscribers</label>
+            <input
+              value={form.followers}
+              onChange={(e) => setForm({ ...form, followers: e.target.value })}
+            />
+            <label>
+              <input
+                type="checkbox"
+                checked={form.monetized}
+                onChange={(e) =>
+                  setForm({ ...form, monetized: e.target.checked })
+                }
+                style={{ width: "auto", marginRight: 8 }}
+              />
+              Monetized
+            </label>
+          </>
+        ) : null}
         <label>Description</label>
         <textarea
           rows={4}
           value={form.desc}
           onChange={(e) => setForm({ ...form, desc: e.target.value })}
-          placeholder="What the buyer gets, transfer method…"
+          placeholder={
+            freelance
+              ? "What the buyer gets, delivery details…"
+              : "What the buyer gets, transfer method…"
+          }
         />
-        <label>{t("createDeal.privateOptional")}</label>
-        <input
-          value={form.privateHandle}
-          onChange={(e) => setForm({ ...form, privateHandle: e.target.value })}
-          placeholder="Optional — share later in escrow chat"
-        />
+        {!freelance ? (
+          <>
+            <label>{t("createDeal.privateOptional")}</label>
+            <input
+              value={form.privateHandle}
+              onChange={(e) =>
+                setForm({ ...form, privateHandle: e.target.value })
+              }
+              placeholder="Optional — share later in escrow chat"
+            />
+          </>
+        ) : null}
         <label>Price (USD)</label>
         <input
           type="number"
           value={form.price}
           onChange={(e) => setForm({ ...form, price: e.target.value })}
         />
-        <label>Stock</label>
-        <input
-          type="number"
-          min={1}
-          value={form.stock}
-          onChange={(e) => setForm({ ...form, stock: e.target.value })}
-        />
+        {!freelance ? (
+          <>
+            <label>Stock</label>
+            <input
+              type="number"
+              min={1}
+              value={form.stock}
+              onChange={(e) => setForm({ ...form, stock: e.target.value })}
+            />
+          </>
+        ) : (
+          <p className="sm mut">
+            No stock — buyers see how many times the gig was purchased.
+          </p>
+        )}
 
         <div className="note sm" style={{ marginTop: 12 }}>
           {t("deal.holdGuide")}

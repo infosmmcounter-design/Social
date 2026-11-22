@@ -13,6 +13,8 @@ export const CAT_ICONS: Record<Category, string> = {
   ai: '<rect width="24" height="24" rx="6" fill="#4338ca"/><path d="M11 5l1.7 4.6 4.6 1.7-4.6 1.7L11 17.6l-1.7-4.6-4.6-1.7 4.6-1.7z" fill="#fff"/><path d="M18 14l.8 2.2 2.2.8-2.2.8L18 20l-.8-2.2-2.2-.8 2.2-.8z" fill="#fff"/>',
   other:
     '<rect width="24" height="24" rx="6" fill="#0f766e"/><g fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 12a5.5 5.5 0 0 1 9.4-3.9"/><path d="M16 5v3.4h-3.4"/><path d="M17.5 12a5.5 5.5 0 0 1-9.4 3.9"/><path d="M8 19v-3.4h3.4"/></g>',
+  freelance:
+    '<rect width="24" height="24" rx="6" fill="#B45309"/><path d="M7 16.5V8.2c0-.7.6-1.2 1.2-1.2h.8c.4 0 .8.2 1 .5L12 11l1.9-3.5c.3-.3.6-.5 1-.5h.8c.7 0 1.2.5 1.2 1.2v8.3h-1.8V11l-1.5 2.7c-.2.4-.7.4-.9 0L10.2 11v5.5H7.4z" fill="#fff"/><circle cx="17.2" cy="16.2" r="1.3" fill="#FDE68A"/>',
 };
 
 export function money(n: number) {

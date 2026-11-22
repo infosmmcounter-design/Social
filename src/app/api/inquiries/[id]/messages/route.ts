@@ -27,17 +27,25 @@ export async function POST(
       if (thread.status === "closed") throw new Error("This chat is closed");
 
       let from: MessageRole | null = null;
+      const isEscrow = (thread.kind || "seller") === "escrow";
 
       if (user?.role === "admin") {
-        // Admin can reply as Escrow or as the named seller (esp. dummy sellers).
-        from = asRole === "seller" ? "seller" : "admin";
+        // Escrow-only rooms: admin always replies as Escrow.
+        // Seller rooms: admin may also reply as the named seller (dummy).
+        from =
+          isEscrow || asRole !== "seller" ? "admin" : "seller";
       } else if (
         user &&
         (user.id === thread.buyerId ||
           user.email.toLowerCase() === thread.buyerEmail.toLowerCase())
       ) {
         from = "buyer";
-      } else if (user && user.id === thread.sellerId) {
+      } else if (
+        !isEscrow &&
+        user &&
+        thread.sellerId > 0 &&
+        user.id === thread.sellerId
+      ) {
         from = "seller";
       } else if (
         guestEmail &&
@@ -66,9 +74,12 @@ export async function POST(
 
   const store = await readStore();
   const inquiry = store.inquiries.find((t) => t.id === Number(id))!;
-  const seller = store.users.find((u) => u.id === inquiry.sellerId);
+  const seller =
+    (inquiry.kind || "seller") === "escrow" || inquiry.sellerId <= 0
+      ? null
+      : store.users.find((u) => u.id === inquiry.sellerId);
   return NextResponse.json({
-    inquiry,
+    inquiry: { ...inquiry, kind: inquiry.kind || "seller" },
     seller: seller
       ? publicUser(seller, false, {
           revealDummy: !!(user && user.role === "admin"),

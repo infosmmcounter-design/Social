@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { updateStore, nextId, readStore, publicUser } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import type { Category, User } from "@/lib/types";
+import { isFreelanceCategory, type Category, type User } from "@/lib/types";
 import bcrypt from "bcryptjs";
 import { avatarDataUrl, listingCoverDataUrl } from "@/lib/placeholders";
 
@@ -122,10 +122,15 @@ export async function PATCH(req: Request) {
         desc: app.desc,
         img: listingCoverDataUrl(app.cat, app.title),
         images: [],
-        stock: 1,
-        listingType: app.cat === "other" ? "service" : "account",
-        deliveryDays: app.cat === "other" ? 3 : 0,
-        revisions: app.cat === "other" ? 1 : 0,
+        stock: isFreelanceCategory(app.cat) ? 9999 : 1,
+        soldCount: 0,
+        listingType: isFreelanceCategory(app.cat)
+          ? "service"
+          : app.cat === "other"
+            ? "tool"
+            : "account",
+        deliveryDays: isFreelanceCategory(app.cat) ? 3 : 0,
+        revisions: isFreelanceCategory(app.cat) ? 1 : 0,
         status: "pending",
         listed: false,
         createdAt: new Date().toISOString(),

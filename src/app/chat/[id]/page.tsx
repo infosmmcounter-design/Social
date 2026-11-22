@@ -17,6 +17,7 @@ function ChatInner() {
   const { user } = useAuth();
   const [inquiry, setInquiry] = useState<{
     id: number;
+    kind?: "seller" | "escrow";
     subject: string;
     buyerName: string;
     buyerEmail: string;
@@ -63,14 +64,16 @@ function ChatInner() {
     return () => clearInterval(t);
   }, [load]);
 
-  const sellerName = seller?.name || "Seller";
+  const isEscrow = (inquiry?.kind || "seller") === "escrow";
+  const sellerName = isEscrow ? "SocialsFlip Escrow" : seller?.name || "Seller";
   const isBuyerParty =
     !!inquiry &&
     ((user &&
       user.email.toLowerCase() === inquiry.buyerEmail.toLowerCase()) ||
       (!!emailQ &&
         emailQ.toLowerCase() === inquiry.buyerEmail.toLowerCase()));
-  const isSellerParty = !!user && !!inquiry && user.id === inquiry.sellerId;
+  const isSellerParty =
+    !isEscrow && !!user && !!inquiry && user.id === inquiry.sellerId;
   const isAdmin = user?.role === "admin";
   const canSend = isBuyerParty || isSellerParty || isAdmin;
 
@@ -82,7 +85,7 @@ function ChatInner() {
         method: "POST",
         json: {
           text,
-          asRole: isAdmin ? asRole : undefined,
+          asRole: isAdmin ? (isEscrow ? "admin" : asRole) : undefined,
           email: emailQ || inquiry?.buyerEmail,
         },
       });
@@ -113,18 +116,33 @@ function ChatInner() {
         className="row"
         style={{ marginTop: 10, gap: 12, alignItems: "center" }}
       >
-        {seller?.avatarUrl ? (
+        {seller?.avatarUrl && !isEscrow ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={seller.avatarUrl}
             alt=""
             style={{ width: 48, height: 48, borderRadius: "50%" }}
           />
+        ) : isEscrow ? (
+          <span
+            className="pill g"
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: "50%",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 800,
+            }}
+          >
+            SF
+          </span>
         ) : null}
         <div>
           <h1 style={{ fontSize: "1.5rem", margin: 0 }}>
-            Chat with {sellerName}
-            {seller?.verified ? <VerifiedTick size={18} /> : null}
+            {isEscrow ? "Chat with Escrow" : `Chat with ${sellerName}`}
+            {seller?.verified && !isEscrow ? <VerifiedTick size={18} /> : null}
           </h1>
           <p className="sm mut" style={{ margin: 0 }}>
             {inquiry.subject}
@@ -149,8 +167,17 @@ function ChatInner() {
       ) : null}
 
       <p className="sm mut">
-        3-way room: <b>{inquiry.buyerName}</b> (buyer) · <b>{sellerName}</b>{" "}
-        (seller) · <b>Escrow</b> (admin). No payment required to chat.
+        {isEscrow ? (
+          <>
+            Direct support: <b>{inquiry.buyerName}</b> (buyer) · <b>Escrow</b>{" "}
+            (SocialsFlip admin). No seller in this room.
+          </>
+        ) : (
+          <>
+            3-way room: <b>{inquiry.buyerName}</b> (buyer) · <b>{sellerName}</b>{" "}
+            (seller) · <b>Escrow</b> (admin). No payment required to chat.
+          </>
+        )}
       </p>
 
       {err ? <p className="err">{err}</p> : null}
@@ -168,7 +195,7 @@ function ChatInner() {
 
       {canSend ? (
         <div className="row" style={{ marginTop: 8, flexWrap: "nowrap" }}>
-          {isAdmin ? (
+          {isAdmin && !isEscrow ? (
             <select
               value={asRole}
               onChange={(e) =>
@@ -185,11 +212,15 @@ function ChatInner() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={
-              isBuyerParty
-                ? `Message ${sellerName}`
-                : isSellerParty
-                  ? `Reply to ${inquiry.buyerName}`
-                  : "Message…"
+              isEscrow
+                ? isBuyerParty
+                  ? "Message Escrow…"
+                  : "Reply as Escrow…"
+                : isBuyerParty
+                  ? `Message ${sellerName}`
+                  : isSellerParty
+                    ? `Reply to ${inquiry.buyerName}`
+                    : "Message…"
             }
             aria-label="Message"
             onKeyDown={(e) => {
@@ -206,13 +237,19 @@ function ChatInner() {
         </p>
       )}
 
-      {!listing && seller ? (
+      {!listing && seller && !isEscrow ? (
         <p className="sm" style={{ marginTop: 16 }}>
           Ready to buy? Browse{" "}
           <Link href={`/seller/${seller.id}`} style={{ color: "var(--a)" }}>
             {sellerName}&apos;s listings
           </Link>
           .
+        </p>
+      ) : null}
+      {isEscrow ? (
+        <p className="sm mut" style={{ marginTop: 16 }}>
+          Need a seller chat instead? Open a listing and tap Chat with seller, or
+          go to <Link href="/help">Help & Support</Link>.
         </p>
       ) : null}
     </section>

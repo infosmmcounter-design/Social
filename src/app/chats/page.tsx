@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { LocaleLink as Link } from "@/components/LocaleLink";
+import { StartEscrowChat } from "@/components/StartEscrowChat";
+import { useLang } from "@/components/LanguageProvider";
 
 type Row = {
   id: number;
+  kind?: "seller" | "escrow";
   subject: string;
   sellerName: string;
   buyerName: string;
@@ -19,6 +22,7 @@ type Row = {
 
 export default function ChatsPage() {
   const { user } = useAuth();
+  const { t } = useLang();
   const [rows, setRows] = useState<Row[]>([]);
   const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
@@ -47,14 +51,19 @@ export default function ChatsPage() {
 
   return (
     <section className="sec" style={{ maxWidth: 720 }}>
-      <h1 style={{ fontSize: "2rem" }}>Seller chats</h1>
+      <h1 style={{ fontSize: "2rem" }}>{t("nav.chats")}</h1>
       <p className="mut">
-        Pre-deal conversations with sellers by name. Escrow can join every room.
-        Deals stay under Orders.
+        Seller chats and direct Escrow support. Deal rooms stay under Orders.
       </p>
 
+      <div className="card f escrow-support-hero" style={{ marginTop: 12 }}>
+        <h3 style={{ marginTop: 0 }}>{t("help.chatEscrow")}</h3>
+        <p className="sm mut">{t("help.chatEscrowSub")}</p>
+        <StartEscrowChat compact />
+      </div>
+
       {!user ? (
-        <div className="card">
+        <div className="card" style={{ marginTop: 14 }}>
           <label>Email used when you started a chat</label>
           <input
             type="email"
@@ -85,43 +94,52 @@ export default function ChatsPage() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.id}>
-                <td>
-                  <b>{r.sellerName}</b>
-                  <br />
-                  <span className="mut sm">Buyer: {r.buyerName}</span>
-                </td>
-                <td>{r.subject}</td>
-                <td className="sm mut">
-                  {r.lastMsg
-                    ? r.lastMsg.text.slice(0, 60)
-                    : new Date(r.updatedAt).toLocaleString()}
-                </td>
-                <td>
-                  <Link
-                    className="btn s"
-                    href={`/chat/${r.id}${
-                      !user
-                        ? `?email=${encodeURIComponent(email || r.buyerEmail)}`
-                        : user.role === "buyer" ||
-                            user.email.toLowerCase() ===
-                              r.buyerEmail.toLowerCase()
-                          ? `?email=${encodeURIComponent(r.buyerEmail)}`
-                          : ""
-                    }`}
-                  >
-                    Open {r.sellerName}
-                  </Link>
-                </td>
-              </tr>
-            ))}
+            {rows.map((r) => {
+              const escrow = (r.kind || "seller") === "escrow";
+              return (
+                <tr key={r.id}>
+                  <td>
+                    <b>{escrow ? "SocialsFlip Escrow" : r.sellerName}</b>
+                    {escrow ? (
+                      <>
+                        {" "}
+                        <span className="pill g">Escrow</span>
+                      </>
+                    ) : null}
+                    <br />
+                    <span className="mut sm">Buyer: {r.buyerName}</span>
+                  </td>
+                  <td>{r.subject}</td>
+                  <td className="sm mut">
+                    {r.lastMsg
+                      ? r.lastMsg.text.slice(0, 60)
+                      : new Date(r.updatedAt).toLocaleString()}
+                  </td>
+                  <td>
+                    <Link
+                      className="btn s"
+                      href={`/chat/${r.id}${
+                        !user
+                          ? `?email=${encodeURIComponent(email || r.buyerEmail)}`
+                          : user.role === "buyer" ||
+                              user.email.toLowerCase() ===
+                                r.buyerEmail.toLowerCase()
+                            ? `?email=${encodeURIComponent(r.buyerEmail)}`
+                            : ""
+                      }`}
+                    >
+                      Open
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         {!rows.length ? (
           <p className="mut">
-            No chats yet. Open a seller profile or listing and tap{" "}
-            <b>Chat with …</b>
+            No chats yet. Use <b>Chat with Escrow</b> above, or open a seller
+            profile and tap Chat.
           </p>
         ) : null}
       </div>

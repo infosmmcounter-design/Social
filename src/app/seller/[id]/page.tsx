@@ -7,6 +7,7 @@ import { VerifiedTick } from "@/components/VerifiedTick";
 import { StartSellerChat } from "@/components/StartSellerChat";
 import { useLang } from "@/components/LanguageProvider";
 import { LocaleLink as Link } from "@/components/LocaleLink";
+import { PublicReview } from "@/components/PublicReview";
 import { api } from "@/lib/api";
 import { stars } from "@/lib/constants";
 
@@ -43,6 +44,7 @@ export default function SellerProfilePage() {
       date: string;
       text: string;
       about?: string;
+      locale?: string;
     }[];
   } | null>(null);
 
@@ -125,17 +127,14 @@ export default function SellerProfilePage() {
         ) : null}
       </div>
 
-      <h2 style={{ marginTop: 28 }}>Reviews</h2>
+      <h2 style={{ marginTop: 28 }}>{t("reviews.buyerReviews")}</h2>
+      <p className="sm mut">{t("reviews.publicNote")}</p>
       {sellerReviews.map((r, i) => (
-        <div className="card" key={i} style={{ marginBottom: 10 }}>
-          <span className="star">{stars(r.stars)}</span>{" "}
-          <span className="sm mut">
-            {r.who} · {r.date}
-          </span>
-          <p style={{ margin: "6px 0 0" }}>{r.text}</p>
-        </div>
+        <PublicReview key={i} review={r} />
       ))}
-      {!sellerReviews.length ? <p className="mut">No reviews yet</p> : null}
+      {!sellerReviews.length ? (
+        <p className="mut">{t("reviews.none")}</p>
+      ) : null}
     </section>
   );
 }

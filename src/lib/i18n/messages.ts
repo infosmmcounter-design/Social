@@ -16,6 +16,8 @@ export type MsgKey =
   | "nav.admin"
   | "nav.dashboard"
   | "nav.language"
+  | "nav.help"
+  | "nav.privacy"
   | "home.kicker"
   | "home.headline"
   | "home.sub"
@@ -39,6 +41,9 @@ export type MsgKey =
   | "freelance.orderGig"
   | "freelance.notes"
   | "freelance.sla"
+  | "freelance.sold"
+  | "freelance.purchased"
+  | "freelance.soldTimes"
   | "common.available"
   | "common.soldOut"
   | "common.loading"
@@ -83,7 +88,44 @@ export type MsgKey =
   | "blog.title"
   | "seo.title"
   | "seo.description"
-  | "footer.escrow";
+  | "footer.escrow"
+  | "help.title"
+  | "help.sub"
+  | "help.contact"
+  | "help.contactBody"
+  | "help.faq"
+  | "help.escrowBadge"
+  | "help.chatEscrow"
+  | "help.chatEscrowSub"
+  | "help.startEscrowChat"
+  | "help.firstMessage"
+  | "help.messagePlaceholder"
+  | "help.orEmail"
+  | "help.quickLinks"
+  | "privacy.title"
+  | "privacy.updated"
+  | "privacy.s1Title"
+  | "privacy.s1Body"
+  | "privacy.s2Title"
+  | "privacy.s2Body"
+  | "privacy.s3Title"
+  | "privacy.s3Body"
+  | "privacy.s4Title"
+  | "privacy.s4Body"
+  | "privacy.s5Title"
+  | "privacy.s5Body"
+  | "privacy.s6Title"
+  | "privacy.s6Body"
+  | "reviews.buyerReviews"
+  | "reviews.publicNote"
+  | "reviews.none"
+  | "reviews.reviewSeller"
+  | "reviews.rating"
+  | "reviews.yourReview"
+  | "reviews.writeInYourLang"
+  | "reviews.post"
+  | "reviews.buyerLanguage"
+  | "reviews.shownInBuyerLang";
 
 type Dict = Record<MsgKey, string>;
 
@@ -102,6 +144,8 @@ const en: Dict = {
   "nav.admin": "Admin",
   "nav.dashboard": "Dashboard",
   "nav.language": "Language",
+  "nav.help": "Help & Support",
+  "nav.privacy": "Privacy Policy",
   "home.kicker": "Escrow-protected marketplace",
   "home.headline": "Buy social accounts, freelance services & tools with confidence.",
   "home.sub":
@@ -127,6 +171,9 @@ const en: Dict = {
   "freelance.notes": "What you need from the freelancers (brief, links, files…)",
   "freelance.sla":
     "After payment is held, the freelancers deliver in the stated delivery window. Revisions included are listed on the gig.",
+  "freelance.sold": "sold",
+  "freelance.purchased": "Purchased by customers",
+  "freelance.soldTimes": "times sold",
   "common.available": "available",
   "common.soldOut": "Sold out",
   "common.loading": "Loading…",
@@ -179,6 +226,54 @@ const en: Dict = {
   "seo.description":
     "Escrow-protected marketplace for social accounts and Fiverr-style freelance gigs (YouTube, Facebook, Instagram, AI tools). Pay USDT TRC20/BEP20 — funds held until delivery.",
   "footer.escrow": "Escrow-held payments on marketplace orders",
+  "help.title": "Help & Support",
+  "help.sub":
+    "Escrow deals, freelance gigs, payments, and reviews — quick answers.",
+  "help.contact": "Contact support",
+  "help.contactBody":
+    "For open deals, use the deal chat (buyer + seller + escrow). For account or payment questions, chat with Escrow below.",
+  "help.faq": "FAQ",
+  "help.escrowBadge": "Direct escrow support",
+  "help.chatEscrow": "Chat with Escrow",
+  "help.chatEscrowSub":
+    "Talk only with SocialsFlip escrow moderators — no seller in this room. Use for payment issues, disputes, or marketplace help.",
+  "help.startEscrowChat": "Start chat with Escrow",
+  "help.firstMessage": "How can we help?",
+  "help.messagePlaceholder": "Describe your issue (order #, payment network…)",
+  "help.orEmail": "Or email",
+  "help.quickLinks": "Quick links",
+  "privacy.title": "Privacy Policy",
+  "privacy.updated": "Last updated: November 2026",
+  "privacy.s1Title": "1. What we collect",
+  "privacy.s1Body":
+    "We collect account details you provide (name, email, country), listing content, deal chat messages, payment proofs (transaction hashes), and buyer reviews. Crypto payments go to escrow wallets — we do not store private keys or card numbers.",
+  "privacy.s2Title": "2. How we use data",
+  "privacy.s2Body":
+    "Data is used to run escrow deals, moderate disputes, show public seller ratings, prevent fraud, and improve SocialsFlip. Public profiles show seller name, bio, ratings, and listings. Buyer reviews are public and shown in the language the buyer selected when writing them.",
+  "privacy.s3Title": "3. Reviews & language",
+  "privacy.s3Body":
+    "When a buyer reviews a seller after a completed deal, the review text is stored and displayed publicly in the buyer’s selected language. We do not auto-translate user reviews. Language UI chrome (buttons, labels) still follows the visitor’s language switcher.",
+  "privacy.s4Title": "4. Sharing",
+  "privacy.s4Body":
+    "We share data with escrow moderators as needed for deals, and with payment networks only as required to verify USDT transfers. We do not sell personal data.",
+  "privacy.s5Title": "5. Retention & security",
+  "privacy.s5Body":
+    "Deal records and chats are kept for dispute handling and compliance. Access is limited to authorized admins. Use a strong password and never share credentials outside escrow chat.",
+  "privacy.s6Title": "6. Contact",
+  "privacy.s6Body":
+    "Questions about privacy: privacy@socialsflip.com. For deal support, use Help & Support or your deal chat.",
+  "reviews.buyerReviews": "Buyer reviews",
+  "reviews.publicNote":
+    "Reviews are public and shown in the language each buyer selected when posting.",
+  "reviews.none": "No reviews yet.",
+  "reviews.reviewSeller": "Review the seller",
+  "reviews.rating": "Rating",
+  "reviews.yourReview": "Your review",
+  "reviews.writeInYourLang":
+    "Write in your selected language — it stays public in that language.",
+  "reviews.post": "Post public review",
+  "reviews.buyerLanguage": "Buyer’s language",
+  "reviews.shownInBuyerLang": "Shown in buyer’s language",
 };
 
 /** Partial overrides per locale; missing keys fall back to English. */
