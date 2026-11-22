@@ -10,6 +10,7 @@ import { LocaleLink as Link } from "@/components/LocaleLink";
 import { api } from "@/lib/api";
 import { stars } from "@/lib/constants";
 import { CATEGORIES } from "@/lib/types";
+import type { MsgKey } from "@/lib/i18n/messages";
 
 type Listing = {
   id: number;
@@ -173,7 +174,7 @@ export default function HomePage() {
               >
                 {t("home.all")}
               </button>
-              {CATEGORIES.map(([k, name]) => (
+              {CATEGORIES.map(([k]) => (
                 <button
                   key={k}
                   type="button"
@@ -181,7 +182,7 @@ export default function HomePage() {
                   onClick={() => setCat(cat === k ? "" : k)}
                 >
                   <CatIcon cat={k} size={16} />
-                  {name}
+                  {t(`cat.${k}` as MsgKey)}
                   {counts[k] ? <span className="chip-n">{counts[k]}</span> : null}
                 </button>
               ))}
@@ -218,8 +219,9 @@ export default function HomePage() {
                     {s.verified ? <VerifiedTick size={15} /> : null}
                   </strong>
                   <p className="sm mut" style={{ margin: "2px 0 0" }}>
-                    {s.official ? "Official store" : s.country || "Seller"} ·{" "}
-                    {s.listingCount} listing{s.listingCount === 1 ? "" : "s"}
+                    {s.official ? t("card.official") : s.country || t("card.seller")} ·{" "}
+                    {s.listingCount}{" "}
+                    {s.listingCount === 1 ? t("card.listing") : t("card.listings")}
                   </p>
                   <p className="sm" style={{ margin: "4px 0 0" }}>
                     {s.reviewCount ? (
@@ -228,7 +230,7 @@ export default function HomePage() {
                         {s.rating.toFixed(1)} ({s.reviewCount})
                       </>
                     ) : (
-                      <span className="mut">No reviews yet</span>
+                      <span className="mut">{t("card.noReviews")}</span>
                     )}
                   </p>
                 </div>

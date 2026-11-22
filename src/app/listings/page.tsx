@@ -6,6 +6,7 @@ import { ListingCard } from "@/components/ListingCard";
 import { useLang } from "@/components/LanguageProvider";
 import { api } from "@/lib/api";
 import { CATEGORIES } from "@/lib/types";
+import type { MsgKey } from "@/lib/i18n/messages";
 
 type Listing = {
   id: number;
@@ -52,7 +53,7 @@ function ListingsInner() {
   }, [q, cat, sort, locale]);
 
   const title = useMemo(() => {
-    if (cat) return CATEGORIES.find((c) => c[0] === cat)?.[1] || t("home.listings");
+    if (cat) return t(`cat.${cat}` as MsgKey);
     return t("home.listings");
   }, [cat, t]);
 
@@ -60,10 +61,7 @@ function ListingsInner() {
     <section className="sec">
       <h1 style={{ fontSize: "1.8rem" }}>{title}</h1>
       {cat === "freelance" ? (
-        <p className="mut">
-          Freelance Services board — list gigs like YouTube editing, Instagram
-          growth, AI setup, and more. Buyers pay escrow; you deliver in chat.
-        </p>
+        <p className="mut">{t("listings.freelanceIntro")}</p>
       ) : null}
       <div className="row" style={{ flexWrap: "wrap" }}>
         <input
@@ -79,9 +77,9 @@ function ListingsInner() {
           style={{ width: "auto" }}
         >
           <option value="">{t("home.all")}</option>
-          {CATEGORIES.map(([k, n]) => (
+          {CATEGORIES.map(([k]) => (
             <option key={k} value={k}>
-              {n}
+              {t(`cat.${k}` as MsgKey)}
             </option>
           ))}
         </select>

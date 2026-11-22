@@ -5,7 +5,8 @@ import { VerifiedTick } from "./VerifiedTick";
 import { useLang } from "./LanguageProvider";
 import { LocaleLink as Link } from "./LocaleLink";
 import { money, stars } from "@/lib/constants";
-import { CATEGORIES, isFreelanceCategory } from "@/lib/types";
+import { isFreelanceCategory } from "@/lib/types";
+import type { MsgKey } from "@/lib/i18n/messages";
 
 type Props = {
   listing: {
@@ -39,8 +40,8 @@ type Props = {
 
 export function ListingCard({ listing }: Props) {
   const { t } = useLang();
-  const catName =
-    CATEGORIES.find((c) => c[0] === listing.cat)?.[1] || listing.cat;
+  const catKey = `cat.${listing.cat}` as MsgKey;
+  const catName = t(catKey) === catKey ? listing.cat : t(catKey);
   const s = listing.seller;
   const freelance =
     isFreelanceCategory(listing.cat) ||
@@ -81,7 +82,7 @@ export function ListingCard({ listing }: Props) {
           {catName}
         </span>{" "}
         {freelance ? <span className="pill w">{t("freelance.badge")}</span> : null}{" "}
-        {s?.official ? <span className="pill g">Sold by SocialsFlip</span> : null}
+        {s?.official ? <span className="pill g">{t("card.soldBy")}</span> : null}
         {s?.verified && !s.official ? (
           <span
             className="pill bl"
@@ -92,7 +93,7 @@ export function ListingCard({ listing }: Props) {
         ) : null}
         <h3 style={{ marginTop: 8 }}>{listing.title}</h3>
         <p className="sm mut" style={{ margin: "0 0 4px" }}>
-          {s?.official ? "SocialsFlip" : s?.name || "Seller"}
+          {s?.official ? "SocialsFlip" : s?.name || t("card.seller")}
           {s?.verified ? <VerifiedTick size={14} /> : null}
           {s?.country ? `, ${s.country}` : ""}
         </p>
@@ -108,7 +109,7 @@ export function ListingCard({ listing }: Props) {
         ) : listing.followers ? (
           <p className="sm mut" style={{ margin: "0 0 4px" }}>
             {listing.followers} ·{" "}
-            {listing.monetized ? "Monetized" : "Not monetized"}
+            {listing.monetized ? t("card.monetized") : t("card.notMonetized")}
           </p>
         ) : null}
         <p className="sm" style={{ margin: "0 0 6px" }}>
@@ -118,7 +119,7 @@ export function ListingCard({ listing }: Props) {
               {(s.rating || 0).toFixed(1)} ({s.reviewCount})
             </>
           ) : (
-            <span className="mut">No reviews yet</span>
+            <span className="mut">{t("card.noReviews")}</span>
           )}
         </p>
         <div className="price">{money(listing.price)}</div>

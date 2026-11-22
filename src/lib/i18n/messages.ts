@@ -10,8 +10,11 @@ export type MsgKey =
   | "nav.sell"
   | "nav.chats"
   | "nav.orders"
+  | "nav.deals"
+  | "nav.account"
   | "nav.blog"
   | "nav.login"
+  | "nav.signup"
   | "nav.logout"
   | "nav.admin"
   | "nav.dashboard"
@@ -29,6 +32,56 @@ export type MsgKey =
   | "home.accounts"
   | "home.sellers"
   | "home.all"
+  | "cat.youtube"
+  | "cat.facebook"
+  | "cat.tiktok"
+  | "cat.instagram"
+  | "cat.x"
+  | "cat.ai"
+  | "cat.freelance"
+  | "cat.other"
+  | "card.soldBy"
+  | "card.monetized"
+  | "card.notMonetized"
+  | "card.noReviews"
+  | "card.official"
+  | "card.seller"
+  | "card.listing"
+  | "card.listings"
+  | "chat.fab"
+  | "chat.withEscrow"
+  | "chat.myChats"
+  | "chat.private"
+  | "chat.empty"
+  | "deals.title"
+  | "deals.buying"
+  | "deals.selling"
+  | "deals.inProgress"
+  | "deals.all"
+  | "deals.emptyBuy"
+  | "deals.emptySell"
+  | "deals.browse"
+  | "deals.login"
+  | "deals.item"
+  | "account.login"
+  | "account.edit"
+  | "account.view"
+  | "account.wallet"
+  | "account.walletHint"
+  | "account.deposit"
+  | "account.depositAmount"
+  | "account.depositNote"
+  | "account.applySell"
+  | "account.buyer"
+  | "account.seller"
+  | "account.country"
+  | "account.phone"
+  | "account.bio"
+  | "account.save"
+  | "account.saved"
+  | "account.days"
+  | "account.emailPending"
+  | "listings.freelanceIntro"
   | "home.newest"
   | "home.priceAsc"
   | "home.priceDesc"
@@ -138,8 +191,11 @@ const en: Dict = {
   "nav.sell": "Sell",
   "nav.chats": "Chats",
   "nav.orders": "Orders",
+  "nav.deals": "Deals",
+  "nav.account": "Account",
   "nav.blog": "Blog",
   "nav.login": "Log in",
+  "nav.signup": "Sign up",
   "nav.logout": "Log out",
   "nav.admin": "Admin",
   "nav.dashboard": "Dashboard",
@@ -158,6 +214,58 @@ const en: Dict = {
   "home.accounts": "Accounts",
   "home.sellers": "Sellers",
   "home.all": "All",
+  "cat.youtube": "YouTube",
+  "cat.facebook": "Facebook",
+  "cat.tiktok": "TikTok",
+  "cat.instagram": "Instagram",
+  "cat.x": "X (Twitter)",
+  "cat.ai": "AI Tools",
+  "cat.freelance": "Freelance Services",
+  "cat.other": "Subscriptions & Other",
+  "card.soldBy": "Sold by SocialsFlip",
+  "card.monetized": "Monetized",
+  "card.notMonetized": "Not monetized",
+  "card.noReviews": "No reviews yet",
+  "card.official": "Official store",
+  "card.seller": "Seller",
+  "card.listing": "listing",
+  "card.listings": "listings",
+  "chat.fab": "Chat",
+  "chat.withEscrow": "Chat with Escrow",
+  "chat.myChats": "My chats",
+  "chat.private": "Private chat · deals protected by escrow",
+  "chat.empty": "No chats yet. Open a listing to message a seller, or start an escrow chat below.",
+  "deals.title": "My deals",
+  "deals.buying": "Buying",
+  "deals.selling": "Selling",
+  "deals.inProgress": "In progress",
+  "deals.all": "All deals",
+  "deals.emptyBuy": "No purchases in progress right now.",
+  "deals.emptySell": "No sales in progress right now.",
+  "deals.browse": "Browse listings",
+  "deals.login": "Log in to see the deals you are buying or selling.",
+  "deals.item": "Item",
+  "account.login": "Create an account to keep a profile, a personal wallet, and your deals.",
+  "account.edit": "Edit profile",
+  "account.view": "View profile",
+  "account.wallet": "Wallet",
+  "account.walletHint":
+    "Send USDT to escrow, then submit the amount and transaction hash. Admin credits this wallet after checking the payment.",
+  "account.deposit": "Submit deposit",
+  "account.depositAmount": "Amount (USDT)",
+  "account.depositNote": "Transaction hash or note",
+  "account.applySell": "Apply to sell",
+  "account.buyer": "Buyer",
+  "account.seller": "Seller",
+  "account.country": "Country",
+  "account.phone": "Phone",
+  "account.bio": "Bio",
+  "account.save": "Save profile",
+  "account.saved": "Profile saved.",
+  "account.days": "Days",
+  "account.emailPending": "Email not verified yet",
+  "listings.freelanceIntro":
+    "Freelance services — YouTube editing, Instagram growth, AI setup, and more. Buyers pay escrow; you deliver in chat.",
   "home.newest": "Newest",
   "home.priceAsc": "Price: low → high",
   "home.priceDesc": "Price: high → low",
@@ -278,6 +386,34 @@ const en: Dict = {
 
 /** Partial overrides per locale; missing keys fall back to English. */
 const ko: Partial<Dict> = {
+  "nav.signup": "가입",
+  "listing.yourName": "이름",
+  "listing.yourEmail": "이메일",
+  "help.chatEscrow": "에스크로와 채팅",
+  "help.chatEscrowSub": "판매자 없이 에스크로와만 대화합니다.",
+  "help.startEscrowChat": "에스크로 채팅 시작",
+  "help.firstMessage": "무엇을 도와드릴까요?",
+  "help.messagePlaceholder": "주문 번호나 결제 네트워크를 적어 주세요",
+  "cat.youtube": "유튜브",
+  "cat.facebook": "페이스북",
+  "cat.tiktok": "틱톡",
+  "cat.instagram": "인스타그램",
+  "cat.x": "X (트위터)",
+  "cat.ai": "AI 도구",
+  "cat.freelance": "프리랜스 서비스",
+  "cat.other": "구독 및 기타",
+  "card.soldBy": "SocialsFlip 판매",
+  "card.monetized": "수익화됨",
+  "card.notMonetized": "미수익화",
+  "card.noReviews": "아직 리뷰 없음",
+  "card.official": "공식 스토어",
+  "card.seller": "판매자",
+  "card.listing": "리스팅",
+  "card.listings": "리스팅",
+  "chat.fab": "채팅",
+  "chat.withEscrow": "에스크로와 채팅",
+  "chat.myChats": "내 채팅",
+  "listings.freelanceIntro": "프리랜스 서비스 — 유튜브 편집, 인스타그램 성장, AI 세팅 등. 구매자는 에스크로로 결제하고, 작업은 채팅으로 전달합니다.",
   "nav.home": "홈",
   "nav.listings": "리스팅",
   "nav.services": "프리랜스",
@@ -323,6 +459,34 @@ const ko: Partial<Dict> = {
 };
 
 const ar: Partial<Dict> = {
+  "nav.signup": "إنشاء حساب",
+  "listing.yourName": "اسمك",
+  "listing.yourEmail": "بريدك",
+  "help.chatEscrow": "محادثة مع الضمان",
+  "help.chatEscrowSub": "محادثة مباشرة مع الضمان فقط، بدون البائع.",
+  "help.startEscrowChat": "ابدأ المحادثة مع الضمان",
+  "help.firstMessage": "كيف نساعدك؟",
+  "help.messagePlaceholder": "اشرح المشكلة (رقم الطلب، شبكة الدفع…)",
+  "cat.youtube": "يوتيوب",
+  "cat.facebook": "فيسبوك",
+  "cat.tiktok": "تيك توك",
+  "cat.instagram": "إنستغرام",
+  "cat.x": "إكس (تويتر)",
+  "cat.ai": "أدوات الذكاء الاصطناعي",
+  "cat.freelance": "خدمات العمل الحر",
+  "cat.other": "اشتراكات وأخرى",
+  "card.soldBy": "يبيعها SocialsFlip",
+  "card.monetized": "مُفعّل الربح",
+  "card.notMonetized": "غير مُفعّل الربح",
+  "card.noReviews": "لا توجد مراجعات بعد",
+  "card.official": "المتجر الرسمي",
+  "card.seller": "البائع",
+  "card.listing": "قائمة",
+  "card.listings": "قوائم",
+  "chat.fab": "محادثة",
+  "chat.withEscrow": "محادثة مع الضمان",
+  "chat.myChats": "محادثاتي",
+  "listings.freelanceIntro": "خدمات العمل الحر — مونتاج يوتيوب، نمو إنستغرام، إعداد الذكاء الاصطناعي وغيرها. يدفع المشتري عبر الضمان، والتسليم يتم في المحادثة.",
   "nav.home": "الرئيسية",
   "nav.listings": "القوائم",
   "nav.sellers": "البائعون",
@@ -330,6 +494,19 @@ const ar: Partial<Dict> = {
   "nav.sell": "بيع",
   "nav.chats": "المحادثات",
   "nav.orders": "الطلبات",
+  "nav.deals": "الصفقات",
+  "nav.account": "الحساب",
+  "deals.title": "صفقاتي",
+  "deals.buying": "أشتري",
+  "deals.selling": "أبيع",
+  "deals.emptyBuy": "لا توجد مشتريات جارية الآن.",
+  "deals.browse": "تصفح القوائم",
+  "account.wallet": "المحفظة",
+  "account.edit": "تعديل الملف",
+  "account.applySell": "قدّم للبيع",
+  "account.deposit": "إرسال إيداع",
+  "chat.private": "محادثة خاصة · الصفقات محمية بالضمان",
+  "chat.empty": "لا توجد محادثات بعد. افتح قائمة لمراسلة البائع، أو ابدأ محادثة الضمان.",
   "nav.blog": "المدونة",
   "nav.login": "تسجيل الدخول",
   "nav.logout": "تسجيل الخروج",
@@ -364,6 +541,34 @@ const ar: Partial<Dict> = {
 };
 
 const zh: Partial<Dict> = {
+  "nav.signup": "注册",
+  "listing.yourName": "你的名字",
+  "listing.yourEmail": "你的邮箱",
+  "help.chatEscrow": "与托管客服聊天",
+  "help.chatEscrowSub": "只和托管客服聊，卖家不在这个房间。",
+  "help.startEscrowChat": "开始托管聊天",
+  "help.firstMessage": "需要什么帮助？",
+  "help.messagePlaceholder": "写下问题（订单号、支付网络…）",
+  "cat.youtube": "YouTube",
+  "cat.facebook": "Facebook",
+  "cat.tiktok": "TikTok",
+  "cat.instagram": "Instagram",
+  "cat.x": "X（推特）",
+  "cat.ai": "AI 工具",
+  "cat.freelance": "自由职业服务",
+  "cat.other": "订阅及其他",
+  "card.soldBy": "由 SocialsFlip 出售",
+  "card.monetized": "已变现",
+  "card.notMonetized": "未变现",
+  "card.noReviews": "还没有评价",
+  "card.official": "官方商店",
+  "card.seller": "卖家",
+  "card.listing": "个商品",
+  "card.listings": "个商品",
+  "chat.fab": "聊天",
+  "chat.withEscrow": "与托管客服聊天",
+  "chat.myChats": "我的聊天",
+  "listings.freelanceIntro": "自由职业服务 — YouTube 剪辑、Instagram 增长、AI 搭建等。买家付托管，交付在聊天里完成。",
   "nav.home": "首页",
   "nav.listings": "商品",
   "nav.sellers": "卖家",
@@ -404,6 +609,34 @@ const zh: Partial<Dict> = {
 };
 
 const ja: Partial<Dict> = {
+  "nav.signup": "登録",
+  "listing.yourName": "お名前",
+  "listing.yourEmail": "メール",
+  "help.chatEscrow": "エスクローとチャット",
+  "help.chatEscrowSub": "出品者なしで、エスクローとだけ話します。",
+  "help.startEscrowChat": "エスクローチャットを開始",
+  "help.firstMessage": "何をお手伝いしましょうか？",
+  "help.messagePlaceholder": "内容を書いてください（注文番号、支払いネットワーク…）",
+  "cat.youtube": "YouTube",
+  "cat.facebook": "Facebook",
+  "cat.tiktok": "TikTok",
+  "cat.instagram": "Instagram",
+  "cat.x": "X（ツイッター）",
+  "cat.ai": "AIツール",
+  "cat.freelance": "フリーランスサービス",
+  "cat.other": "サブスクとその他",
+  "card.soldBy": "SocialsFlipが販売",
+  "card.monetized": "収益化済み",
+  "card.notMonetized": "未収益化",
+  "card.noReviews": "まだレビューはありません",
+  "card.official": "公式ストア",
+  "card.seller": "出品者",
+  "card.listing": "件",
+  "card.listings": "件",
+  "chat.fab": "チャット",
+  "chat.withEscrow": "エスクローとチャット",
+  "chat.myChats": "自分のチャット",
+  "listings.freelanceIntro": "フリーランスサービス — YouTube編集、Instagram成長、AI構築など。支払いはエスクロー、納品はチャットです。",
   "nav.home": "ホーム",
   "nav.listings": "出品",
   "nav.sellers": "出品者",
@@ -445,6 +678,34 @@ const ja: Partial<Dict> = {
 };
 
 const ru: Partial<Dict> = {
+  "nav.signup": "Регистрация",
+  "listing.yourName": "Ваше имя",
+  "listing.yourEmail": "Ваш email",
+  "help.chatEscrow": "Чат с эскроу",
+  "help.chatEscrowSub": "Только с эскроу, без продавца.",
+  "help.startEscrowChat": "Начать чат с эскроу",
+  "help.firstMessage": "Чем помочь?",
+  "help.messagePlaceholder": "Опишите вопрос (номер заказа, сеть оплаты…)",
+  "cat.youtube": "YouTube",
+  "cat.facebook": "Facebook",
+  "cat.tiktok": "TikTok",
+  "cat.instagram": "Instagram",
+  "cat.x": "X (Твиттер)",
+  "cat.ai": "ИИ-инструменты",
+  "cat.freelance": "Фриланс-услуги",
+  "cat.other": "Подписки и другое",
+  "card.soldBy": "Продаёт SocialsFlip",
+  "card.monetized": "Монетизирован",
+  "card.notMonetized": "Без монетизации",
+  "card.noReviews": "Отзывов пока нет",
+  "card.official": "Официальный магазин",
+  "card.seller": "Продавец",
+  "card.listing": "объявление",
+  "card.listings": "объявлений",
+  "chat.fab": "Чат",
+  "chat.withEscrow": "Чат с эскроу",
+  "chat.myChats": "Мои чаты",
+  "listings.freelanceIntro": "Фриланс-услуги — монтаж YouTube, рост Instagram, настройка ИИ и другое. Покупатель платит в эскроу, сдача в чате.",
   "nav.home": "Главная",
   "nav.listings": "Объявления",
   "nav.sellers": "Продавцы",
@@ -486,6 +747,34 @@ const ru: Partial<Dict> = {
 };
 
 const fil: Partial<Dict> = {
+  "nav.signup": "Mag-sign up",
+  "listing.yourName": "Pangalan",
+  "listing.yourEmail": "Email",
+  "help.chatEscrow": "Chat sa Escrow",
+  "help.chatEscrowSub": "Diretsong chat sa escrow lang, walang seller.",
+  "help.startEscrowChat": "Simulan ang chat sa escrow",
+  "help.firstMessage": "Paano kami makakatulong?",
+  "help.messagePlaceholder": "Ilarawan ang issue (order #, payment network…)",
+  "cat.youtube": "YouTube",
+  "cat.facebook": "Facebook",
+  "cat.tiktok": "TikTok",
+  "cat.instagram": "Instagram",
+  "cat.x": "X (Twitter)",
+  "cat.ai": "AI Tools",
+  "cat.freelance": "Freelance Services",
+  "cat.other": "Subscriptions at iba",
+  "card.soldBy": "Binebenta ng SocialsFlip",
+  "card.monetized": "Monetized",
+  "card.notMonetized": "Hindi monetized",
+  "card.noReviews": "Wala pang review",
+  "card.official": "Opisyal na tindahan",
+  "card.seller": "Seller",
+  "card.listing": "listing",
+  "card.listings": "listings",
+  "chat.fab": "Chat",
+  "chat.withEscrow": "Chat sa Escrow",
+  "chat.myChats": "Mga chat ko",
+  "listings.freelanceIntro": "Freelance services — YouTube editing, Instagram growth, AI setup, at iba pa. Escrow ang bayad; sa chat ang delivery.",
   "nav.home": "Home",
   "nav.listings": "Mga listing",
   "nav.sellers": "Mga seller",
@@ -527,6 +816,34 @@ const fil: Partial<Dict> = {
 };
 
 const de: Partial<Dict> = {
+  "nav.signup": "Registrieren",
+  "listing.yourName": "Ihr Name",
+  "listing.yourEmail": "Ihre E-Mail",
+  "help.chatEscrow": "Chat mit Escrow",
+  "help.chatEscrowSub": "Nur mit dem Escrow, ohne Verkäufer.",
+  "help.startEscrowChat": "Escrow-Chat starten",
+  "help.firstMessage": "Wobei können wir helfen?",
+  "help.messagePlaceholder": "Problem beschreiben (Bestellnr., Zahlungsnetzwerk…)",
+  "cat.youtube": "YouTube",
+  "cat.facebook": "Facebook",
+  "cat.tiktok": "TikTok",
+  "cat.instagram": "Instagram",
+  "cat.x": "X (Twitter)",
+  "cat.ai": "KI-Tools",
+  "cat.freelance": "Freelance-Dienste",
+  "cat.other": "Abos und mehr",
+  "card.soldBy": "Verkauft von SocialsFlip",
+  "card.monetized": "Monetarisiert",
+  "card.notMonetized": "Nicht monetarisiert",
+  "card.noReviews": "Noch keine Bewertungen",
+  "card.official": "Offizieller Shop",
+  "card.seller": "Verkäufer",
+  "card.listing": "Angebot",
+  "card.listings": "Angebote",
+  "chat.fab": "Chat",
+  "chat.withEscrow": "Chat mit Escrow",
+  "chat.myChats": "Meine Chats",
+  "listings.freelanceIntro": "Freelance-Dienste — YouTube-Schnitt, Instagram-Wachstum, KI-Setup und mehr. Käufer zahlen in Escrow, Lieferung im Chat.",
   "nav.home": "Start",
   "nav.listings": "Angebote",
   "nav.sellers": "Verkäufer",
@@ -568,6 +885,34 @@ const de: Partial<Dict> = {
 };
 
 const fr: Partial<Dict> = {
+  "nav.signup": "Inscription",
+  "listing.yourName": "Votre nom",
+  "listing.yourEmail": "Votre e-mail",
+  "help.chatEscrow": "Chat avec l’escrow",
+  "help.chatEscrowSub": "Discussion directe avec l’escrow, sans le vendeur.",
+  "help.startEscrowChat": "Démarrer le chat escrow",
+  "help.firstMessage": "Comment pouvons-nous aider ?",
+  "help.messagePlaceholder": "Décrivez le problème (n° de commande, réseau…)",
+  "cat.youtube": "YouTube",
+  "cat.facebook": "Facebook",
+  "cat.tiktok": "TikTok",
+  "cat.instagram": "Instagram",
+  "cat.x": "X (Twitter)",
+  "cat.ai": "Outils IA",
+  "cat.freelance": "Services freelance",
+  "cat.other": "Abonnements et autres",
+  "card.soldBy": "Vendu par SocialsFlip",
+  "card.monetized": "Monétisé",
+  "card.notMonetized": "Non monétisé",
+  "card.noReviews": "Pas encore d’avis",
+  "card.official": "Boutique officielle",
+  "card.seller": "Vendeur",
+  "card.listing": "annonce",
+  "card.listings": "annonces",
+  "chat.fab": "Chat",
+  "chat.withEscrow": "Chat avec l’escrow",
+  "chat.myChats": "Mes chats",
+  "listings.freelanceIntro": "Services freelance — montage YouTube, croissance Instagram, setup IA et plus. Paiement en escrow, livraison dans le chat.",
   "nav.home": "Accueil",
   "nav.listings": "Annonces",
   "nav.sellers": "Vendeurs",
@@ -609,6 +954,34 @@ const fr: Partial<Dict> = {
 };
 
 const es: Partial<Dict> = {
+  "nav.signup": "Registrarse",
+  "listing.yourName": "Tu nombre",
+  "listing.yourEmail": "Tu correo",
+  "help.chatEscrow": "Chat con el escrow",
+  "help.chatEscrowSub": "Chat directo solo con el escrow, sin el vendedor.",
+  "help.startEscrowChat": "Empezar chat con el escrow",
+  "help.firstMessage": "¿Cómo podemos ayudar?",
+  "help.messagePlaceholder": "Describe el problema (n.º de pedido, red de pago…)",
+  "cat.youtube": "YouTube",
+  "cat.facebook": "Facebook",
+  "cat.tiktok": "TikTok",
+  "cat.instagram": "Instagram",
+  "cat.x": "X (Twitter)",
+  "cat.ai": "Herramientas de IA",
+  "cat.freelance": "Servicios freelance",
+  "cat.other": "Suscripciones y más",
+  "card.soldBy": "Vendido por SocialsFlip",
+  "card.monetized": "Monetizado",
+  "card.notMonetized": "Sin monetizar",
+  "card.noReviews": "Aún no hay reseñas",
+  "card.official": "Tienda oficial",
+  "card.seller": "Vendedor",
+  "card.listing": "anuncio",
+  "card.listings": "anuncios",
+  "chat.fab": "Chat",
+  "chat.withEscrow": "Chat con el escrow",
+  "chat.myChats": "Mis chats",
+  "listings.freelanceIntro": "Servicios freelance — edición de YouTube, crecimiento de Instagram, setup de IA y más. El comprador paga en escrow y la entrega es por chat.",
   "nav.home": "Inicio",
   "nav.listings": "Anuncios",
   "nav.sellers": "Vendedores",

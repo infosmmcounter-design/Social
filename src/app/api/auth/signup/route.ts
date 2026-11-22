@@ -63,5 +63,7 @@ export async function POST(req: Request) {
   const store = await readStore();
   const user = store.users.find((u) => u.id === userId)!;
   await createSession(user.id, user.role);
-  return NextResponse.json({ user: publicUser(user) });
+  return NextResponse.json({
+    user: publicUser(user, false, { includeWallet: true }),
+  });
 }

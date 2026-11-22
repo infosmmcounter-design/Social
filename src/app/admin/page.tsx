@@ -28,6 +28,7 @@ type Tab =
   | "requests"
   | "reviews"
   | "blog"
+  | "people"
   | "set";
 
 export default function AdminPage() {
@@ -275,10 +276,36 @@ export default function AdminPage() {
     if (user?.role === "admin") refresh().catch((e) => setErr(String(e)));
   }, [user]);
 
+  const [people, setPeople] = useState<
+    {
+      id: number;
+      name: string;
+      email: string;
+      role: string;
+      country: string;
+      verified: boolean;
+      walletBalance: number;
+    }[]
+  >([]);
+  const [deposits, setDeposits] = useState<
+    { id: number; userId: number; amount: number; note: string; status: string }[]
+  >([]);
+  const [walletAmt, setWalletAmt] = useState<Record<number, string>>({});
+
   useEffect(() => {
     setMsg("");
     setErr("");
   }, [tab]);
+
+  useEffect(() => {
+    if (tab !== "people" || user?.role !== "admin") return;
+    api<{ users: typeof people; deposits: typeof deposits }>("/api/admin/wallets")
+      .then((d) => {
+        setPeople(d.users || []);
+        setDeposits(d.deposits || []);
+      })
+      .catch((e) => setErr(e instanceof Error ? e.message : "Failed"));
+  }, [tab, user]);
 
   if (loading || !user) return <p className="sec mut">Loading admin…</p>;
   if (user.role !== "admin") {
@@ -296,6 +323,7 @@ export default function AdminPage() {
     ["dash", "Dashboard"],
     ["apps", "Applications"],
     ["sellers", "Sellers"],
+    ["people", "People & wallets"],
     ["listings", "Listings"],
     ["orders", "Orders"],
     ["created", "Created deals"],
@@ -766,6 +794,151 @@ export default function AdminPage() {
             ) : null}
           </div>
         </>
+      )}
+
+      {tab === "people" && (
+        <div>
+          <h2>Buyer and seller wallets</h2>
+          <p className="sm mut">
+            Approve a deposit to add it to that person’s wallet, or set the balance yourself.
+            Buyers keep a profile here even before they apply to sell.
+          </p>
+          <h3>Pending deposits</h3>
+          {!deposits.filter((d) => d.status === "pending").length ? (
+            <p className="mut">No pending deposits.</p>
+          ) : (
+            deposits
+              .filter((d) => d.status === "pending")
+              .map((d) => (
+                <div key={d.id} className="card" style={{ marginBottom: 8 }}>
+                  <strong>#{d.id}</strong> user {d.userId} · {money(d.amount)}
+                  <p className="sm mut">{d.note}</p>
+                  <div className="row">
+                    <button
+                      className="btn s"
+                      type="button"
+                      onClick={() =>
+                        run("Deposit approved", async () => {
+                          await api("/api/admin/wallets", {
+                            method: "POST",
+                            json: { action: "approve", depositId: d.id },
+                          });
+                          const fresh = await api<{
+                            users: typeof people;
+                            deposits: typeof deposits;
+                          }>("/api/admin/wallets");
+                          setPeople(fresh.users);
+                          setDeposits(fresh.deposits);
+                        })
+                      }
+                    >
+                      Approve
+                    </button>
+                    <button
+                      className="btn s o"
+                      type="button"
+                      onClick={() =>
+                        run("Deposit rejected", async () => {
+                          await api("/api/admin/wallets", {
+                            method: "POST",
+                            json: { action: "reject", depositId: d.id },
+                          });
+                          const fresh = await api<{
+                            users: typeof people;
+                            deposits: typeof deposits;
+                          }>("/api/admin/wallets");
+                          setPeople(fresh.users);
+                          setDeposits(fresh.deposits);
+                        })
+                      }
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))
+          )}
+          <div className="tbl" style={{ marginTop: 16 }}>
+            <table>
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>Wallet</th>
+                  <th>Set balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {people.map((p) => (
+                  <tr key={p.id}>
+                    <td>
+                      {p.name}
+                      <div className="sm mut">{p.email}</div>
+                      {p.verified ? <span className="pill g">Verified</span> : null}
+                    </td>
+                    <td>{p.role}</td>
+                    <td>{money(p.walletBalance)}</td>
+                    <td>
+                      <div className="row">
+                        <input
+                          style={{ width: 90 }}
+                          value={walletAmt[p.id] || ""}
+                          onChange={(e) =>
+                            setWalletAmt({ ...walletAmt, [p.id]: e.target.value })
+                          }
+                          placeholder="0"
+                        />
+                        <button
+                          className="btn s"
+                          type="button"
+                          onClick={() =>
+                            run("Wallet updated", async () => {
+                              await api("/api/admin/wallets", {
+                                method: "POST",
+                                json: {
+                                  action: "set",
+                                  userId: p.id,
+                                  amount: Number(walletAmt[p.id] || 0),
+                                },
+                              });
+                              const fresh = await api<{ users: typeof people }>(
+                                "/api/admin/wallets"
+                              );
+                              setPeople(fresh.users);
+                            })
+                          }
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="btn s o"
+                          type="button"
+                          onClick={() =>
+                            run(p.verified ? "Unverified" : "Verified", async () => {
+                              await api("/api/admin/wallets", {
+                                method: "POST",
+                                json: {
+                                  action: p.verified ? "unverify" : "verify",
+                                  userId: p.id,
+                                },
+                              });
+                              const fresh = await api<{ users: typeof people }>(
+                                "/api/admin/wallets"
+                              );
+                              setPeople(fresh.users);
+                            })
+                          }
+                        >
+                          {p.verified ? "Unverify" : "Verify"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
       {tab === "listings" && (

@@ -42,6 +42,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={jakarta.className}>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('sf_theme')==='dark')document.documentElement.dataset.theme='dark';}catch(e){}",
+          }}
+        />
         <LanguageProvider>
           <AuthProvider>
             <HreflangTags />

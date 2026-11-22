@@ -16,5 +16,7 @@ export async function POST(req: Request) {
   }
 
   await createSession(user.id, user.role);
-  return NextResponse.json({ user: publicUser(user) });
+  return NextResponse.json({
+    user: publicUser(user, false, { includeWallet: true }),
+  });
 }
