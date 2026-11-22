@@ -23,41 +23,20 @@ export function StoreHeader() {
           <BrandLogo size={38} />
           <span className="sp" />
           <LanguageSwitcher compact />
-          <div className="nav-pills" role="navigation" aria-label="Primary">
-            <Link className="nav-pill np-listings" href="/listings">
-              {t("nav.listings")}
-            </Link>
-            <Link
-              className="nav-pill np-services"
-              href="/listings?cat=freelance"
-            >
-              {t("nav.services")}
-            </Link>
-            <Link className="nav-pill np-sellers" href="/?view=sellers">
-              {t("nav.sellers")}
-            </Link>
-            <Link className="nav-pill np-create" href="/create-deal">
-              {t("nav.createDeal")}
-            </Link>
-            <Link className="nav-pill np-sell" href="/apply">
-              {t("nav.sell")}
-            </Link>
-            <Link className="nav-pill np-chats" href="/chats">
-              {t("nav.chats")}
-            </Link>
-            <Link className="nav-pill np-orders" href="/orders">
-              {t("nav.orders")}
-            </Link>
-            <Link className="nav-pill np-blog" href="/blog">
-              {t("nav.blog")}
-            </Link>
-            <Link className="nav-pill np-help" href="/help">
-              {t("nav.help")}
-            </Link>
+          <div className="nav-box" role="navigation" aria-label="Primary">
+            <Link href="/listings">{t("nav.listings")}</Link>
+            <Link href="/listings?cat=freelance">{t("nav.services")}</Link>
+            <Link href="/?view=sellers">{t("nav.sellers")}</Link>
+            <Link href="/create-deal">{t("nav.createDeal")}</Link>
+            <Link href="/apply">{t("nav.sell")}</Link>
+            <Link href="/chats">{t("nav.chats")}</Link>
+            <Link href="/orders">{t("nav.orders")}</Link>
+            <Link href="/blog">{t("nav.blog")}</Link>
+            <Link href="/help">{t("nav.help")}</Link>
           </div>
           {user ? (
             <div className="nav-actions">
-              <Link className="nav-pill np-dash" href={dash}>
+              <Link className="btn s" href={dash}>
                 {user.role === "admin" ? t("nav.admin") : t("nav.dashboard")}
               </Link>
               <button className="btn s o" type="button" onClick={() => logout()}>
