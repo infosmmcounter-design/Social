@@ -158,62 +158,62 @@ a.nav-pill.np-sellers {
 a.nav-pill.np-sellers:hover {
   background: linear-gradient(180deg, #cbd5e1, #94a3b8);
 }
-/* Create deal — simple green button with black side caps */
+/* Create deal — bright green body + clear black side caps */
 a.nav-pill.np-create {
   color: #fff;
-  background:
-    linear-gradient(#16a34a, #16a34a) padding-box,
-    linear-gradient(90deg, #111 0%, #111 12%, #16a34a 12%, #16a34a 88%, #111 88%, #111 100%) border-box;
-  background-color: #16a34a;
   background-image: linear-gradient(
     90deg,
-    #111 0%,
-    #111 10px,
-    #16a34a 10px,
-    #16a34a calc(100% - 10px),
-    #111 calc(100% - 10px),
-    #111 100%
+    #0a0a0a 0%,
+    #0a0a0a 14px,
+    #22c55e 14px,
+    #16a34a 50%,
+    #22c55e calc(100% - 14px),
+    #0a0a0a calc(100% - 14px),
+    #0a0a0a 100%
   );
-  border: 1px solid #14532d;
-  box-shadow: 0 3px 12px rgba(22, 163, 74, 0.32);
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  border: 1px solid #052e16;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
 }
 a.nav-pill.np-create:hover {
   background-image: linear-gradient(
     90deg,
     #000 0%,
-    #000 10px,
-    #15803d 10px,
-    #15803d calc(100% - 10px),
-    #000 calc(100% - 10px),
+    #000 14px,
+    #16a34a 14px,
+    #15803d 50%,
+    #16a34a calc(100% - 14px),
+    #000 calc(100% - 14px),
     #000 100%
   );
   color: #fff;
 }
-/* Sell — same green + black side treatment */
+/* Sell — same green + black sides */
 a.nav-pill.np-sell {
   color: #fff;
   background-image: linear-gradient(
     90deg,
-    #111 0%,
-    #111 10px,
-    #15803d 10px,
-    #15803d calc(100% - 10px),
-    #111 calc(100% - 10px),
-    #111 100%
+    #0a0a0a 0%,
+    #0a0a0a 14px,
+    #22c55e 14px,
+    #15803d 50%,
+    #22c55e calc(100% - 14px),
+    #0a0a0a calc(100% - 14px),
+    #0a0a0a 100%
   );
-  border: 1px solid #14532d;
-  box-shadow: 0 3px 12px rgba(21, 128, 61, 0.3);
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  border: 1px solid #052e16;
+  box-shadow: 0 4px 14px rgba(21, 128, 61, 0.32);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
 }
 a.nav-pill.np-sell:hover {
   background-image: linear-gradient(
     90deg,
     #000 0%,
-    #000 10px,
-    #166534 10px,
-    #166534 calc(100% - 10px),
-    #000 calc(100% - 10px),
+    #000 14px,
+    #16a34a 14px,
+    #166534 50%,
+    #16a34a calc(100% - 14px),
+    #000 calc(100% - 14px),
     #000 100%
   );
   color: #fff;
