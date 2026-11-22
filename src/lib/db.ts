@@ -457,6 +457,7 @@ export function publicUser(
     official: !!u.official,
     joinedAt: u.joinedAt,
     active: u.active,
+    completedDeals: u.completedDeals || 0,
     walletBalance: opts?.includeWallet ? Number(u.walletBalance || 0) : undefined,
     paymentMethods: includePayMethods
       ? (u.paymentMethods || []).filter((m) => m.enabled)
@@ -508,6 +509,9 @@ export function normalizeStore(data: StoreData): StoreData {
     if (typeof u.walletBalance !== "number" || Number.isNaN(u.walletBalance)) {
       u.walletBalance = 0;
     }
+    if (typeof u.completedDeals !== "number") u.completedDeals = 0;
+    if (!u.blockedUserIds) u.blockedUserIds = [];
+    if (!u.blockedEmails) u.blockedEmails = [];
   }
   for (const l of data.listings) {
     if (!l.images) l.images = [];
@@ -650,6 +654,8 @@ export function normalizeStore(data: StoreData): StoreData {
   if (!data.inquiries) data.inquiries = [];
   for (const t of data.inquiries) {
     if (!t.kind) t.kind = "seller";
+    if (!t.hiddenFor) t.hiddenFor = [];
+    if (!t.hiddenEmails) t.hiddenEmails = [];
   }
   for (const r of data.reviews) {
     if (!r.about) r.about = "seller";

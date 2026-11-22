@@ -120,6 +120,7 @@ export async function POST(
           : "Buyer refunded. Escrow closed.",
       };
 
+      const previous = order.status;
       setDealStatus(
         order,
         status,
@@ -127,6 +128,13 @@ export async function POST(
           labels[status] ||
           `Status updated to ${DEAL_STATUS_LABEL[status]}.`
       );
+
+      if (status === "completed" && previous !== "completed") {
+        const sellerUser = data.users.find((u) => u.id === order.sellerId);
+        if (sellerUser) {
+          sellerUser.completedDeals = (sellerUser.completedDeals || 0) + 1;
+        }
+      }
 
       if (status === "funds_held") {
         addSystemMessage(

@@ -56,6 +56,27 @@ export async function POST(
 
       if (!from) throw new Error("Forbidden");
 
+      const otherId =
+        from === "buyer" ? thread.sellerId : thread.buyerId || 0;
+      const other = otherId
+        ? data.users.find((u) => u.id === otherId)
+        : data.users.find(
+            (u) => u.email.toLowerCase() === thread.buyerEmail.toLowerCase()
+          );
+      const me = user ? data.users.find((u) => u.id === user.id) : null;
+      const blocked =
+        (me &&
+          ((other && (me.blockedUserIds || []).includes(other.id)) ||
+            (me.blockedEmails || []).includes(thread.buyerEmail.toLowerCase()) ||
+            (other?.blockedUserIds || []).includes(me.id) ||
+            (other?.blockedEmails || []).includes(
+              (user?.email || guestEmail || "").toLowerCase()
+            ))) ||
+        false;
+      if (blocked && user?.role !== "admin") {
+        throw new Error("This chat is blocked.");
+      }
+
       const msg: ChatMessage = {
         id: Date.now() + Math.floor(Math.random() * 1000),
         from,

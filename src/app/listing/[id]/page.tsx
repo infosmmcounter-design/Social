@@ -14,6 +14,7 @@ import { LocaleLink as Link } from "@/components/LocaleLink";
 import { PublicReview } from "@/components/PublicReview";
 import { QtyPicker } from "@/components/QtyPicker";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
+import { keywordsFor } from "@/lib/i18n/keywords";
 
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -73,6 +74,16 @@ export default function ListingDetailPage() {
         setData(d);
         if (typeof d.feePct === "number") setFeePct(d.feePct);
         if (d.seo?.title) document.title = d.seo.title;
+        const cat = String((d.listing as { cat?: string }).cat || "");
+        if (cat) {
+          let keys = document.querySelector('meta[name="keywords"]');
+          if (!keys) {
+            keys = document.createElement("meta");
+            keys.setAttribute("name", "keywords");
+            document.head.appendChild(keys);
+          }
+          keys.setAttribute("content", keywordsFor(locale, cat).join(", "));
+        }
         if (d.seo?.description) {
           let meta = document.querySelector('meta[name="description"]');
           if (!meta) {

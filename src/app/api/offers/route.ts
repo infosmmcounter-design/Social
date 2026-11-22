@@ -136,18 +136,15 @@ export async function POST(req: Request) {
 
   try {
     await updateStore((data) => {
+      const emailForCreator = creatorEmail || user?.email || "";
+      const outside =
+        !user ||
+        (!!emailForCreator && emailForCreator !== user.email.toLowerCase());
       let creatorId = user?.id ?? 0;
-      if (user && (user.role === "seller" || user.role === "admin")) {
+      if (!outside && user) {
         creatorId = user.id;
-        // promote buyer to seller if needed when creating deals
         const u = data.users.find((x) => x.id === user.id);
         if (u && u.role === "buyer") u.role = "seller";
-      } else if (user) {
-        const u = data.users.find((x) => x.id === user.id);
-        if (u) {
-          if (u.role === "buyer") u.role = "seller";
-          creatorId = u.id;
-        }
       } else {
         const existing = data.users.find((u) => u.email === creatorEmail);
         if (!existing) {
@@ -244,7 +241,7 @@ export async function POST(req: Request) {
     sharePath: `/offer/${offer.token}`,
     tempPassword: createdGuestSeller ? guestTempPassword : null,
     message: createdGuestSeller
-      ? "Deal link created. Save your temp login password to manage this deal later. Buyer pays SocialsFlip escrow — not you."
-      : "Deal link created. Copy and send to your buyer. They pay SocialsFlip escrow — not you directly.",
+      ? "Deal link created for an outside creator. Save the temp password. Admin manages this deal under Created deals. The buyer can pay without an account."
+      : "Deal link created. Copy and send to your buyer. They pay SocialsFlip escrow — not you directly. Admin can open every created deal.",
   });
 }

@@ -338,7 +338,7 @@ export default function AdminPage() {
   ];
 
   return (
-    <section className="sec">
+    <section className="sec admin-shell">
       <div className="row" style={{ justifyContent: "space-between" }}>
         <h1 style={{ fontSize: "2rem", margin: 0 }}>Admin panel</h1>
         <Link className="l" href="/" style={{ color: "var(--a)", fontWeight: 600 }}>

@@ -9,7 +9,7 @@ import { useLang } from "@/components/LanguageProvider";
 import { LocaleLink as Link } from "@/components/LocaleLink";
 import { PublicReview } from "@/components/PublicReview";
 import { api } from "@/lib/api";
-import { stars } from "@/lib/constants";
+import { stars, trustFromRating } from "@/lib/constants";
 
 export default function SellerProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +25,7 @@ export default function SellerProfilePage() {
       rating: number;
       reviewCount: number;
       joinedAt: string;
+      completedDeals?: number;
       avatarUrl?: string;
     };
     listings: {
@@ -104,12 +105,22 @@ export default function SellerProfilePage() {
             {s.reviewCount ? (
               <>
                 <span className="star">{stars(s.rating)}</span>{" "}
-                {s.rating.toFixed(1)} ({s.reviewCount})
+                {s.rating.toFixed(1)} ({s.reviewCount}) · Trust{" "}
+                {trustFromRating(s.rating, s.reviewCount).percent}%
               </>
             ) : (
-              <span className="mut">No reviews yet</span>
+              <span className="mut">New seller · Trust 100%</span>
             )}
+            {s.completedDeals ? ` · ${s.completedDeals} completed deals` : ""}
           </p>
+          <p className="sm mut" style={{ margin: "4px 0 0" }}>
+            Member since {new Date(s.joinedAt).toLocaleDateString()}
+          </p>
+          {s.reviewCount && trustFromRating(s.rating, s.reviewCount).risky ? (
+            <p className="err">
+              Warning: people have not had a good experience with this seller.
+            </p>
+          ) : null}
         </div>
       </div>
       {s.bio ? <p style={{ marginTop: 14 }}>{s.bio}</p> : null}

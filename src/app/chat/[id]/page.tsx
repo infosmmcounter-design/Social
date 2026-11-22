@@ -139,7 +139,7 @@ function ChatInner() {
             SF
           </span>
         ) : null}
-        <div>
+        <div style={{ flex: 1 }}>
           <h1 style={{ fontSize: "1.5rem", margin: 0 }}>
             {isEscrow ? "Chat with Escrow" : `Chat with ${sellerName}`}
             {seller?.verified && !isEscrow ? <VerifiedTick size={18} /> : null}
@@ -149,6 +149,40 @@ function ChatInner() {
             {isAdmin && seller?.dummy ? " · (dummy — reply as seller)" : ""}
           </p>
         </div>
+        {user ? (
+          <div className="row">
+            <button
+              type="button"
+              className="btn s o"
+              onClick={async () => {
+                if (!confirm("Delete this chat from your list?")) return;
+                await api(`/api/inquiries/${id}`, {
+                  method: "POST",
+                  json: { action: "delete", email: emailQ },
+                });
+                window.location.href = "/chats";
+              }}
+            >
+              Delete chat
+            </button>
+            {!isEscrow ? (
+              <button
+                type="button"
+                className="btn s d"
+                onClick={async () => {
+                  if (!confirm(`Block ${isBuyerParty ? sellerName : inquiry.buyerName}?`)) return;
+                  await api(`/api/inquiries/${id}`, {
+                    method: "POST",
+                    json: { action: "block" },
+                  });
+                  setErr("Blocked. New messages from this person are stopped.");
+                }}
+              >
+                Block
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {listing ? (

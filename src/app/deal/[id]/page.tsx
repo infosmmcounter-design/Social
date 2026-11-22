@@ -72,6 +72,7 @@ function DealInner() {
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
   const [now, setNow] = useState(Date.now());
+  const [serviceDeal, setServiceDeal] = useState(false);
 
   const load = useCallback(async () => {
     const q = emailQ ? `&email=${encodeURIComponent(emailQ)}` : "";
@@ -79,10 +80,20 @@ function DealInner() {
       order: Order;
       seller: { name: string; dummy?: boolean; verified?: boolean } | null;
       wallets: { asset: string; network: string; address: string }[];
+      listing?: { cat?: string; listingType?: string; isFreelance?: boolean } | null;
     }>(`/api/orders?id=${id}${q}`);
     setOrder(d.order);
     setSeller(d.seller);
     setWallets(d.wallets || []);
+    const listing = d.listing;
+    setServiceDeal(
+      !!(
+        listing &&
+        (listing.listingType === "service" ||
+          listing.cat === "freelance" ||
+          listing.isFreelance)
+      )
+    );
   }, [id, emailQ]);
 
   useEffect(() => {
@@ -405,7 +416,12 @@ function DealInner() {
         {seller?.name}
         {isAdmin && seller?.dummy ? " (dummy — admin can reply)" : ""}
         <br />
-        <b>Transfer notes:</b> {order.det}
+        <b>
+          {serviceDeal
+            ? "Required info from the seller:"
+            : "Email to transfer ownership:"}
+        </b>{" "}
+        {order.det}
         {order.handleRevealed && order.privateHandle ? (
           <>
             <br />
