@@ -5,5 +5,7 @@ import { publicUser } from "@/lib/db";
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ user: null });
-  return NextResponse.json({ user: publicUser(user) });
+  return NextResponse.json({
+    user: publicUser(user, false, { includeWallet: true }),
+  });
 }

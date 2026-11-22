@@ -216,6 +216,94 @@ html[dir="rtl"] .chat-dock {
   margin: 10px 0 0;
   font-weight: 700;
 }
+.chat-dock-list {
+  max-height: 180px;
+  overflow: auto;
+  margin-bottom: 8px;
+}
+.chat-dock-row {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.account-hero {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  margin-top: 12px;
+  padding: 18px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #1a1a1a, #3a2e12);
+  color: #fff8d6;
+}
+.account-av {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  background: #c9a227;
+  color: #141414;
+}
+.account-hero-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+html[dir="rtl"] .account-hero-actions {
+  margin-left: 0;
+  margin-right: auto;
+}
+.wallet-card {
+  margin-top: 14px;
+}
+.wallet-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+}
+.wallet-list li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+}
+.account-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+.account-stats div {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--s);
+  display: flex;
+  flex-direction: column;
+}
+.deals-empty {
+  margin: 48px auto;
+  max-width: 360px;
+  text-align: center;
+}
+.deals-empty-ic {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--s2);
+  color: var(--ink);
+}
 html[data-theme="dark"] {
   color-scheme: dark;
   --bg: #0f0f0f;

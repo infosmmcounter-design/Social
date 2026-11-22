@@ -108,6 +108,17 @@ export interface User {
   joinedAt: string;
   active: boolean;
   paymentMethods: SellerPaymentMethod[];
+  /** Personal USDT balance. Credited only after admin approves a deposit. */
+  walletBalance?: number;
+}
+
+export interface WalletDeposit {
+  id: number;
+  userId: number;
+  amount: number;
+  note: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
 }
 
 export interface SellerApplication {
@@ -308,6 +319,7 @@ export interface StoreData {
   offers: DealOffer[];
   reviews: Review[];
   posts: BlogPost[];
+  walletDeposits?: WalletDeposit[];
 }
 
 export const CATEGORIES: [Category, string][] = [

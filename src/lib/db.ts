@@ -438,7 +438,7 @@ export function nextId(data: StoreData): number {
 export function publicUser(
   u: User,
   includePayMethods = false,
-  opts?: { revealDummy?: boolean }
+  opts?: { revealDummy?: boolean; includeWallet?: boolean }
 ) {
   return {
     id: u.id,
@@ -457,6 +457,7 @@ export function publicUser(
     official: !!u.official,
     joinedAt: u.joinedAt,
     active: u.active,
+    walletBalance: opts?.includeWallet ? Number(u.walletBalance || 0) : undefined,
     paymentMethods: includePayMethods
       ? (u.paymentMethods || []).filter((m) => m.enabled)
       : undefined,
@@ -500,9 +501,13 @@ export function normalizeStore(data: StoreData): StoreData {
     };
   });
   data.fee = data.settings.fee ?? data.fee ?? 10;
+  if (!data.walletDeposits) data.walletDeposits = [];
   for (const u of data.users) {
     if (!u.paymentMethods) u.paymentMethods = [];
     if (!u.avatarUrl) u.avatarUrl = avatarDataUrl(u.name, u.verified);
+    if (typeof u.walletBalance !== "number" || Number.isNaN(u.walletBalance)) {
+      u.walletBalance = 0;
+    }
   }
   for (const l of data.listings) {
     if (!l.images) l.images = [];

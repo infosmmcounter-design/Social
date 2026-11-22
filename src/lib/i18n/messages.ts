@@ -10,6 +10,8 @@ export type MsgKey =
   | "nav.sell"
   | "nav.chats"
   | "nav.orders"
+  | "nav.deals"
+  | "nav.account"
   | "nav.blog"
   | "nav.login"
   | "nav.signup"
@@ -49,6 +51,36 @@ export type MsgKey =
   | "chat.fab"
   | "chat.withEscrow"
   | "chat.myChats"
+  | "chat.private"
+  | "chat.empty"
+  | "deals.title"
+  | "deals.buying"
+  | "deals.selling"
+  | "deals.inProgress"
+  | "deals.all"
+  | "deals.emptyBuy"
+  | "deals.emptySell"
+  | "deals.browse"
+  | "deals.login"
+  | "deals.item"
+  | "account.login"
+  | "account.edit"
+  | "account.view"
+  | "account.wallet"
+  | "account.walletHint"
+  | "account.deposit"
+  | "account.depositAmount"
+  | "account.depositNote"
+  | "account.applySell"
+  | "account.buyer"
+  | "account.seller"
+  | "account.country"
+  | "account.phone"
+  | "account.bio"
+  | "account.save"
+  | "account.saved"
+  | "account.days"
+  | "account.emailPending"
   | "listings.freelanceIntro"
   | "home.newest"
   | "home.priceAsc"
@@ -159,6 +191,8 @@ const en: Dict = {
   "nav.sell": "Sell",
   "nav.chats": "Chats",
   "nav.orders": "Orders",
+  "nav.deals": "Deals",
+  "nav.account": "Account",
   "nav.blog": "Blog",
   "nav.login": "Log in",
   "nav.signup": "Sign up",
@@ -199,6 +233,37 @@ const en: Dict = {
   "chat.fab": "Chat",
   "chat.withEscrow": "Chat with Escrow",
   "chat.myChats": "My chats",
+  "chat.private": "Private chat · deals protected by escrow",
+  "chat.empty": "No chats yet. Open a listing to message a seller, or start an escrow chat below.",
+  "deals.title": "My deals",
+  "deals.buying": "Buying",
+  "deals.selling": "Selling",
+  "deals.inProgress": "In progress",
+  "deals.all": "All deals",
+  "deals.emptyBuy": "No purchases in progress right now.",
+  "deals.emptySell": "No sales in progress right now.",
+  "deals.browse": "Browse listings",
+  "deals.login": "Log in to see the deals you are buying or selling.",
+  "deals.item": "Item",
+  "account.login": "Create an account to keep a profile, a personal wallet, and your deals.",
+  "account.edit": "Edit profile",
+  "account.view": "View profile",
+  "account.wallet": "Wallet",
+  "account.walletHint":
+    "Send USDT to escrow, then submit the amount and transaction hash. Admin credits this wallet after checking the payment.",
+  "account.deposit": "Submit deposit",
+  "account.depositAmount": "Amount (USDT)",
+  "account.depositNote": "Transaction hash or note",
+  "account.applySell": "Apply to sell",
+  "account.buyer": "Buyer",
+  "account.seller": "Seller",
+  "account.country": "Country",
+  "account.phone": "Phone",
+  "account.bio": "Bio",
+  "account.save": "Save profile",
+  "account.saved": "Profile saved.",
+  "account.days": "Days",
+  "account.emailPending": "Email not verified yet",
   "listings.freelanceIntro":
     "Freelance services — YouTube editing, Instagram growth, AI setup, and more. Buyers pay escrow; you deliver in chat.",
   "home.newest": "Newest",
@@ -429,6 +494,19 @@ const ar: Partial<Dict> = {
   "nav.sell": "بيع",
   "nav.chats": "المحادثات",
   "nav.orders": "الطلبات",
+  "nav.deals": "الصفقات",
+  "nav.account": "الحساب",
+  "deals.title": "صفقاتي",
+  "deals.buying": "أشتري",
+  "deals.selling": "أبيع",
+  "deals.emptyBuy": "لا توجد مشتريات جارية الآن.",
+  "deals.browse": "تصفح القوائم",
+  "account.wallet": "المحفظة",
+  "account.edit": "تعديل الملف",
+  "account.applySell": "قدّم للبيع",
+  "account.deposit": "إرسال إيداع",
+  "chat.private": "محادثة خاصة · الصفقات محمية بالضمان",
+  "chat.empty": "لا توجد محادثات بعد. افتح قائمة لمراسلة البائع، أو ابدأ محادثة الضمان.",
   "nav.blog": "المدونة",
   "nav.login": "تسجيل الدخول",
   "nav.logout": "تسجيل الخروج",

@@ -10,12 +10,7 @@ import { LocaleLink as Link } from "./LocaleLink";
 export function StoreHeader() {
   const { user, logout } = useAuth();
   const { t } = useLang();
-  const dash =
-    user?.role === "admin"
-      ? "/admin"
-      : user?.role === "seller"
-        ? "/dashboard/seller"
-        : "/dashboard/buyer";
+  const dash = user?.role === "admin" ? "/admin" : "/account";
 
   return (
     <header className="sf-header">
@@ -32,7 +27,7 @@ export function StoreHeader() {
             {user ? (
               <>
                 <Link className="btn s" href={dash}>
-                  {user.role === "admin" ? t("nav.admin") : t("nav.dashboard")}
+                  {user.role === "admin" ? t("nav.admin") : t("nav.account")}
                 </Link>
                 <button className="btn s o" type="button" onClick={() => logout()}>
                   {t("nav.logout")}
