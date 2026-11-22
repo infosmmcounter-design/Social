@@ -10,6 +10,8 @@ const PATHS = [
   "/apply",
   "/blog",
   "/orders",
+  "/help",
+  "/privacy",
   "/auth/login",
   "/auth/signup",
 ];

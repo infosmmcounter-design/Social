@@ -65,25 +65,31 @@ export async function POST(req: Request) {
             DUMMY_LISTING_TEMPLATES[(i + j) % DUMMY_LISTING_TEMPLATES.length];
           const lid = nextId(data);
           const title = `${tpl.title} #${lid}`;
-          const isService = tpl.cat === "other";
+          const isFreelance = tpl.cat === "freelance";
+          const isTool = tpl.cat === "other" || tpl.cat === "ai";
           data.listings.push({
             id: lid,
             sellerId: sid,
             title,
             cat: tpl.cat as Category,
             niche: tpl.niche,
-            followers: tpl.followers,
-            monetized: tpl.monetized,
-            teaser: `${tpl.niche} account/service ready for escrow transfer.`,
-            privateHandle: `@dummy_${tpl.cat}_${lid}`,
+            followers: isFreelance ? "" : tpl.followers,
+            monetized: isFreelance ? false : tpl.monetized,
+            teaser: isFreelance
+              ? `${tpl.niche} freelance gig — escrow delivery.`
+              : `${tpl.niche} account/service ready for escrow transfer.`,
+            privateHandle: isFreelance ? "" : `@dummy_${tpl.cat}_${lid}`,
             price: tpl.price + Math.floor(Math.random() * 200),
-            desc: `Realistic demo listing for ${tpl.cat}. Private handle hidden until escrow deal or approved request.`,
+            desc: isFreelance
+              ? `Freelance Services board gig for ${tpl.niche}. Delivered in escrow chat.`
+              : `Realistic demo listing for ${tpl.cat}. Private handle hidden until escrow deal or approved request.`,
             img: listingCoverDataUrl(tpl.cat, title),
             images: [],
-            stock: isService ? 5 + Math.floor(Math.random() * 20) : 1,
-            listingType: isService ? "service" : "account",
-            deliveryDays: isService ? 2 + Math.floor(Math.random() * 5) : 0,
-            revisions: isService ? 1 + Math.floor(Math.random() * 2) : 0,
+            stock: isFreelance ? 9999 : 1,
+            soldCount: isFreelance ? 5 + Math.floor(Math.random() * 80) : 0,
+            listingType: isFreelance ? "service" : isTool ? "tool" : "account",
+            deliveryDays: isFreelance ? 2 + Math.floor(Math.random() * 5) : 0,
+            revisions: isFreelance ? 1 + Math.floor(Math.random() * 2) : 0,
             status: "approved",
             listed: true,
             createdAt: new Date().toISOString(),

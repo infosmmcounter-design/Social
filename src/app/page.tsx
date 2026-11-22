@@ -38,8 +38,6 @@ type Listing = {
   } | null;
 };
 
-type KindFilter = "all" | "account" | "service";
-
 type Seller = {
   id: number;
   name: string;
@@ -62,7 +60,6 @@ export default function HomePage() {
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("");
-  const [kind, setKind] = useState<KindFilter>("all");
   const [sort, setSort] = useState<SortKey>("newest");
   const [view, setView] = useState<ViewMode>("listings");
 
@@ -70,9 +67,9 @@ export default function HomePage() {
     try {
       const params = new URLSearchParams(window.location.search);
       if (params.get("view") === "sellers") setView("sellers");
-      const t = params.get("type");
-      if (t === "service" || t === "freelance") setKind("service");
-      if (t === "account") setKind("account");
+      // Deep-link: /?cat=freelance opens listings filtered to Freelance Services chip
+      const c = params.get("cat");
+      if (c) setCat(c);
     } catch {
       /* ignore */
     }
@@ -88,24 +85,12 @@ export default function HomePage() {
       .catch(() => setSellers([]));
   }, [locale]);
 
-  const byKind = useMemo(() => {
-    if (kind === "service")
-      return listings.filter(
-        (l) => l.isFreelance || l.listingType === "service"
-      );
-    if (kind === "account")
-      return listings.filter(
-        (l) => !l.isFreelance && (l.listingType || "account") !== "service"
-      );
-    return listings;
-  }, [listings, kind]);
-
   const counts = Object.fromEntries(
-    CATEGORIES.map(([k]) => [k, byKind.filter((l) => l.cat === k).length])
+    CATEGORIES.map(([k]) => [k, listings.filter((l) => l.cat === k).length])
   );
 
   const filtered = useMemo(() => {
-    let list = byKind;
+    let list = listings;
     if (cat) list = list.filter((l) => l.cat === cat);
     if (q.trim()) {
       const qq = q.trim().toLowerCase();
@@ -120,7 +105,7 @@ export default function HomePage() {
     else if (sort === "price_desc") list = [...list].sort((a, b) => b.price - a.price);
     else list = [...list].sort((a, b) => b.id - a.id);
     return list;
-  }, [byKind, cat, q, sort]);
+  }, [listings, cat, q, sort]);
 
   return (
     <>
@@ -163,33 +148,10 @@ export default function HomePage() {
           <div className="view-toggle">
             <button
               type="button"
-              className={view === "listings" && kind === "all" ? "on" : ""}
-              onClick={() => {
-                setView("listings");
-                setKind("all");
-              }}
+              className={view === "listings" ? "on" : ""}
+              onClick={() => setView("listings")}
             >
               {t("home.listings")}
-            </button>
-            <button
-              type="button"
-              className={view === "listings" && kind === "account" ? "on" : ""}
-              onClick={() => {
-                setView("listings");
-                setKind("account");
-              }}
-            >
-              {t("home.accounts")}
-            </button>
-            <button
-              type="button"
-              className={view === "listings" && kind === "service" ? "on" : ""}
-              onClick={() => {
-                setView("listings");
-                setKind("service");
-              }}
-            >
-              {t("home.services")}
             </button>
             <button
               type="button"

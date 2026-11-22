@@ -8,9 +8,15 @@ import type {
   ChatMessage,
   DealStatus,
 } from "./types";
-import { DEFAULT_CRYPTO_WALLETS } from "./types";
+import { DEFAULT_CRYPTO_WALLETS, isFreelanceCategory } from "./types";
 import { loadRawStore, saveRawStore, persistenceMode } from "./store-backend";
 import { avatarDataUrl, listingCoverDataUrl } from "./placeholders";
+
+function isFreelanceListing(l: Pick<Listing, "cat" | "listingType">): boolean {
+  return (
+    isFreelanceCategory(l.cat) || (l.listingType || "account") === "service"
+  );
+}
 
 let writeQueue: Promise<unknown> = Promise.resolve();
 
@@ -105,6 +111,7 @@ async function createSeed(): Promise<StoreData> {
       img: listingCoverDataUrl("youtube", "YouTube Gaming 85K"),
       images: [],
       stock: 1,
+      soldCount: 0,
       listingType: "account",
       deliveryDays: 0,
       revisions: 0,
@@ -127,6 +134,7 @@ async function createSeed(): Promise<StoreData> {
       img: listingCoverDataUrl("instagram", "IG Fashion 42K"),
       images: [],
       stock: 1,
+      soldCount: 0,
       listingType: "account",
       deliveryDays: 0,
       revisions: 0,
@@ -134,22 +142,23 @@ async function createSeed(): Promise<StoreData> {
       listed: true,
       createdAt: now,
     },
-    // Official freelance / Fiverr-style gigs
+    // Official board: Freelance Services (same chip row as YT/FB/…)
     {
       id: 12,
       sellerId: 2,
       title: "YouTube Thumbnail Pack (5 designs)",
-      cat: "youtube",
+      cat: "freelance",
       niche: "Thumbnail design",
       followers: "",
       monetized: false,
       teaser: "Click-ready YouTube thumbnails — 5 unique designs, 2 revisions.",
       privateHandle: "",
       price: 49,
-      desc: "Fiverr-style freelance gig: send your video title + niche. You get 5 custom thumbnails (PNG) within the delivery window. Includes 2 free revisions. Escrow-protected.",
-      img: listingCoverDataUrl("youtube", "YT Thumbnails"),
+      desc: "Freelance Services board: send your video title + niche. You get 5 custom thumbnails (PNG) within the delivery window. Includes 2 free revisions. Escrow-protected.",
+      img: listingCoverDataUrl("freelance", "YT Thumbnails"),
       images: [],
-      stock: 50,
+      stock: 9999,
+      soldCount: 48,
       listingType: "service",
       deliveryDays: 2,
       revisions: 2,
@@ -161,17 +170,18 @@ async function createSeed(): Promise<StoreData> {
       id: 13,
       sellerId: 2,
       title: "Instagram Reels Editing (up to 60s)",
-      cat: "instagram",
+      cat: "freelance",
       niche: "Reels editing",
       followers: "",
       monetized: false,
       teaser: "Trendy Reels cut with captions, music sync, and hooks.",
       privateHandle: "",
       price: 35,
-      desc: "Send raw clips. We edit one Reel up to 60s with captions, transitions, and music sync. 1 revision included. Delivered via escrow chat.",
-      img: listingCoverDataUrl("instagram", "Reels Edit"),
+      desc: "Freelance Services board: send raw clips. One Reel up to 60s with captions and music sync. 1 revision. Delivered via escrow chat.",
+      img: listingCoverDataUrl("freelance", "Reels Edit"),
       images: [],
-      stock: 99,
+      stock: 9999,
+      soldCount: 126,
       listingType: "service",
       deliveryDays: 3,
       revisions: 1,
@@ -183,17 +193,18 @@ async function createSeed(): Promise<StoreData> {
       id: 14,
       sellerId: 2,
       title: "AI Content System Setup (ChatGPT + Sheets)",
-      cat: "ai",
+      cat: "freelance",
       niche: "AI content system",
       followers: "",
       monetized: false,
       teaser: "Custom prompt pack + Google Sheet workflow for weekly social posts.",
       privateHandle: "",
       price: 79,
-      desc: "Freelance AI gig: we build a reusable prompt pack and simple Sheet workflow so you can generate platform posts faster. Includes a 20-min walkthrough notes file. 2 revisions.",
-      img: listingCoverDataUrl("ai", "AI Content System"),
+      desc: "Freelance Services board: reusable prompt pack + Sheet workflow. Includes walkthrough notes. 2 revisions.",
+      img: listingCoverDataUrl("freelance", "AI Content System"),
       images: [],
-      stock: 30,
+      stock: 9999,
+      soldCount: 31,
       listingType: "service",
       deliveryDays: 5,
       revisions: 2,
@@ -286,7 +297,8 @@ async function createSeed(): Promise<StoreData> {
         img: listingCoverDataUrl(tpl.cat, title),
         images: [],
         stock: 1 + (j % 3),
-        listingType: tpl.cat === "other" ? "service" : "account",
+        soldCount: 0,
+        listingType: tpl.cat === "other" ? "tool" : "account",
         deliveryDays: 0,
         revisions: 0,
         status: "approved",
@@ -296,10 +308,9 @@ async function createSeed(): Promise<StoreData> {
     }
   }
 
-  // Extra freelance gigs from dummy sellers (Fiverr-style)
+  // Extra gigs on the Freelance Services board from dummy sellers
   const freelanceGigs: {
     sellerIdx: number;
-    cat: Category;
     title: string;
     niche: string;
     price: number;
@@ -308,7 +319,6 @@ async function createSeed(): Promise<StoreData> {
   }[] = [
     {
       sellerIdx: 0,
-      cat: "facebook",
       title: "Facebook Page Management (7 days)",
       niche: "Page management",
       price: 120,
@@ -317,7 +327,6 @@ async function createSeed(): Promise<StoreData> {
     },
     {
       sellerIdx: 1,
-      cat: "tiktok",
       title: "TikTok Growth Strategy Doc",
       niche: "Account growth",
       price: 55,
@@ -326,7 +335,6 @@ async function createSeed(): Promise<StoreData> {
     },
     {
       sellerIdx: 2,
-      cat: "youtube",
       title: "YouTube SEO + Title Pack",
       niche: "Channel growth & SEO",
       price: 65,
@@ -345,17 +353,18 @@ async function createSeed(): Promise<StoreData> {
       id: lid,
       sellerId: seller.id,
       title,
-      cat: g.cat,
+      cat: "freelance",
       niche: g.niche,
       followers: "",
       monetized: false,
-      teaser: `Freelance gig · delivery in ${g.days} days · ${g.revisions} revision(s).`,
+      teaser: `Freelance Services · delivery in ${g.days} days · ${g.revisions} revision(s).`,
       privateHandle: "",
       price: g.price,
-      desc: `Fiverr-style freelance service on ${g.cat}. Work is delivered in the escrow chat after payment is held. Includes ${g.revisions} revision(s).`,
-      img: listingCoverDataUrl(g.cat, title),
+      desc: `Listed on the Freelance Services board. Delivered in escrow chat after payment is held. Includes ${g.revisions} revision(s).`,
+      img: listingCoverDataUrl("freelance", title),
       images: [],
-      stock: 25,
+      stock: 9999,
+      soldCount: 12,
       listingType: "service",
       deliveryDays: g.days,
       revisions: g.revisions,
@@ -498,9 +507,22 @@ export function normalizeStore(data: StoreData): StoreData {
   for (const l of data.listings) {
     if (!l.images) l.images = [];
     if (l.stock === undefined || l.stock === null) l.stock = 1;
-    if (!l.listingType) l.listingType = l.cat === "other" ? "service" : "account";
+    if (l.soldCount === undefined || l.soldCount === null) l.soldCount = 0;
+    if (!l.listingType) {
+      l.listingType =
+        l.cat === "freelance"
+          ? "service"
+          : l.cat === "other"
+            ? "tool"
+            : "account";
+    }
     // Accept legacy alias
     if ((l.listingType as string) === "freelance") l.listingType = "service";
+    if (l.cat === "freelance") l.listingType = "service";
+    if (isFreelanceListing(l)) {
+      // Gigs are not limited by stock inventory
+      if ((l.stock ?? 0) < 100) l.stock = 9999;
+    }
     if (l.deliveryDays === undefined || l.deliveryDays === null) {
       l.deliveryDays = l.listingType === "service" ? 3 : 0;
     }
@@ -509,8 +531,18 @@ export function normalizeStore(data: StoreData): StoreData {
     }
     if (!l.img) l.img = listingCoverDataUrl(l.cat, l.title);
   }
-  // One-time: inject demo freelance gigs if store has none yet
-  if (!data.listings.some((l) => l.listingType === "service")) {
+  // Migrate legacy service gigs that lived under platform cats → Freelance board
+  for (const l of data.listings) {
+    if (
+      l.listingType === "service" &&
+      l.cat !== "freelance" &&
+      l.cat !== "other"
+    ) {
+      l.cat = "freelance";
+    }
+  }
+  // One-time: inject demo freelance gigs if Freelance Services board is empty
+  if (!data.listings.some((l) => l.cat === "freelance")) {
     const ownerId =
       data.users.find((u) => u.official)?.id ||
       data.users.find((u) => u.role === "seller")?.id ||
@@ -520,17 +552,18 @@ export function normalizeStore(data: StoreData): StoreData {
       {
         sellerId: ownerId,
         title: "YouTube Thumbnail Pack (5 designs)",
-        cat: "youtube",
+        cat: "freelance",
         niche: "Thumbnail design",
         followers: "",
         monetized: false,
         teaser: "Click-ready YouTube thumbnails — 5 designs, 2 revisions.",
         privateHandle: "",
         price: 49,
-        desc: "Fiverr-style freelance gig delivered via escrow chat.",
-        img: listingCoverDataUrl("youtube", "YT Thumbnails"),
+        desc: "Freelance Services board — gig delivered via escrow chat.",
+        img: listingCoverDataUrl("freelance", "YT Thumbnails"),
         images: [],
-        stock: 50,
+        stock: 9999,
+        soldCount: 48,
         listingType: "service",
         deliveryDays: 2,
         revisions: 2,
@@ -541,17 +574,18 @@ export function normalizeStore(data: StoreData): StoreData {
       {
         sellerId: ownerId,
         title: "Instagram Reels Editing (up to 60s)",
-        cat: "instagram",
+        cat: "freelance",
         niche: "Reels editing",
         followers: "",
         monetized: false,
         teaser: "Trendy Reels cut with captions and music sync.",
         privateHandle: "",
         price: 35,
-        desc: "Freelance Reels editing gig. 1 revision included.",
-        img: listingCoverDataUrl("instagram", "Reels Edit"),
+        desc: "Freelance Services board — Reels editing. 1 revision included.",
+        img: listingCoverDataUrl("freelance", "Reels Edit"),
         images: [],
-        stock: 99,
+        stock: 9999,
+        soldCount: 126,
         listingType: "service",
         deliveryDays: 3,
         revisions: 1,
@@ -562,17 +596,18 @@ export function normalizeStore(data: StoreData): StoreData {
       {
         sellerId: ownerId,
         title: "AI Content System Setup",
-        cat: "ai",
+        cat: "freelance",
         niche: "AI content system",
         followers: "",
         monetized: false,
         teaser: "Prompt pack + Sheet workflow for weekly posts.",
         privateHandle: "",
         price: 79,
-        desc: "Freelance AI setup gig with 2 revisions.",
-        img: listingCoverDataUrl("ai", "AI Content System"),
+        desc: "Freelance Services board — AI setup gig with 2 revisions.",
+        img: listingCoverDataUrl("freelance", "AI Content System"),
         images: [],
-        stock: 30,
+        stock: 9999,
+        soldCount: 31,
         listingType: "service",
         deliveryDays: 5,
         revisions: 2,
@@ -607,9 +642,90 @@ export function normalizeStore(data: StoreData): StoreData {
     if (o.offerId === undefined) o.offerId = null;
   }
   if (!data.inquiries) data.inquiries = [];
+  for (const t of data.inquiries) {
+    if (!t.kind) t.kind = "seller";
+  }
   for (const r of data.reviews) {
     if (!r.about) r.about = "seller";
     if (r.buyerId === undefined) r.buyerId = null;
+    if (!r.locale) r.locale = "en";
+  }
+  // Demo multilingual public buyer→seller reviews (shown in buyer's language)
+  if (!data.reviews.some((r) => (r.about || "seller") === "seller")) {
+    const sellerId =
+      data.users.find((u) => u.official && u.role === "seller")?.id ||
+      data.users.find((u) => u.role === "seller")?.id ||
+      2;
+    const listingId =
+      data.listings.find((l) => l.sellerId === sellerId && l.listed)?.id ||
+      data.listings[0]?.id ||
+      10;
+    const demos: {
+      stars: number;
+      text: string;
+      who: string;
+      locale: string;
+      date: string;
+    }[] = [
+      {
+        stars: 5,
+        text: "Smooth escrow and fast delivery. Thumbnail pack looked pro.",
+        who: "ja***",
+        locale: "en",
+        date: "2026-10-12",
+      },
+      {
+        stars: 5,
+        text: "거래가 안전했고 작업 속도가 빨랐어요. 추천합니다!",
+        who: "민***",
+        locale: "ko",
+        date: "2026-10-18",
+      },
+      {
+        stars: 4,
+        text: "خدمة ممتازة والدفع عبر الضمان أعطاني ثقة. سأشتري مرة أخرى.",
+        who: "أح***",
+        locale: "ar",
+        date: "2026-10-22",
+      },
+      {
+        stars: 5,
+        text: "Escrow klar und Lieferung pünktlich. Gerne wieder.",
+        who: "ma***",
+        locale: "de",
+        date: "2026-11-02",
+      },
+      {
+        stars: 5,
+        text: "Pago en escrow sin problemas. El gig de Reels quedó perfecto.",
+        who: "lu***",
+        locale: "es",
+        date: "2026-11-08",
+      },
+    ];
+    for (const d of demos) {
+      data.reviews.push({
+        id: nextId(data),
+        orderId: 0,
+        listingId,
+        sellerId,
+        about: "seller",
+        buyerId: null,
+        stars: d.stars,
+        text: d.text,
+        who: d.who,
+        date: d.date,
+        locale: d.locale,
+      });
+    }
+    const seller = data.users.find((u) => u.id === sellerId);
+    if (seller) {
+      const revs = data.reviews.filter(
+        (r) => r.sellerId === sellerId && (r.about || "seller") === "seller"
+      );
+      seller.reviewCount = revs.length;
+      seller.rating = revs.reduce((a, r) => a + r.stars, 0) / revs.length;
+    }
   }
   return data;
 }
@@ -621,6 +737,7 @@ export function matchWalletAsset(coin: string): "USDT_TRC20" | "USDT_BEP20" {
 }
 
 export function publicListing(l: Listing, revealHandle = false) {
+  const freelance = isFreelanceListing(l);
   return {
     id: l.id,
     sellerId: l.sellerId,
@@ -634,12 +751,13 @@ export function publicListing(l: Listing, revealHandle = false) {
     desc: l.desc,
     img: l.img || listingCoverDataUrl(l.cat, l.title),
     images: l.images || [],
-    stock: l.stock ?? 1,
+    stock: freelance ? undefined : l.stock ?? 1,
+    soldCount: l.soldCount ?? 0,
     listingType: l.listingType || "account",
-    deliveryDays: l.deliveryDays ?? (l.listingType === "service" ? 3 : 0),
-    revisions: l.revisions ?? (l.listingType === "service" ? 1 : 0),
-    isFreelance: (l.listingType || "account") === "service",
-    soldOut: (l.stock ?? 1) <= 0,
+    deliveryDays: l.deliveryDays ?? (freelance ? 3 : 0),
+    revisions: l.revisions ?? (freelance ? 1 : 0),
+    isFreelance: freelance,
+    soldOut: freelance ? false : (l.stock ?? 1) <= 0,
     status: l.status,
     listed: l.listed,
     createdAt: l.createdAt,
@@ -647,6 +765,8 @@ export function publicListing(l: Listing, revealHandle = false) {
     handleHidden: !!l.privateHandle && !revealHandle,
   };
 }
+
+export { isFreelanceListing };
 
 export function calcTotals(price: number, seller: User, feePct: number) {
   const fee = seller.official ? 0 : Math.round(price * feePct) / 100;
@@ -747,10 +867,26 @@ export const DUMMY_LISTING_TEMPLATES: {
   },
   {
     cat: "other",
-    title: "Social Growth Service Pack",
-    niche: "Services",
+    title: "Canva Pro Shared Seat (30 days)",
+    niche: "Subscriptions",
     followers: "N/A",
     price: 199,
+    monetized: false,
+  },
+  {
+    cat: "freelance",
+    title: "YouTube Thumbnail Pack (5 designs)",
+    niche: "Thumbnail design",
+    followers: "",
+    price: 49,
+    monetized: false,
+  },
+  {
+    cat: "freelance",
+    title: "Instagram Reels Editing (up to 60s)",
+    niche: "Reels editing",
+    followers: "",
+    price: 35,
     monetized: false,
   },
 ];

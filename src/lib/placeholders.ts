@@ -8,6 +8,8 @@ const PALETTE: Record<string, [string, string]> = {
   telegram: ["#1F1F1F", "#0A0A0A"],
   discord: ["#242424", "#101010"],
   other: ["#C9971A", "#8A6A10"],
+  freelance: ["#78350F", "#451A03"],
+  ai: ["#1E1B4B", "#0F0A2A"],
 };
 
 export function listingCoverDataUrl(cat: string, title = ""): string {

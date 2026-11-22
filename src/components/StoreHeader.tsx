@@ -23,41 +23,28 @@ export function StoreHeader() {
           <BrandLogo size={38} />
           <span className="sp" />
           <LanguageSwitcher compact />
-          <Link className="l" href="/listings">
-            {t("nav.listings")}
-          </Link>
-          <Link className="l" href="/listings?type=service">
-            {t("nav.services")}
-          </Link>
-          <Link className="l" href="/?view=sellers">
-            {t("nav.sellers")}
-          </Link>
-          <Link className="l" href="/create-deal">
-            {t("nav.createDeal")}
-          </Link>
-          <Link className="l" href="/apply">
-            {t("nav.sell")}
-          </Link>
-          <Link className="l" href="/chats">
-            {t("nav.chats")}
-          </Link>
-          <Link className="l" href="/orders">
-            {t("nav.orders")}
-          </Link>
-          <Link className="l" href="/blog">
-            {t("nav.blog")}
-          </Link>
+          <div className="nav-box" role="navigation" aria-label="Primary">
+            <Link href="/listings">{t("nav.listings")}</Link>
+            <Link href="/listings?cat=freelance">{t("nav.services")}</Link>
+            <Link href="/?view=sellers">{t("nav.sellers")}</Link>
+            <Link href="/create-deal">{t("nav.createDeal")}</Link>
+            <Link href="/apply">{t("nav.sell")}</Link>
+            <Link href="/chats">{t("nav.chats")}</Link>
+            <Link href="/orders">{t("nav.orders")}</Link>
+            <Link href="/blog">{t("nav.blog")}</Link>
+            <Link href="/help">{t("nav.help")}</Link>
+          </div>
           {user ? (
-            <>
-              <Link className="l" href={dash}>
+            <div className="nav-actions">
+              <Link className="btn s" href={dash}>
                 {user.role === "admin" ? t("nav.admin") : t("nav.dashboard")}
               </Link>
-              <button className="btn s o" onClick={() => logout()}>
+              <button className="btn s o" type="button" onClick={() => logout()}>
                 {t("nav.logout")}
               </button>
-            </>
+            </div>
           ) : (
-            <Link className="btn s" href="/auth/login">
+            <Link className="btn s nav-login" href="/auth/login">
               {t("nav.login")}
             </Link>
           )}

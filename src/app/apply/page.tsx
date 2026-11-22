@@ -83,7 +83,7 @@ export default function ApplyPage() {
         <h3 style={{ marginTop: 18 }}>First service to list</h3>
         <label>Title</label>
         <input value={form.title} onChange={(e) => set("title", e.target.value)} required />
-        <label>Platform</label>
+        <label>Category board</label>
         <select value={form.cat} onChange={(e) => set("cat", e.target.value)}>
           {CATEGORIES.map(([k, n]) => (
             <option key={k} value={k}>
@@ -91,6 +91,10 @@ export default function ApplyPage() {
             </option>
           ))}
         </select>
+        <p className="sm mut">
+          Pick <b>Freelance Services</b> to list a gig (editing, growth, AI
+          work…). Other boards are for accounts &amp; tools.
+        </p>
         <label>Your price (USD)</label>
         <input
           type="number"

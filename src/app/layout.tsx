@@ -5,6 +5,7 @@ import { LanguageProvider } from "@/components/LanguageProvider";
 import { DocumentTitle } from "@/components/DocumentTitle";
 import { HreflangTags } from "@/components/HreflangTags";
 import { StoreHeader } from "@/components/StoreHeader";
+import { StoreFooter } from "@/components/StoreFooter";
 import { BottomNav } from "@/components/BottomNav";
 import { hreflangAlternates, siteOrigin } from "@/lib/i18n/seo";
 import "./globals.css";
@@ -47,6 +48,7 @@ export default function RootLayout({
             <DocumentTitle />
             <StoreHeader />
             <main className="w page-pad">{children}</main>
+            <StoreFooter />
             <BottomNav />
           </AuthProvider>
         </LanguageProvider>

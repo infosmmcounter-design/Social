@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { updateStore, nextId, readStore } from "@/lib/db";
 import { getCurrentUser, requireUser } from "@/lib/auth";
+import { isLocale, DEFAULT_LOCALE } from "@/lib/i18n/locales";
 
 export async function GET() {
   const store = await readStore();
@@ -13,6 +14,8 @@ export async function POST(req: Request) {
   const stars = Number(body.stars);
   const text = String(body.text || "").trim();
   const about = body.about === "buyer" ? "buyer" : "seller";
+  const rawLocale = String(body.locale || "").toLowerCase();
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE;
   const user = await getCurrentUser();
 
   if (!orderId || !stars || !text)
@@ -46,6 +49,7 @@ export async function POST(req: Request) {
           )
         )
           throw new Error("Seller already reviewed for this deal");
+        // Public review stays in the buyer's selected language (not auto-translated)
         data.reviews.push({
           id: nextId(data),
           orderId,
@@ -57,6 +61,7 @@ export async function POST(req: Request) {
           text,
           who: email.slice(0, 2) + "***",
           date: new Date().toISOString().slice(0, 10),
+          locale,
         });
         const seller = data.users.find((u) => u.id === order.sellerId);
         if (seller) {
@@ -90,6 +95,7 @@ export async function POST(req: Request) {
           text,
           who: user.name || "Seller",
           date: new Date().toISOString().slice(0, 10),
+          locale,
         });
         if (order.buyerId) {
           const buyer = data.users.find((u) => u.id === order.buyerId);

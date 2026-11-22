@@ -7,6 +7,7 @@ import {
   addSystemMessage,
   publicUser,
   matchWalletAsset,
+  isFreelanceListing,
 } from "@/lib/db";
 import { getCurrentUser, requireUser } from "@/lib/auth";
 
@@ -122,7 +123,9 @@ export async function POST(req: Request) {
           (l.listed || !!offer)
       );
       if (!listing) throw new Error("Listing / deal not available.");
-      if ((listing.stock ?? 1) <= 0) throw new Error("This deal is sold out.");
+      const freelance = isFreelanceListing(listing);
+      if (!freelance && (listing.stock ?? 1) <= 0)
+        throw new Error("This deal is sold out.");
       if (offer && offer.status !== "open")
         throw new Error("This deal link was already used or closed.");
       const seller = data.users.find((u) => u.id === listing.sellerId);
@@ -164,7 +167,7 @@ export async function POST(req: Request) {
         paymentWindowMins: windowMins,
         deliveryDueAt: null,
         deliveryWindowHours: data.settings.deliveryWindowHours || 24,
-        stockReserved: true,
+        stockReserved: !freelance,
         deliveredAt: null,
         price: totals.price,
         fee: totals.fee,
@@ -176,12 +179,20 @@ export async function POST(req: Request) {
         createdAt: new Date().toISOString(),
       };
 
-      listing.stock = Math.max(0, (listing.stock ?? 1) - 1);
+      listing.soldCount = (listing.soldCount ?? 0) + 1;
+      if (!freelance) {
+        listing.stock = Math.max(0, (listing.stock ?? 1) - 1);
+      }
       if (offer) {
-        offer.stock = Math.max(0, (offer.stock ?? 1) - 1);
+        if (!freelance) {
+          offer.stock = Math.max(0, (offer.stock ?? 1) - 1);
+          offer.status =
+            offer.stock <= 0 || listing.stock <= 0 ? "ordered" : "open";
+        } else {
+          // Freelance gigs stay open for more customers
+          offer.status = "open";
+        }
         offer.orderId = orderId;
-        // Keep link open while stock remains; close after last unit
-        offer.status = offer.stock <= 0 || listing.stock <= 0 ? "ordered" : "open";
       }
 
       addSystemMessage(
@@ -195,7 +206,9 @@ export async function POST(req: Request) {
       addSystemMessage(order, paymentInstructions);
       addSystemMessage(
         order,
-        `Stock reserved. Available stock now: ${listing.stock}. After funds are held, creator has ${data.settings.deliveryWindowHours || 24}h to deliver.`
+        freelance
+          ? `Freelance gig ordered (${listing.soldCount} total sold). After funds are held, freelancers have ${data.settings.deliveryWindowHours || 24}h to deliver.`
+          : `Stock reserved. Available stock now: ${listing.stock}. After funds are held, creator has ${data.settings.deliveryWindowHours || 24}h to deliver.`
       );
 
       data.orders.push(order);

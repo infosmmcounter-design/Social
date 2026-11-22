@@ -38,9 +38,6 @@ export default function LoginPage() {
   return (
     <section className="sec" style={{ maxWidth: 420 }}>
       <h1 style={{ fontSize: "2rem" }}>Log in</h1>
-      <p className="mut sm">
-        Demo: admin@socialsflip.com / admin123 · buyer@demo.com / buyer123
-      </p>
       <form className="card" onSubmit={submit}>
         <label>Email</label>
         <input
