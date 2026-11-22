@@ -1,22 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useLang } from "./LanguageProvider";
 import { LocaleLink as Link } from "./LocaleLink";
-import { StartEscrowChat } from "./StartEscrowChat";
-import { useAuth } from "./AuthProvider";
-import { api } from "@/lib/api";
+import { OPEN_CHAT_EVENT } from "./ChatDock";
 import { stripLocalePrefix } from "@/lib/i18n/locale-path";
 import type { MsgKey } from "@/lib/i18n/messages";
-
-type ChatRow = {
-  id: number;
-  kind?: string;
-  subject: string;
-  sellerName?: string;
-  lastMsg?: { text: string } | null;
-};
 
 const LEFT: { href: string; labelKey: MsgKey; d: string }[] = [
   {
@@ -30,21 +19,10 @@ export function BottomNav() {
   const rawPath = usePathname() || "/";
   const path = stripLocalePrefix(rawPath).path;
   const { t } = useLang();
-  const { user } = useAuth();
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chats, setChats] = useState<ChatRow[]>([]);
-
-  useEffect(() => {
-    if (!chatOpen) return;
-    const q = user?.role === "admin" ? "?scope=admin" : "";
-    api<{ inquiries: ChatRow[] }>(`/api/inquiries${q}`)
-      .then((d) => setChats(d.inquiries || []))
-      .catch(() => setChats([]));
-  }, [chatOpen, user]);
 
   if (path.startsWith("/admin") || rawPath.includes("/admin")) return null;
 
-  const chatOn = chatOpen || path.startsWith("/chat") || path.startsWith("/chats") || path.startsWith("/help");
+  const chatOn = path.startsWith("/chat") || path.startsWith("/chats") || path.startsWith("/help");
 
   function link(n: { href: string; labelKey: MsgKey; d: string }, sell = false) {
     const on =
@@ -63,60 +41,12 @@ export function BottomNav() {
 
   return (
     <>
-      {chatOpen ? (
-        <div className="chat-dock" role="dialog" aria-label={t("nav.chats")}>
-          <div className="chat-dock-panel">
-            <div className="chat-dock-head">
-              <div>
-                <strong>{t("nav.chats")}</strong>
-                <p className="sm mut" style={{ margin: 0 }}>
-                  {t("chat.private")}
-                </p>
-              </div>
-              <button type="button" className="chat-dock-x" onClick={() => setChatOpen(false)} aria-label="Close">
-                ×
-              </button>
-            </div>
-            <div className="chat-dock-list">
-              {chats.length ? (
-                chats.slice(0, 6).map((c) => (
-                  <Link
-                    key={c.id}
-                    href={`/chat/${c.id}`}
-                    className="chat-dock-row"
-                    onClick={() => setChatOpen(false)}
-                  >
-                    <strong>{c.kind === "escrow" ? t("chat.withEscrow") : c.sellerName || c.subject}</strong>
-                    <span className="sm mut">
-                      {c.lastMsg?.text || c.subject}
-                    </span>
-                  </Link>
-                ))
-              ) : (
-                <p className="sm mut" style={{ margin: "8px 0 12px" }}>
-                  {t("chat.empty")}
-                </p>
-              )}
-            </div>
-            <StartEscrowChat compact />
-            <p className="sm chat-dock-links">
-              <Link href="/chats" onClick={() => setChatOpen(false)}>
-                {t("chat.myChats")}
-              </Link>
-              <Link href="/help" onClick={() => setChatOpen(false)}>
-                {t("nav.help")}
-              </Link>
-            </p>
-          </div>
-        </div>
-      ) : null}
       <nav className="bn" aria-label="Main">
         {LEFT.map((n) => link(n))}
         <button
           type="button"
           className={`bn-item ${chatOn ? "on" : ""}`}
-          aria-expanded={chatOpen}
-          onClick={() => setChatOpen((v) => !v)}
+          onClick={() => window.dispatchEvent(new Event(OPEN_CHAT_EVENT))}
         >
           <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden>
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
