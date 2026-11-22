@@ -8,7 +8,7 @@ import { useLang } from "./LanguageProvider";
 import { LocaleLink as Link } from "./LocaleLink";
 
 export function StoreHeader() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { t } = useLang();
   const dash = user?.role === "admin" ? "/admin" : "/account";
 
@@ -29,9 +29,6 @@ export function StoreHeader() {
                 <Link className="btn s" href={dash}>
                   {user.role === "admin" ? t("nav.admin") : t("nav.account")}
                 </Link>
-                <button className="btn s o" type="button" onClick={() => logout()}>
-                  {t("nav.logout")}
-                </button>
               </>
             ) : (
               <>

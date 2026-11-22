@@ -68,31 +68,30 @@ export function BrandLogo({
           strokeWidth="1.5"
         />
 
-        {/* Top flip arrow → */}
+        <text
+          x="8"
+          y="26"
+          fill={`url(#${gGold})`}
+          fontSize="16"
+          fontWeight="700"
+          fontFamily="Plus Jakarta Sans, sans-serif"
+        >
+          SF
+        </text>
+        {/* Handshake: a deal / flip between two sides */}
         <path
-          d="M17 23.5h24.5L35.2 17"
+          d="M14 40c2-3 4-4 6.2-4h3.2l2.2 2.2 2.2-2.2h3.2c2.2 0 4.2 1 6.2 4"
           stroke={`url(#${gGold})`}
-          strokeWidth="3.4"
+          strokeWidth="2.4"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        {/* Bottom flip arrow ← */}
         <path
-          d="M47 40.5H22.5L28.8 47"
+          d="M22.5 38.2l3.2 3.4 3.3-2.2 3.3 2.2 3.2-3.4"
           stroke={`url(#${gGold})`}
-          strokeWidth="3.4"
+          strokeWidth="2.2"
           strokeLinecap="round"
           strokeLinejoin="round"
-        />
-
-        {/* SF — vector paths (no ambiguous letter shapes) */}
-        <path
-          fill={`url(#${gGold})`}
-          d="M18.2 33.1c0-2.35 1.95-3.85 4.85-3.85 1.7 0 3.05.45 4.05 1.25l-1.2 1.65c-.7-.55-1.6-.9-2.7-.9-1.35 0-2.15.65-2.15 1.65 0 .85.55 1.35 2.4 1.75l1.05.25c2.85.65 4.25 1.85 4.25 3.95 0 2.5-2.05 4.15-5.15 4.15-2.05 0-3.7-.65-4.75-1.8l1.3-1.55c.75.85 1.85 1.3 3.2 1.3 1.45 0 2.3-.7 2.3-1.7 0-.85-.55-1.35-2.45-1.8l-1.05-.25c-2.95-.7-4.4-1.9-4.4-4.05Z"
-        />
-        <path
-          fill={`url(#${gGold})`}
-          d="M30.6 29.4h3.55v5.35h5.1V29.4H42.8v12.3h-3.55v-5.05h-5.1v5.05H30.6V29.4Z"
         />
       </svg>
       {showWord ? (

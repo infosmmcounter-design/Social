@@ -60,7 +60,7 @@ function ChatInner() {
   }, [load]);
 
   useEffect(() => {
-    const t = setInterval(() => load().catch(() => undefined), 8000);
+    const t = setInterval(() => load().catch(() => undefined), 4000);
     return () => clearInterval(t);
   }, [load]);
 

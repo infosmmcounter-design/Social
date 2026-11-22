@@ -11,6 +11,7 @@ import { LocaleLink as Link } from "@/components/LocaleLink";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
 import { CatIcon } from "@/components/Icons";
 import { VerifiedTick } from "@/components/VerifiedTick";
+import { QtyPicker } from "@/components/QtyPicker";
 
 export default function OfferPage() {
   const { token } = useParams<{ token: string }>();
@@ -50,6 +51,7 @@ export default function OfferPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [det, setDet] = useState("");
+  const [qty, setQty] = useState(1);
   const [coin, setCoin] = useState("USDT (TRC20)");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -74,14 +76,19 @@ export default function OfferPage() {
 
   const { offer, listing, creator, settings } = data;
   const catName = CATEGORIES.find((c) => c[0] === offer.cat)?.[1] || offer.cat;
-  const fee = Math.round(offer.price * (settings.fee || 10)) / 100;
-  const total = offer.price + fee;
   const freelance = !!(
     offer.cat === "freelance" ||
     (listing as { isFreelance?: boolean; listingType?: string } | null)
       ?.isFreelance ||
     (listing as { listingType?: string } | null)?.listingType === "service"
   );
+  const available = freelance
+    ? null
+    : Math.max(0, Math.floor(listing?.stock ?? offer.stock ?? 1));
+  const qtyOver = available !== null && qty > available;
+  const line = Math.round(offer.price * qty * 100) / 100;
+  const fee = Math.round(line * (settings.fee || 10)) / 100;
+  const total = line + fee;
   const soldOut =
     !freelance &&
     (offer.status !== "open" ||
@@ -91,6 +98,10 @@ export default function OfferPage() {
     (listing as { soldCount?: number } | null)?.soldCount ?? 0;
 
   async function placeOrder() {
+    if (qtyOver) {
+      setErr(t("listing.qtyOver"));
+      return;
+    }
     setErr("");
     setBusy(true);
     try {
@@ -102,6 +113,7 @@ export default function OfferPage() {
           email,
           name,
           det,
+          qty,
           coin,
         },
       });
@@ -237,6 +249,18 @@ export default function OfferPage() {
           onChange={(e) => setDet(e.target.value)}
           placeholder="Email to receive ownership"
         />
+        <QtyPicker
+          value={qty}
+          onChange={setQty}
+          max={available}
+          label={t("listing.quantity")}
+          overText={t("listing.qtyOver")}
+          availableText={
+            available === null
+              ? undefined
+              : `${available} ${t("common.available")}`
+          }
+        />
         <label>Pay with</label>
         <select value={coin} onChange={(e) => setCoin(e.target.value)}>
           <option value="USDT (TRC20)">USDT (TRC20) — Tron</option>
@@ -245,8 +269,10 @@ export default function OfferPage() {
 
         <div className="sum" style={{ marginTop: 12 }}>
           <div>
-            <span>{t("common.price")}</span>
-            <span>{money(offer.price)}</span>
+            <span>
+              {t("common.price")} · {money(offer.price)} {t("listing.each")} × {qty}
+            </span>
+            <span>{money(line)}</span>
           </div>
           <div>
             <span>{t("common.escrowFee")}</span>
@@ -262,7 +288,7 @@ export default function OfferPage() {
         <button
           className="btn"
           style={{ width: "100%", marginTop: 10 }}
-          disabled={busy || soldOut || offer.status !== "open"}
+          disabled={busy || soldOut || qtyOver || offer.status !== "open"}
           onClick={placeOrder}
         >
           {busy ? t("listing.opening") : t("offer.payEscrow")}

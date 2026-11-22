@@ -72,7 +72,9 @@ export async function POST(req: Request) {
         rating: 0,
         reviewCount: 0,
         dummy,
-        joinedAt: new Date().toISOString(),
+        joinedAt: body.joinedAt
+          ? new Date(String(body.joinedAt)).toISOString()
+          : new Date().toISOString(),
         active: true,
         paymentMethods: [],
       });

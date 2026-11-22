@@ -90,16 +90,19 @@ export async function POST(req: Request) {
     .toLowerCase();
   const buyerName = String(body.name || "Guest Buyer").trim();
   const det = String(body.det || "").trim();
-  const coin = String(body.coin || "USDT (TRC20)");
+  const qty = Math.max(1, Math.floor(Number(body.qty) || 1));
+  const payWith = String(body.payWith || "");
+  const coin =
+    payWith === "wallet" ? "Wallet balance" : String(body.coin || "USDT (TRC20)");
 
-  if ((!listingId && !offerToken) || !buyerEmail || !det) {
+  if ((!listingId && !offerToken) || !buyerEmail) {
     return NextResponse.json(
-      { error: "Email, transfer details and listing/deal link are required." },
+      { error: "Email and a listing or deal link are required." },
       { status: 400 }
     );
   }
 
-  if (!/USDT\s*\((TRC20|BEP20)\)/i.test(coin)) {
+  if (payWith !== "wallet" && !/USDT\s*\((TRC20|BEP20)\)/i.test(coin)) {
     return NextResponse.json(
       { error: "Only USDT TRC20 or USDT BEP20 is accepted." },
       { status: 400 }
@@ -124,14 +127,45 @@ export async function POST(req: Request) {
       );
       if (!listing) throw new Error("Listing / deal not available.");
       const freelance = isFreelanceListing(listing);
-      if (!freelance && (listing.stock ?? 1) <= 0)
+      const available = freelance
+        ? Number.POSITIVE_INFINITY
+        : Math.max(
+            0,
+            Math.min(
+              listing.stock ?? 1,
+              offer ? offer.stock ?? listing.stock ?? 1 : listing.stock ?? 1
+            )
+          );
+      if (!freelance && available <= 0)
         throw new Error("This deal is sold out.");
+      if (!freelance && qty > available) {
+        throw new Error(
+          `You are selecting more than the available stock (${available}).`
+        );
+      }
       if (offer && offer.status !== "open")
         throw new Error("This deal link was already used or closed.");
       const seller = data.users.find((u) => u.id === listing.sellerId);
       if (!seller) throw new Error("Deal creator / seller not found.");
+      if (!det) {
+        throw new Error(
+          freelance
+            ? "Add the details the seller needs for this service."
+            : "Add the email or info needed to transfer the account."
+        );
+      }
 
-      const totals = calcTotals(listing.price, seller, data.fee);
+      const linePrice =
+        Math.round(listing.price * qty * 100) / 100;
+      const totals = calcTotals(linePrice, seller, data.fee);
+      const useWallet = payWith === "wallet";
+      if (useWallet) {
+        if (!user) throw new Error("Log in to pay with wallet balance.");
+        const bal = Number(user && data.users.find((u) => u.id === user.id)?.walletBalance || 0);
+        if (bal < totals.total) {
+          throw new Error("Not enough wallet balance. Deposit USDT first.");
+        }
+      }
       const asset = matchWalletAsset(coin);
       const wallet = data.settings.cryptoWallets.find(
         (w) => w.enabled && w.asset === asset
@@ -142,7 +176,9 @@ export async function POST(req: Request) {
       const now = Date.now();
       const paymentDueAt = new Date(now + windowMins * 60_000).toISOString();
 
-      const paymentInstructions = wallet?.address
+      const paymentInstructions = useWallet
+        ? `Paid ${totals.total.toFixed(2)} USDT from the buyer wallet. Funds are held in escrow.`
+        : wallet?.address
         ? `Send exactly ${totals.total.toFixed(2)} USDT via ${coin} to SocialsFlip ESCROW wallet (${wallet.network}): ${wallet.address}. Do NOT pay the seller directly. Wrong network = lost funds. Pay within ${windowMins} minutes.`
         : `Pay ${totals.total.toFixed(2)} USDT via ${coin} to SocialsFlip escrow within ${windowMins} minutes. Wallet address appears once admin configures it.`;
 
@@ -156,6 +192,7 @@ export async function POST(req: Request) {
         buyerEmail,
         buyerName: buyerName || user?.name || "Guest Buyer",
         title: listing.title,
+        qty,
         det,
         coin,
         paymentMode: "escrow_crypto" as const,
@@ -165,27 +202,42 @@ export async function POST(req: Request) {
         buyerMarkedPaid: false,
         paymentDueAt,
         paymentWindowMins: windowMins,
-        deliveryDueAt: null,
+        deliveryDueAt: useWallet
+          ? new Date(
+              now + (data.settings.deliveryWindowHours || 24) * 60 * 60_000
+            ).toISOString()
+          : null,
         deliveryWindowHours: data.settings.deliveryWindowHours || 24,
         stockReserved: !freelance,
         deliveredAt: null,
         price: totals.price,
         fee: totals.fee,
         total: totals.total,
-        status: "awaiting_payment" as const,
+        status: (useWallet ? "funds_held" : "awaiting_payment") as
+          | "awaiting_payment"
+          | "funds_held",
         handleRevealed: false,
         privateRequestStatus: "none" as const,
         msgs: [],
         createdAt: new Date().toISOString(),
       };
 
-      listing.soldCount = (listing.soldCount ?? 0) + 1;
+      if (useWallet && user) {
+        const payer = data.users.find((u) => u.id === user.id);
+        if (!payer) throw new Error("Log in to pay with wallet balance.");
+        payer.walletBalance =
+          Math.round((Number(payer.walletBalance || 0) - totals.total) * 100) / 100;
+        order.buyerMarkedPaid = true;
+        order.paymentProof = "Paid from wallet balance";
+      }
+
+      listing.soldCount = (listing.soldCount ?? 0) + qty;
       if (!freelance) {
-        listing.stock = Math.max(0, (listing.stock ?? 1) - 1);
+        listing.stock = Math.max(0, (listing.stock ?? 1) - qty);
       }
       if (offer) {
         if (!freelance) {
-          offer.stock = Math.max(0, (offer.stock ?? 1) - 1);
+          offer.stock = Math.max(0, (offer.stock ?? 1) - qty);
           offer.status =
             offer.stock <= 0 || listing.stock <= 0 ? "ordered" : "open";
         } else {
@@ -207,8 +259,8 @@ export async function POST(req: Request) {
       addSystemMessage(
         order,
         freelance
-          ? `Freelance gig ordered (${listing.soldCount} total sold). After funds are held, freelancers have ${data.settings.deliveryWindowHours || 24}h to deliver.`
-          : `Stock reserved. Available stock now: ${listing.stock}. After funds are held, creator has ${data.settings.deliveryWindowHours || 24}h to deliver.`
+          ? `Freelance gig ordered × ${qty} (${listing.soldCount} total sold). After funds are held, freelancers have ${data.settings.deliveryWindowHours || 24}h to deliver.`
+          : `Quantity ${qty} reserved. Available stock now: ${listing.stock}. After funds are held, creator has ${data.settings.deliveryWindowHours || 24}h to deliver.`
       );
 
       data.orders.push(order);

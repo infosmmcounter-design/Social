@@ -29,6 +29,18 @@ export function ChatDock() {
   const [chats, setChats] = useState<ChatRow[]>([]);
 
   useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (!el) return;
+      if (el.closest(".chat-dock") || el.closest(".chat-fab")) return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open]);
+
+  useEffect(() => {
     const toggle = () => setOpen((v) => !v);
     window.addEventListener(OPEN_CHAT_EVENT, toggle);
     return () => window.removeEventListener(OPEN_CHAT_EVENT, toggle);

@@ -28,6 +28,7 @@ type Order = {
   buyerName: string;
   buyerEmail: string;
   det: string;
+  qty?: number;
   handleRevealed: boolean;
   privateHandle: string | null;
   msgs: { id: number; from: string; text: string; createdAt: string }[];
@@ -94,12 +95,11 @@ function DealInner() {
   }, []);
 
   useEffect(() => {
-    if (!order || order.status !== "awaiting_payment") return;
     const t = setInterval(() => {
       load().catch(() => undefined);
-    }, 12000);
+    }, 4000);
     return () => clearInterval(t);
-  }, [order?.status, load]);
+  }, [load]);
 
   const isBuyer =
     !!order &&
@@ -253,8 +253,8 @@ function DealInner() {
         Deal #{order.id}: {order.title}
       </h1>
       <p className="sm mut">
-        Status: <b>{DEAL_STATUS_LABEL[order.status]}</b> · Total{" "}
-        {money(order.total)} · {order.coin}
+        Status: <b>{DEAL_STATUS_LABEL[order.status]}</b> · Qty{" "}
+        {order.qty || 1} · Total {money(order.total)} · {order.coin}
       </p>
 
       <div className="steps">
@@ -454,7 +454,7 @@ function DealInner() {
             disabled={!["funds_held", "awaiting_payment"].includes(order.status)}
             onClick={() => setStatus("credentials_shared")}
           >
-            Share credentials
+            Mark delivered / transfer done
           </button>
         )}
         {isBuyer && (

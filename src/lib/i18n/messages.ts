@@ -111,6 +111,9 @@ export type MsgKey =
   | "listing.startEscrow"
   | "listing.guestNote"
   | "listing.stockLabel"
+  | "listing.quantity"
+  | "listing.qtyOver"
+  | "listing.each"
   | "listing.sla"
   | "listing.yourName"
   | "listing.yourEmail"
@@ -298,6 +301,9 @@ const en: Dict = {
   "listing.guestNote":
     "Guests can buy without an account. A 3-way chat opens with Buyer, Seller, and Admin.",
   "listing.stockLabel": "Available stock",
+  "listing.quantity": "Quantity",
+  "listing.qtyOver": "You are selecting more than the available stock.",
+  "listing.each": "each",
   "listing.sla":
     "After payment is held in escrow, the seller has 24 hours to deliver. If they miss it, you can cancel or claim a refund.",
   "listing.yourName": "Your name",
@@ -445,6 +451,9 @@ const ko: Partial<Dict> = {
   "listing.startEscrow": "에스크로 딜 시작",
   "listing.buyNow": "구매 / 에스크로 시작",
   "listing.stockLabel": "가용 재고",
+  "listing.quantity": "수량",
+  "listing.qtyOver": "가용 재고보다 많이 선택했습니다.",
+  "listing.each": "개당",
   "deal.escrowPay": "에스크로 암호화폐 결제",
   "deal.iPaid": "결제했습니다",
   "deal.chat": "딜 채팅",
@@ -527,6 +536,9 @@ const ar: Partial<Dict> = {
   "listing.startEscrow": "بدء صفقة الضمان",
   "listing.buyNow": "اشترِ الآن / ابدأ الضمان",
   "listing.stockLabel": "المخزون المتاح",
+  "listing.quantity": "الكمية",
+  "listing.qtyOver": "أنت تختار أكثر من المخزون المتاح.",
+  "listing.each": "للوحدة",
   "deal.escrowPay": "دفع العملة المشفرة للضمان",
   "deal.iPaid": "لقد قمت بالدفع",
   "deal.chat": "محادثة الصفقة",
@@ -595,6 +607,9 @@ const zh: Partial<Dict> = {
   "listing.startEscrow": "开始托管交易",
   "listing.buyNow": "立即购买 / 开始托管",
   "listing.stockLabel": "可用库存",
+  "listing.quantity": "数量",
+  "listing.qtyOver": "您选择的数量超过了可用库存。",
+  "listing.each": "每件",
   "deal.escrowPay": "托管加密支付",
   "deal.iPaid": "我已付款",
   "deal.chat": "交易聊天",
@@ -664,6 +679,9 @@ const ja: Partial<Dict> = {
   "listing.startEscrow": "エスクロー取引を開始",
   "listing.buyNow": "購入 / エスクロー開始",
   "listing.stockLabel": "在庫",
+  "listing.quantity": "数量",
+  "listing.qtyOver": "在庫数より多く選択しています。",
+  "listing.each": "1件あたり",
   "deal.escrowPay": "エスクロー暗号決済",
   "deal.iPaid": "支払い済み",
   "deal.chat": "取引チャット",
@@ -733,6 +751,9 @@ const ru: Partial<Dict> = {
   "listing.startEscrow": "Начать эскроу-сделку",
   "listing.buyNow": "Купить / Начать эскроу",
   "listing.stockLabel": "Доступный запас",
+  "listing.quantity": "Количество",
+  "listing.qtyOver": "Вы выбираете больше, чем есть в наличии.",
+  "listing.each": "за шт.",
   "deal.escrowPay": "Крипто-оплата в эскроу",
   "deal.iPaid": "Я оплатил",
   "deal.chat": "Чат сделки",
@@ -802,6 +823,9 @@ const fil: Partial<Dict> = {
   "listing.startEscrow": "Simulan ang Escrow Deal",
   "listing.buyNow": "Bumili / Simulan ang Escrow",
   "listing.stockLabel": "Available stock",
+  "listing.quantity": "Dami",
+  "listing.qtyOver": "Mas mataas ang pinili mo kaysa sa available na stock.",
+  "listing.each": "bawat isa",
   "deal.escrowPay": "Escrow crypto payment",
   "deal.iPaid": "Nagbayad na ako",
   "deal.chat": "Deal chat",
@@ -871,6 +895,9 @@ const de: Partial<Dict> = {
   "listing.startEscrow": "Escrow-Deal starten",
   "listing.buyNow": "Jetzt kaufen / Escrow starten",
   "listing.stockLabel": "Verfügbarer Bestand",
+  "listing.quantity": "Menge",
+  "listing.qtyOver": "Sie wählen mehr als den verfügbaren Bestand.",
+  "listing.each": "pro Stück",
   "deal.escrowPay": "Escrow-Krypto-Zahlung",
   "deal.iPaid": "Ich habe bezahlt",
   "deal.chat": "Deal-Chat",
@@ -940,6 +967,9 @@ const fr: Partial<Dict> = {
   "listing.startEscrow": "Démarrer l’escrow",
   "listing.buyNow": "Acheter / Démarrer l’escrow",
   "listing.stockLabel": "Stock disponible",
+  "listing.quantity": "Quantité",
+  "listing.qtyOver": "Vous sélectionnez plus que le stock disponible.",
+  "listing.each": "l'unité",
   "deal.escrowPay": "Paiement crypto en séquestre",
   "deal.iPaid": "J’ai payé",
   "deal.chat": "Chat de l’offre",
@@ -1009,6 +1039,9 @@ const es: Partial<Dict> = {
   "listing.startEscrow": "Iniciar trato escrow",
   "listing.buyNow": "Comprar / Iniciar escrow",
   "listing.stockLabel": "Stock disponible",
+  "listing.quantity": "Cantidad",
+  "listing.qtyOver": "Estás eligiendo más que el stock disponible.",
+  "listing.each": "por unidad",
   "deal.escrowPay": "Pago cripto en escrow",
   "deal.iPaid": "Ya pagué",
   "deal.chat": "Chat del trato",

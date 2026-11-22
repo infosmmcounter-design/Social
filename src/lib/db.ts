@@ -645,6 +645,7 @@ export function normalizeStore(data: StoreData): StoreData {
     if (o.stockReserved === undefined) o.stockReserved = true;
     if (o.deliveredAt === undefined) o.deliveredAt = null;
     if (o.offerId === undefined) o.offerId = null;
+    if (!o.qty || o.qty < 1) o.qty = 1;
   }
   if (!data.inquiries) data.inquiries = [];
   for (const t of data.inquiries) {
@@ -806,12 +807,26 @@ export function restoreOrderStock(
   order: Order,
   reason: string
 ) {
-  if (!order.stockReserved) return;
   if (order.deliveredAt) return;
+  const qty = Math.max(1, Math.floor(order.qty || 1));
   const listing = data.listings.find((l) => l.id === order.listingId);
   if (listing) {
-    listing.stock = (listing.stock ?? 0) + 1;
+    listing.soldCount = Math.max(0, (listing.soldCount ?? 0) - qty);
+  }
+  if (!order.stockReserved) {
+    addSystemMessage(order, reason);
+    return;
+  }
+  if (listing) {
+    listing.stock = (listing.stock ?? 0) + qty;
     if (listing.status === "approved") listing.listed = true;
+  }
+  if (order.offerId) {
+    const offer = data.offers.find((o) => o.id === order.offerId);
+    if (offer) {
+      offer.stock = (offer.stock ?? 0) + qty;
+      if (offer.status === "ordered") offer.status = "open";
+    }
   }
   order.stockReserved = false;
   addSystemMessage(order, reason);

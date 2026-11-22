@@ -63,6 +63,10 @@ export default function HomePage() {
   const [cat, setCat] = useState("");
   const [sort, setSort] = useState<SortKey>("newest");
   const [view, setView] = useState<ViewMode>("listings");
+  const [monetized, setMonetized] = useState<"all" | "yes" | "no">("all");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [minFollowers, setMinFollowers] = useState("");
 
   useEffect(() => {
     try {
@@ -102,11 +106,24 @@ export default function HomePage() {
           .includes(qq)
       );
     }
+    if (monetized === "yes") list = list.filter((l) => l.monetized);
+    if (monetized === "no") list = list.filter((l) => !l.monetized && l.listingType !== "service" && !l.isFreelance);
+    const minP = Number(minPrice);
+    const maxP = Number(maxPrice);
+    if (minPrice && !Number.isNaN(minP)) list = list.filter((l) => l.price >= minP);
+    if (maxPrice && !Number.isNaN(maxP)) list = list.filter((l) => l.price <= maxP);
+    const minF = Number(minFollowers);
+    if (minFollowers && !Number.isNaN(minF)) {
+      list = list.filter((l) => {
+        const n = Number(String(l.followers || "").replace(/[^0-9.]/g, ""));
+        return n >= minF;
+      });
+    }
     if (sort === "price_asc") list = [...list].sort((a, b) => a.price - b.price);
     else if (sort === "price_desc") list = [...list].sort((a, b) => b.price - a.price);
     else list = [...list].sort((a, b) => b.id - a.id);
     return list;
-  }, [listings, cat, q, sort]);
+  }, [listings, cat, q, sort, monetized, minPrice, maxPrice, minFollowers]);
 
   return (
     <>
@@ -146,26 +163,46 @@ export default function HomePage() {
       <section className="sec" style={{ paddingBottom: 6 }}>
         <div className="row" style={{ justifyContent: "space-between", gap: 12 }}>
           <h2 style={{ margin: 0 }}>{t("home.browse")}</h2>
-          <div className="view-toggle">
-            <button
-              type="button"
-              className={view === "listings" ? "on" : ""}
-              onClick={() => setView("listings")}
-            >
-              {t("home.listings")}
-            </button>
-            <button
-              type="button"
-              className={view === "sellers" ? "on" : ""}
-              onClick={() => setView("sellers")}
-            >
-              {t("home.sellers")}
-            </button>
-          </div>
         </div>
 
         {view === "listings" ? (
           <>
+            <div className="row" style={{ marginTop: 10 }}>
+              <select
+                value={monetized}
+                onChange={(e) => setMonetized(e.target.value as "all" | "yes" | "no")}
+                style={{ width: "auto" }}
+                aria-label="Monetized"
+              >
+                <option value="all">Monetized and not</option>
+                <option value="yes">Monetized only</option>
+                <option value="no">Not monetized</option>
+              </select>
+              <input
+                style={{ width: 110 }}
+                inputMode="decimal"
+                placeholder="Min $"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                aria-label="Minimum price"
+              />
+              <input
+                style={{ width: 110 }}
+                inputMode="decimal"
+                placeholder="Max $"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                aria-label="Maximum price"
+              />
+              <input
+                style={{ width: 140 }}
+                inputMode="numeric"
+                placeholder="Min subscribers"
+                value={minFollowers}
+                onChange={(e) => setMinFollowers(e.target.value)}
+                aria-label="Minimum subscribers"
+              />
+            </div>
             <div className="filter-bar">
               <button
                 type="button"

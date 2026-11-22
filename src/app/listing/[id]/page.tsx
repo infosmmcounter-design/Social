@@ -6,12 +6,13 @@ import { CatIcon } from "@/components/Icons";
 import { VerifiedTick } from "@/components/VerifiedTick";
 import { StartSellerChat } from "@/components/StartSellerChat";
 import { api } from "@/lib/api";
-import { money, stars } from "@/lib/constants";
+import { money, stars, trustFromRating } from "@/lib/constants";
 import { CATEGORIES, isFreelanceCategory } from "@/lib/types";
 import { useAuth } from "@/components/AuthProvider";
 import { useLang } from "@/components/LanguageProvider";
 import { LocaleLink as Link } from "@/components/LocaleLink";
 import { PublicReview } from "@/components/PublicReview";
+import { QtyPicker } from "@/components/QtyPicker";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
 
 export default function ListingDetailPage() {
@@ -34,8 +35,10 @@ export default function ListingDetailPage() {
   const [name, setName] = useState("");
   const [det, setDet] = useState("");
   const [coin, setCoin] = useState("USDT (TRC20)");
+  const [qty, setQty] = useState(1);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [balance, setBalance] = useState(0);
   const [feePct, setFeePct] = useState(10);
 
   useEffect(() => {
@@ -43,6 +46,13 @@ export default function ListingDetailPage() {
       setEmail(user.email);
       setName(user.name);
     }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    api<{ balance: number }>("/api/wallet")
+      .then((d) => setBalance(d.balance || 0))
+      .catch(() => setBalance(0));
   }, [user]);
 
   useEffect(() => {
@@ -113,20 +123,27 @@ export default function ListingDetailPage() {
   } | null;
   const gallery = [l.img, ...(l.images || [])].filter(Boolean) as string[];
 
-  const fee = s?.official ? 0 : Math.round(l.price * feePct) / 100;
-  const total = l.price + fee;
   const catName = CATEGORIES.find((c) => c[0] === l.cat)?.[1] || l.cat;
   const freelance = !!(
     isFreelanceCategory(l.cat) ||
     l.isFreelance ||
     l.listingType === "service"
   );
+  const available = freelance ? null : Math.max(0, Math.floor(l.stock ?? 1));
+  const qtyOver = available !== null && qty > available;
+  const line = Math.round(l.price * qty * 100) / 100;
+  const fee = s?.official ? 0 : Math.round(line * feePct) / 100;
+  const total = line + fee;
   const soldOut =
     !freelance &&
     (l.soldOut || (l.stock !== undefined && l.stock <= 0));
   const sold = l.soldCount ?? 0;
 
-  async function startDeal() {
+  async function startDeal(payWith?: "wallet") {
+    if (qtyOver) {
+      setErr(t("listing.qtyOver"));
+      return;
+    }
     setErr("");
     setBusy(true);
     try {
@@ -137,8 +154,10 @@ export default function ListingDetailPage() {
           email,
           name,
           det,
+          qty,
           coin,
           paymentMode: "escrow_crypto",
+          payWith: payWith || "",
         },
       });
       router.push(
@@ -283,8 +302,12 @@ export default function ListingDetailPage() {
                 <p className="sm mut" style={{ margin: 0 }}>
                   {s?.country}{" "}
                   {s?.reviewCount
-                    ? `· ${stars(s.rating || 0)} ${(s.rating || 0).toFixed(1)} (${s.reviewCount})`
-                    : ""}
+                    ? `· ${stars(s.rating || 0)} ${(s.rating || 0).toFixed(1)} (${s.reviewCount}) · Trust ${trustFromRating(s.rating || 0, s.reviewCount).percent}%`
+                    : " · New seller"}
+                {s?.reviewCount &&
+                trustFromRating(s.rating || 0, s.reviewCount).risky ? (
+                  <span className="err"> · Risky to deal</span>
+                ) : null}
                 </p>
               </div>
             </div>
@@ -351,7 +374,24 @@ export default function ListingDetailPage() {
           <input
             value={det}
             onChange={(e) => setDet(e.target.value)}
-            placeholder="Email to receive ownership"
+            placeholder={
+              freelance
+                ? "Links, brief, or files the seller asked for"
+                : "Email that should receive the account"
+            }
+          />
+
+          <QtyPicker
+            value={qty}
+            onChange={setQty}
+            max={available}
+            label={t("listing.quantity")}
+            overText={t("listing.qtyOver")}
+            availableText={
+              available === null
+                ? undefined
+                : `${available} ${t("common.available")}`
+            }
           />
 
           <label>{t("listing.payWith")}</label>
@@ -366,8 +406,10 @@ export default function ListingDetailPage() {
 
           <div className="sum" style={{ marginTop: 12 }}>
             <div>
-              <span>{t("common.price")}</span>
-              <span>{money(l.price)}</span>
+              <span>
+                {t("common.price")} · {money(l.price)} {t("listing.each")} × {qty}
+              </span>
+              <span>{money(line)}</span>
             </div>
             {!s?.official ? (
               <div>
@@ -383,11 +425,21 @@ export default function ListingDetailPage() {
             </div>
           </div>
           {err ? <p className="err">{err}</p> : null}
+          {user && balance >= total && !soldOut && !qtyOver ? (
+            <button
+              className="btn"
+              style={{ width: "100%", marginTop: 10 }}
+              disabled={busy}
+              onClick={() => startDeal("wallet")}
+            >
+              Pay {money(total)} from wallet ({money(balance)})
+            </button>
+          ) : null}
           <button
-            className="btn"
+            className="btn o"
             style={{ width: "100%", marginTop: 10 }}
-            disabled={busy || soldOut}
-            onClick={startDeal}
+            disabled={busy || soldOut || qtyOver}
+            onClick={() => startDeal()}
           >
             {busy
               ? t("listing.opening")

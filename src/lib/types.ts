@@ -195,6 +195,8 @@ export interface Order {
   buyerEmail: string;
   buyerName: string;
   title: string;
+  /** How many units the buyer reserved in this deal. */
+  qty: number;
   det: string;
   coin: string;
   paymentMode: PaymentMode;

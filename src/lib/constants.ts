@@ -25,3 +25,15 @@ export function stars(n: number) {
   const r = Math.round(n);
   return "★".repeat(r) + "☆".repeat(5 - r);
 }
+
+/** Public trust percent from the seller’s average star rating. */
+export function trustFromRating(rating: number, reviewCount: number) {
+  if (!reviewCount) return { percent: 100, risky: false, label: "New" };
+  let percent = 70;
+  if (rating >= 4.8) percent = 100;
+  else if (rating >= 4.5) percent = 95;
+  else if (rating >= 4) percent = 90;
+  else if (rating >= 3.5) percent = 85;
+  else if (rating >= 3) percent = 80;
+  return { percent, risky: percent < 80, label: `${percent}%` };
+}
