@@ -550,7 +550,7 @@ export default function AccountPage() {
       {panel === "fees" ? (
         <div className="card hl-card" style={{ marginTop: 12 }}>
           <h3>Fee and trust</h3>
-          <p>The escrow fee is added at checkout. A seller’s trust percent follows their star rating. Under 80% the profile shows a warning.</p>
+          <p>Every order adds a 5% escrow fee to the listing price. The buyer pays that total. A seller’s trust percent follows their star rating. Under 80% the profile shows a warning.</p>
         </div>
       ) : null}
       {panel === "rules" ? (

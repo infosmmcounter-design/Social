@@ -758,6 +758,22 @@ a.card:hover {
   color: #1d4ed8;
 }
 
+.fee-banner {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #1a1408, #3d3112);
+  color: #fff8d6;
+}
+.fee-banner p {
+  color: #fff8d6;
+}
+.fee-note {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #8a6a12;
+}
 .price {
   font-weight: 700;
   font-size: 1.2rem;

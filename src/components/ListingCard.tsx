@@ -4,7 +4,7 @@ import { CatIcon } from "./Icons";
 import { VerifiedTick } from "./VerifiedTick";
 import { useLang } from "./LanguageProvider";
 import { LocaleLink as Link } from "./LocaleLink";
-import { money, stars } from "@/lib/constants";
+import { ESCROW_FEE_PCT, money, stars } from "@/lib/constants";
 import { isFreelanceCategory } from "@/lib/types";
 import { showsMonetized } from "@/lib/category-filters";
 import type { MsgKey } from "@/lib/i18n/messages";
@@ -127,6 +127,7 @@ export function ListingCard({ listing }: Props) {
           )}
         </p>
         <div className="price">{money(listing.price)}</div>
+        <p className="fee-note">+ {ESCROW_FEE_PCT}% {t("common.escrowFee")}</p>
       </div>
     </Link>
   );

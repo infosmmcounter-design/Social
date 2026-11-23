@@ -87,9 +87,10 @@ export default function OfferPage() {
     ? null
     : Math.max(0, Math.floor(listing?.stock ?? offer.stock ?? 1));
   const qtyOver = available !== null && qty > available;
+  const feePct = settings.fee ?? 5;
   const line = Math.round(offer.price * qty * 100) / 100;
-  const fee = Math.round(line * (settings.fee || 10)) / 100;
-  const total = line + fee;
+  const fee = Math.round(line * feePct) / 100;
+  const total = Math.round((line + fee) * 100) / 100;
   const soldOut =
     !freelance &&
     (offer.status !== "open" ||
@@ -274,6 +275,12 @@ export default function OfferPage() {
           <option value="USDT (BEP20)">USDT (BEP20) — BNB Smart Chain</option>
         </select>
 
+        <div className="fee-banner">
+          <p className="crypto-kicker">{feePct}% escrow fee</p>
+          <p className="sm" style={{ margin: "4px 0 0" }}>
+            Every deal adds this fee to the price. You pay the total.
+          </p>
+        </div>
         <div className="sum" style={{ marginTop: 12 }}>
           <div>
             <span>
@@ -282,7 +289,9 @@ export default function OfferPage() {
             <span>{money(line)}</span>
           </div>
           <div>
-            <span>{t("common.escrowFee")}</span>
+            <span>
+              {t("common.escrowFee")} ({feePct}%)
+            </span>
             <span>{money(fee)}</span>
           </div>
           <div className="t">

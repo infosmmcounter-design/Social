@@ -17,6 +17,16 @@ export const CAT_ICONS: Record<Category, string> = {
     '<rect width="24" height="24" rx="6" fill="#B45309"/><path d="M7 16.5V8.2c0-.7.6-1.2 1.2-1.2h.8c.4 0 .8.2 1 .5L12 11l1.9-3.5c.3-.3.6-.5 1-.5h.8c.7 0 1.2.5 1.2 1.2v8.3h-1.8V11l-1.5 2.7c-.2.4-.7.4-.9 0L10.2 11v5.5H7.4z" fill="#fff"/><circle cx="17.2" cy="16.2" r="1.3" fill="#FDE68A"/>',
 };
 
+/** Escrow fee on every deal, including the official store. */
+export const ESCROW_FEE_PCT = 5;
+
+export function escrowAmounts(price: number, feePct = ESCROW_FEE_PCT) {
+  const pct = Number.isFinite(feePct) && feePct >= 0 ? feePct : ESCROW_FEE_PCT;
+  const fee = Math.round(price * pct) / 100;
+  const total = Math.round((price + fee) * 100) / 100;
+  return { price, fee, total, feePct: pct };
+}
+
 export function money(n: number) {
   return "$" + Number(n).toFixed(2);
 }

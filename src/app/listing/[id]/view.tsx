@@ -41,7 +41,7 @@ export default function ListingDetailPage() {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [balance, setBalance] = useState(0);
-  const [feePct, setFeePct] = useState(10);
+  const [feePct, setFeePct] = useState(5);
 
   useEffect(() => {
     if (user) {
@@ -144,8 +144,8 @@ export default function ListingDetailPage() {
   const available = freelance ? null : Math.max(0, Math.floor(l.stock ?? 1));
   const qtyOver = available !== null && qty > available;
   const line = Math.round(l.price * qty * 100) / 100;
-  const fee = s?.official ? 0 : Math.round(line * feePct) / 100;
-  const total = line + fee;
+  const fee = Math.round(line * feePct) / 100;
+  const total = Math.round((line + fee) * 100) / 100;
   const soldOut =
     !freelance &&
     (l.soldOut || (l.stock !== undefined && l.stock <= 0));
@@ -343,6 +343,12 @@ export default function ListingDetailPage() {
         </div>
 
         <div className="card">
+          <div className="fee-banner">
+            <p className="crypto-kicker">{feePct}% escrow fee</p>
+            <p className="sm" style={{ margin: "4px 0 0" }}>
+              Every deal adds this fee to the listing price. You pay the total.
+            </p>
+          </div>
           <h2>
             {freelance ? t("freelance.orderGig") : t("listing.startEscrow")}
           </h2>
@@ -425,14 +431,12 @@ export default function ListingDetailPage() {
               </span>
               <span>{money(line)}</span>
             </div>
-            {!s?.official ? (
-              <div>
-                <span>
-                  {t("common.escrowFee")} ({feePct}%)
-                </span>
-                <span>{money(fee)}</span>
-              </div>
-            ) : null}
+            <div>
+              <span>
+                {t("common.escrowFee")} ({feePct}%)
+              </span>
+              <span>{money(fee)}</span>
+            </div>
             <div className="t">
               <span>{t("common.total")}</span>
               <span>{money(total)}</span>
@@ -459,7 +463,7 @@ export default function ListingDetailPage() {
               ? t("listing.opening")
               : soldOut
                 ? t("common.soldOut")
-                : t("listing.buyNow")}
+                : `${t("listing.buyNow")} · ${money(total)}`}
           </button>
         </div>
       </div>
