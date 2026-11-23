@@ -1822,7 +1822,7 @@ export default function AdminPage() {
             Payments are crypto-only: USDT TRC20 (Tron) and USDT BEP20 (BNB Smart
             Chain). No JazzCash / bank / local methods.
           </p>
-          <label>Escrow fee on seller listings (%)</label>
+          <label>Escrow fee on every deal (%)</label>
           <input
             type="number"
             min={0}

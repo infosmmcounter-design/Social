@@ -375,9 +375,10 @@ async function createSeed(): Promise<StoreData> {
   }
 
   return {
-    fee: 10,
+    fee: 5,
     settings: {
-      fee: 10,
+      fee: 5,
+      feeRevised: true,
       allowDirectPayToSeller: false,
       autoDetectCrypto: false,
       paymentWindowMins: 60,
@@ -502,7 +503,14 @@ export function normalizeStore(data: StoreData): StoreData {
       enabled: old?.enabled ?? true,
     };
   });
-  data.fee = data.settings.fee ?? data.fee ?? 10;
+  if (!data.settings.feeRevised) {
+    data.settings.fee = 5;
+    data.settings.feeRevised = true;
+  }
+  if (typeof data.settings.fee !== "number" || Number.isNaN(data.settings.fee)) {
+    data.settings.fee = 5;
+  }
+  data.fee = data.settings.fee;
   if (!data.walletDeposits) data.walletDeposits = [];
   if (!data.cryptoPayments) data.cryptoPayments = [];
   if (!data.unmatchedTxs) data.unmatchedTxs = [];
@@ -816,9 +824,10 @@ export function publicListing(l: Listing, revealHandle = false) {
 
 export { isFreelanceListing };
 
-export function calcTotals(price: number, seller: User, feePct: number) {
-  const fee = seller.official ? 0 : Math.round(price * feePct) / 100;
-  return { price, fee, total: price + fee };
+export function calcTotals(price: number, _seller: User, feePct: number) {
+  const pct = Number.isFinite(feePct) && feePct >= 0 ? feePct : 5;
+  const fee = Math.round(price * pct) / 100;
+  return { price, fee, total: Math.round((price + fee) * 100) / 100 };
 }
 
 export function addSystemMessage(

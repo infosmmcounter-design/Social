@@ -39,7 +39,10 @@ export interface SellerPaymentMethod {
 }
 
 export interface PlatformSettings {
+  /** Percent added to every order. Standard rate is 5. */
   fee: number;
+  /** Set after the platform fee was moved to 5% so a later admin change is kept. */
+  feeRevised?: boolean;
   cryptoWallets: CryptoWallet[];
   allowDirectPayToSeller: boolean;
   autoDetectCrypto: boolean;

@@ -221,9 +221,29 @@ function DealInner() {
         Deal #{order.id}: {order.title}
       </h1>
       <p className="sm mut">
-        Status: <b>{DEAL_STATUS_LABEL[order.status]}</b> · Qty{" "}
-        {order.qty || 1} · Total {money(order.total)} · {order.coin}
+        Status: <b>{DEAL_STATUS_LABEL[order.status]}</b> · Qty {order.qty || 1} ·{" "}
+        {order.coin}
       </p>
+      <div className="hl-card deal-hold">
+        <p className="crypto-kicker">
+          Escrow fee
+          {order.price > 0 ? ` ${Math.round((order.fee / order.price) * 100)}%` : ""}
+        </p>
+        <div className="sum">
+          <div>
+            <span>Listing price</span>
+            <span>{money(order.price)}</span>
+          </div>
+          <div>
+            <span>Escrow fee</span>
+            <span>{money(order.fee)}</span>
+          </div>
+          <div className="t">
+            <span>Pay this total</span>
+            <span>{money(order.total)}</span>
+          </div>
+        </div>
+      </div>
 
       <div className="steps">
         {steps.map((s) => (
