@@ -43,6 +43,16 @@ export type MsgKey =
   | "card.soldBy"
   | "card.monetized"
   | "card.notMonetized"
+  | "filter.allChannels"
+  | "filter.monetizedChannel"
+  | "filter.nonMonetizedChannel"
+  | "filter.allHere"
+  | "filter.monetized"
+  | "filter.notMonetized"
+  | "filter.minPrice"
+  | "filter.maxPrice"
+  | "filter.minSubscribers"
+  | "filter.minFollowers"
   | "card.noReviews"
   | "card.official"
   | "card.seller"
@@ -81,6 +91,14 @@ export type MsgKey =
   | "account.saved"
   | "account.days"
   | "account.emailPending"
+  | "account.emailVerified"
+  | "account.resendEmail"
+  | "account.emailSent"
+  | "account.emailMailOff"
+  | "auth.checkEmail"
+  | "auth.verifyTitle"
+  | "auth.verifyOk"
+  | "auth.verifyBad"
   | "listings.freelanceIntro"
   | "home.newest"
   | "home.priceAsc"
@@ -228,6 +246,16 @@ const en: Dict = {
   "card.soldBy": "Sold by SocialsFlip",
   "card.monetized": "Monetized",
   "card.notMonetized": "Not monetized",
+  "filter.allChannels": "All channels",
+  "filter.monetizedChannel": "Monetized channel",
+  "filter.nonMonetizedChannel": "Non-monetized channel",
+  "filter.allHere": "All in this section",
+  "filter.monetized": "Monetized",
+  "filter.notMonetized": "Not monetized",
+  "filter.minPrice": "Min $",
+  "filter.maxPrice": "Max $",
+  "filter.minSubscribers": "Min subscribers",
+  "filter.minFollowers": "Min followers",
   "card.noReviews": "No reviews yet",
   "card.official": "Official store",
   "card.seller": "Seller",
@@ -267,6 +295,15 @@ const en: Dict = {
   "account.saved": "Profile saved.",
   "account.days": "Days",
   "account.emailPending": "Email not verified yet",
+  "account.emailVerified": "Email verified",
+  "account.resendEmail": "Send verification email again",
+  "account.emailSent": "Verification email sent. Open the link in that message.",
+  "account.emailMailOff":
+    "The mailbox is not connected yet, so the verification email cannot be sent.",
+  "auth.checkEmail": "Check your email and open the verification link.",
+  "auth.verifyTitle": "Verify email",
+  "auth.verifyOk": "Your email is verified. You can use the account.",
+  "auth.verifyBad": "This verification link is invalid or expired.",
   "listings.freelanceIntro":
     "Freelance services — YouTube editing, Instagram growth, AI setup, and more. Buyers pay escrow; you deliver in chat.",
   "home.newest": "Newest",

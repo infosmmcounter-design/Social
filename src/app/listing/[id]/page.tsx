@@ -8,6 +8,7 @@ import { StartSellerChat } from "@/components/StartSellerChat";
 import { api } from "@/lib/api";
 import { money, stars, trustFromRating } from "@/lib/constants";
 import { CATEGORIES, isFreelanceCategory } from "@/lib/types";
+import { showsMonetized } from "@/lib/category-filters";
 import { useAuth } from "@/components/AuthProvider";
 import { useLang } from "@/components/LanguageProvider";
 import { LocaleLink as Link } from "@/components/LocaleLink";
@@ -277,8 +278,10 @@ export default function ListingDetailPage() {
             <p className="sm mut">
               {l.listingType ? `${l.listingType} · ` : ""}
               {l.niche ? `${l.niche} · ` : ""}
-              {l.followers || "—"} ·{" "}
-              {l.monetized ? "Monetized" : "Not monetized"}
+              {l.followers || "—"}
+              {showsMonetized(l.cat)
+                ? ` · ${l.monetized ? t("card.monetized") : t("card.notMonetized")}`
+                : ""}
             </p>
           )}
           <p style={{ whiteSpace: "pre-wrap" }}>{l.desc || l.teaser}</p>

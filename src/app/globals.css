@@ -391,8 +391,8 @@ html[dir="rtl"] .lang-switch select {
 }
 .brand-mark {
   flex-shrink: 0;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  overflow: visible;
+  filter: drop-shadow(0 8px 12px rgba(20, 14, 4, 0.28));
 }
 .brand-word {
   font-weight: 800;
@@ -1158,6 +1158,13 @@ footer.sf-footer {
   height: 36px;
 }
 
+.cat-filters {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--s2);
+}
 .page-pad {
   padding-bottom: 96px;
 }

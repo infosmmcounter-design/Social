@@ -10,6 +10,8 @@ import { LocaleLink as Link } from "@/components/LocaleLink";
 import { api } from "@/lib/api";
 import { stars } from "@/lib/constants";
 import { CATEGORIES } from "@/lib/types";
+import { CategoryFilters, type MonetizedFilter } from "@/components/CategoryFilters";
+import { filtersForCategory } from "@/lib/category-filters";
 import type { MsgKey } from "@/lib/i18n/messages";
 
 type Listing = {
@@ -63,7 +65,7 @@ export default function HomePage() {
   const [cat, setCat] = useState("");
   const [sort, setSort] = useState<SortKey>("newest");
   const [view, setView] = useState<ViewMode>("listings");
-  const [monetized, setMonetized] = useState<"all" | "yes" | "no">("all");
+  const [monetized, setMonetized] = useState<MonetizedFilter>("all");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [minFollowers, setMinFollowers] = useState("");
@@ -106,14 +108,21 @@ export default function HomePage() {
           .includes(qq)
       );
     }
-    if (monetized === "yes") list = list.filter((l) => l.monetized);
-    if (monetized === "no") list = list.filter((l) => !l.monetized && l.listingType !== "service" && !l.isFreelance);
+    const spec = filtersForCategory(cat);
+    if (spec?.monetized) {
+      if (monetized === "yes") list = list.filter((l) => l.monetized);
+      if (monetized === "no") list = list.filter((l) => !l.monetized);
+    }
     const minP = Number(minPrice);
     const maxP = Number(maxPrice);
-    if (minPrice && !Number.isNaN(minP)) list = list.filter((l) => l.price >= minP);
-    if (maxPrice && !Number.isNaN(maxP)) list = list.filter((l) => l.price <= maxP);
+    if (spec?.price && minPrice && !Number.isNaN(minP)) {
+      list = list.filter((l) => l.price >= minP);
+    }
+    if (spec?.price && maxPrice && !Number.isNaN(maxP)) {
+      list = list.filter((l) => l.price <= maxP);
+    }
     const minF = Number(minFollowers);
-    if (minFollowers && !Number.isNaN(minF)) {
+    if (spec?.audience && minFollowers && !Number.isNaN(minF)) {
       list = list.filter((l) => {
         const n = Number(String(l.followers || "").replace(/[^0-9.]/g, ""));
         return n >= minF;
@@ -167,47 +176,17 @@ export default function HomePage() {
 
         {view === "listings" ? (
           <>
-            <div className="row" style={{ marginTop: 10 }}>
-              <select
-                value={monetized}
-                onChange={(e) => setMonetized(e.target.value as "all" | "yes" | "no")}
-                style={{ width: "auto" }}
-                aria-label="Monetized"
-              >
-                <option value="all">Monetized and not</option>
-                <option value="yes">Monetized only</option>
-                <option value="no">Not monetized</option>
-              </select>
-              <input
-                style={{ width: 110 }}
-                inputMode="decimal"
-                placeholder="Min $"
-                value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
-                aria-label="Minimum price"
-              />
-              <input
-                style={{ width: 110 }}
-                inputMode="decimal"
-                placeholder="Max $"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-                aria-label="Maximum price"
-              />
-              <input
-                style={{ width: 140 }}
-                inputMode="numeric"
-                placeholder="Min subscribers"
-                value={minFollowers}
-                onChange={(e) => setMinFollowers(e.target.value)}
-                aria-label="Minimum subscribers"
-              />
-            </div>
             <div className="filter-bar">
               <button
                 type="button"
                 className={`chip ${!cat ? "on" : ""}`}
-                onClick={() => setCat("")}
+                onClick={() => {
+                  setCat("");
+                  setMonetized("all");
+                  setMinPrice("");
+                  setMaxPrice("");
+                  setMinFollowers("");
+                }}
               >
                 {t("home.all")}
               </button>
@@ -216,7 +195,14 @@ export default function HomePage() {
                   key={k}
                   type="button"
                   className={`chip ${cat === k ? "on" : ""}`}
-                  onClick={() => setCat(cat === k ? "" : k)}
+                  onClick={() => {
+                    const next = cat === k ? "" : k;
+                    setCat(next);
+                    setMonetized("all");
+                    setMinPrice("");
+                    setMaxPrice("");
+                    setMinFollowers("");
+                  }}
                 >
                   <CatIcon cat={k} size={16} />
                   {t(`cat.${k}` as MsgKey)}
@@ -234,6 +220,17 @@ export default function HomePage() {
                 <option value="price_desc">{t("home.priceDesc")}</option>
               </select>
             </div>
+            <CategoryFilters
+              cat={cat}
+              monetized={monetized}
+              onMonetized={setMonetized}
+              minPrice={minPrice}
+              maxPrice={maxPrice}
+              minAudience={minFollowers}
+              onMinPrice={setMinPrice}
+              onMaxPrice={setMaxPrice}
+              onMinAudience={setMinFollowers}
+            />
 
             <div className="grid" style={{ marginTop: 14 }}>
               {filtered.map((l) => (

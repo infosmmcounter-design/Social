@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { money } from "@/lib/constants";
 import { CATEGORIES } from "@/lib/types";
+import { showsMonetized } from "@/lib/category-filters";
 import { useAuth } from "@/components/AuthProvider";
 import { useLang } from "@/components/LanguageProvider";
 import { LocaleLink as Link } from "@/components/LocaleLink";
@@ -142,7 +143,11 @@ export default function OfferPage() {
           <CatIcon cat={offer.cat} size={14} />
           {catName}
         </span>
-        {offer.monetized ? <span className="pill g">Monetized</span> : null}
+        {showsMonetized(offer.cat) ? (
+          <span className={`pill ${offer.monetized ? "g" : ""}`}>
+            {offer.monetized ? t("card.monetized") : t("card.notMonetized")}
+          </span>
+        ) : null}
         <span className="pill">
           {freelance
             ? `${sold} ${t("freelance.sold")}`

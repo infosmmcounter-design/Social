@@ -22,7 +22,7 @@ export default function SignupPage() {
     e.preventDefault();
     setErr("");
     try {
-      const d = await api<{ user: AuthUser }>("/api/auth/signup", {
+      const d = await api<{ user: AuthUser; mailSent?: boolean; mailConfigured?: boolean }>("/api/auth/signup", {
         method: "POST",
         json: { name, email, password, country },
       });
