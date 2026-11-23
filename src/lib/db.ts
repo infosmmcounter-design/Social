@@ -450,7 +450,6 @@ export function publicUser(
     phone: u.phone,
     avatarUrl: u.avatarUrl || avatarDataUrl(u.name, u.verified),
     verified: u.verified,
-    emailVerified: u.emailVerified !== false,
     rating: u.rating,
     reviewCount: u.reviewCount,
     // Never expose dummy badge on public storefront.
@@ -513,7 +512,6 @@ export function normalizeStore(data: StoreData): StoreData {
     if (typeof u.completedDeals !== "number") u.completedDeals = 0;
     if (!u.blockedUserIds) u.blockedUserIds = [];
     if (!u.blockedEmails) u.blockedEmails = [];
-    if (u.emailVerified === undefined) u.emailVerified = true;
   }
   for (const l of data.listings) {
     if (!l.images) l.images = [];

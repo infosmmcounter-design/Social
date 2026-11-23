@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { updateStore, nextId, publicUser } from "@/lib/db";
 import { createSession, hashPassword } from "@/lib/auth";
 import { avatarDataUrl } from "@/lib/placeholders";
-import { newVerifyToken, sendVerifyEmail } from "@/lib/email-verify";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -26,7 +25,6 @@ export async function POST(req: Request) {
   }
 
   const passwordHash = await hashPassword(password);
-  const issued = newVerifyToken();
   let userId = 0;
 
   try {
@@ -52,9 +50,6 @@ export async function POST(req: Request) {
         joinedAt: new Date().toISOString(),
         active: true,
         paymentMethods: [],
-        emailVerified: false,
-        emailVerifyTokenHash: issued.hash,
-        emailVerifyExpires: issued.expires,
       });
     });
   } catch (e) {
@@ -68,10 +63,7 @@ export async function POST(req: Request) {
   const store = await readStore();
   const user = store.users.find((u) => u.id === userId)!;
   await createSession(user.id, user.role);
-  const mail = await sendVerifyEmail(user, issued.token, req);
   return NextResponse.json({
     user: publicUser(user, false, { includeWallet: true }),
-    mailSent: mail.sent,
-    mailConfigured: mail.configured,
   });
 }

@@ -17,56 +17,6 @@ type Deposit = {
 
 type WalletAddr = { asset: string; network: string; address: string; label?: string };
 
-function EmailStatus() {
-  const { user, refresh } = useAuth();
-  const { t } = useLang();
-  const [note, setNote] = useState("");
-  const [busy, setBusy] = useState(false);
-  if (!user || user.emailVerified !== false) {
-    return (
-      <p className="sm">
-        {"✓ "}
-        {t("account.emailVerified")}
-      </p>
-    );
-  }
-  async function resend() {
-    setBusy(true);
-    setNote("");
-    try {
-      const res = await api<{
-        ok?: boolean;
-        mailConfigured?: boolean;
-        error?: string;
-      }>("/api/auth/verify/resend", { method: "POST" });
-      if (res.ok) {
-        setNote(t("account.emailSent"));
-        refresh();
-      } else if (res.mailConfigured === false) {
-        setNote(t("account.emailMailOff"));
-      } else {
-        setNote(res.error || t("account.emailMailOff"));
-      }
-    } catch (e) {
-      setNote(e instanceof Error ? e.message : t("account.emailMailOff"));
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <div className="note" style={{ marginTop: 8 }}>
-      <p className="sm" style={{ margin: 0 }}>
-        {"○ "}
-        {t("account.emailPending")}
-      </p>
-      <button className="btn s" type="button" disabled={busy} onClick={resend} style={{ marginTop: 8 }}>
-        {t("account.resendEmail")}
-      </button>
-      {note ? <p className="sm">{note}</p> : null}
-    </div>
-  );
-}
-
 export default function AccountPage() {
   const { user, loading, refresh, setUser, logout } = useAuth();
   const { t } = useLang();
@@ -287,8 +237,6 @@ export default function AccountPage() {
           <span>{t("account.days")}</span>
         </div>
       </div>
-      <EmailStatus />
-
       <div className="row" style={{ marginTop: 16 }}>
         {(
           [

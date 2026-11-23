@@ -16,60 +16,6 @@ import { LocaleLink as Link } from "@/components/LocaleLink";
 import { useLang } from "@/components/LanguageProvider";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
 
-function MailSetupCard() {
-  const [info, setInfo] = useState<{
-    configured: boolean;
-    host: string;
-    port: number;
-    user: string;
-    from: string;
-    missing: string[];
-  } | null>(null);
-  const [note, setNote] = useState("");
-
-  useEffect(() => {
-    api<NonNullable<typeof info>>("/api/admin/mail")
-      .then(setInfo)
-      .catch(() => setInfo(null));
-  }, []);
-
-  return (
-    <div className="note" style={{ marginBottom: 16 }}>
-      <h3 style={{ marginTop: 0 }}>Email verification</h3>
-      <p className="sm">
-        New accounts get a 24-hour link. Mail sends only after these Vercel
-        environment variables are set: SMTP_HOST, SMTP_PORT, SMTP_USER,
-        SMTP_PASS, SMTP_FROM, APP_URL.
-      </p>
-      {info ? (
-        <p className="sm">
-          {info.configured
-            ? `Mailbox connected · ${info.from} via ${info.host}:${info.port}`
-            : `Not connected yet. Still needed: ${info.missing.join(", ")}`}
-        </p>
-      ) : (
-        <p className="sm mut">Checking mailbox…</p>
-      )}
-      <button
-        className="btn s"
-        type="button"
-        onClick={async () => {
-          setNote("");
-          try {
-            await api("/api/admin/mail", { method: "POST" });
-            setNote("Test email sent to your admin inbox.");
-          } catch (e) {
-            setNote(e instanceof Error ? e.message : "Test email failed");
-          }
-        }}
-      >
-        Send test email
-      </button>
-      {note ? <p className="sm">{note}</p> : null}
-    </div>
-  );
-}
-
 type Tab =
   | "dash"
   | "apps"
@@ -1866,7 +1812,6 @@ export default function AdminPage() {
       ) : null}
       {tab === "set" && settings && (
         <div className="card" style={{ maxWidth: 560 }}>
-          <MailSetupCard />
           <h3>Escrow & crypto settings</h3>
           <p className="sm mut">
             Payments are crypto-only: USDT TRC20 (Tron) and USDT BEP20 (BNB Smart

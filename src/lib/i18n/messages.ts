@@ -101,15 +101,6 @@ export type MsgKey =
   | "account.save"
   | "account.saved"
   | "account.days"
-  | "account.emailPending"
-  | "account.emailVerified"
-  | "account.resendEmail"
-  | "account.emailSent"
-  | "account.emailMailOff"
-  | "auth.checkEmail"
-  | "auth.verifyTitle"
-  | "auth.verifyOk"
-  | "auth.verifyBad"
   | "listings.freelanceIntro"
   | "home.newest"
   | "home.priceAsc"
@@ -316,16 +307,6 @@ const en: Dict = {
   "account.save": "Save profile",
   "account.saved": "Profile saved.",
   "account.days": "Days",
-  "account.emailPending": "Email not verified yet",
-  "account.emailVerified": "Email verified",
-  "account.resendEmail": "Send verification email again",
-  "account.emailSent": "Verification email sent. Open the link in that message.",
-  "account.emailMailOff":
-    "The mailbox is not connected yet, so the verification email cannot be sent.",
-  "auth.checkEmail": "Check your email and open the verification link.",
-  "auth.verifyTitle": "Verify email",
-  "auth.verifyOk": "Your email is verified. You can use the account.",
-  "auth.verifyBad": "This verification link is invalid or expired.",
   "listings.freelanceIntro":
     "Freelance services — YouTube editing, Instagram growth, AI setup, and more. Buyers pay escrow; you deliver in chat.",
   "home.newest": "Newest",

@@ -18,7 +18,6 @@ export type AuthUser = {
   country: string;
   bio: string;
   verified: boolean;
-  emailVerified?: boolean;
   rating: number;
   reviewCount: number;
   dummy: boolean;

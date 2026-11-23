@@ -116,10 +116,6 @@ export interface User {
   blockedUserIds?: number[];
   /** Emails this person blocked (guest buyers). */
   blockedEmails?: string[];
-  /** Inbox confirmation. Missing on old accounts means already verified. */
-  emailVerified?: boolean;
-  emailVerifyTokenHash?: string;
-  emailVerifyExpires?: string;
 }
 
 export interface WalletDeposit {
