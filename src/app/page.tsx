@@ -54,7 +54,7 @@ type Seller = {
   listingCount: number;
 };
 
-type SortKey = "newest" | "price_asc" | "price_desc";
+type SortKey = "recommended" | "newest" | "price_asc" | "price_desc";
 type ViewMode = "listings" | "sellers";
 
 export default function HomePage() {
@@ -63,7 +63,7 @@ export default function HomePage() {
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("");
-  const [sort, setSort] = useState<SortKey>("newest");
+  const [sort, setSort] = useState<SortKey>("recommended");
   const [view, setView] = useState<ViewMode>("listings");
   const [monetized, setMonetized] = useState<MonetizedFilter>("all");
   const [minPrice, setMinPrice] = useState("");
@@ -128,8 +128,15 @@ export default function HomePage() {
         return n >= minF;
       });
     }
+    const byRating = (a: Listing, b: Listing) => {
+      const ar = a.seller?.rating || 0;
+      const br = b.seller?.rating || 0;
+      if (br !== ar) return br - ar;
+      return (b.seller?.reviewCount || 0) - (a.seller?.reviewCount || 0);
+    };
     if (sort === "price_asc") list = [...list].sort((a, b) => a.price - b.price);
     else if (sort === "price_desc") list = [...list].sort((a, b) => b.price - a.price);
+    else if (sort === "recommended") list = [...list].sort(byRating);
     else list = [...list].sort((a, b) => b.id - a.id);
     return list;
   }, [listings, cat, q, sort, monetized, minPrice, maxPrice, minFollowers]);
@@ -171,7 +178,13 @@ export default function HomePage() {
 
       <section className="sec" style={{ paddingBottom: 6 }}>
         <div className="row" style={{ justifyContent: "space-between", gap: 12 }}>
-          <h2 style={{ margin: 0 }}>{t("home.browse")}</h2>
+          <h2 style={{ margin: 0 }}>
+            {cat
+              ? t(`cat.${cat}` as MsgKey)
+              : sort === "recommended"
+                ? t("home.recommended")
+                : t("home.browse")}
+          </h2>
         </div>
 
         {view === "listings" ? (
@@ -215,6 +228,7 @@ export default function HomePage() {
                 onChange={(e) => setSort(e.target.value as SortKey)}
                 aria-label="Sort"
               >
+                <option value="recommended">{t("home.sortRecommended")}</option>
                 <option value="newest">{t("home.newest")}</option>
                 <option value="price_asc">{t("home.priceAsc")}</option>
                 <option value="price_desc">{t("home.priceDesc")}</option>
@@ -273,6 +287,26 @@ export default function HomePage() {
             {!sellers.length ? <p className="mut">{t("home.noSellers")}</p> : null}
           </div>
         )}
+      </section>
+
+      <section className="sec deal-how">
+        <h2>{t("home.dealTitle")}</h2>
+        <div className="deal-steps">
+          {(
+            [
+              ["01", "home.deal1", "home.deal1d"],
+              ["02", "home.deal2", "home.deal2d"],
+              ["03", "home.deal3", "home.deal3d"],
+              ["04", "home.deal4", "home.deal4d"],
+            ] as const
+          ).map(([n, title, body]) => (
+            <article key={n} className="deal-step">
+              <span className="deal-n">{n}</span>
+              <h3>{t(title)}</h3>
+              <p>{t(body)}</p>
+            </article>
+          ))}
+        </div>
       </section>
     </>
   );

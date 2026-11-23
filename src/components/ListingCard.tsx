@@ -116,10 +116,11 @@ export function ListingCard({ listing }: Props) {
           </p>
         ) : null}
         <p className="sm" style={{ margin: "0 0 6px" }}>
-          {s?.reviewCount ? (
+          {(s?.reviewCount || 0) > 0 || (s?.rating || 0) > 0 ? (
             <>
-              <span className="star">{stars(s.rating || 0)}</span>{" "}
-              {(s.rating || 0).toFixed(1)} ({s.reviewCount})
+              <span className="star">{stars(s?.rating || 0)}</span>{" "}
+              {(s?.rating || 0).toFixed(1)}
+              {s?.reviewCount ? ` (${s.reviewCount})` : ""}
             </>
           ) : (
             <span className="mut">{t("card.noReviews")}</span>

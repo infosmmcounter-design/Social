@@ -80,8 +80,16 @@ function ListingsInner() {
         return n >= minF;
       });
     }
+    if (sort === "recommended") {
+      list = [...list].sort((a, b) => {
+        const ar = a.seller?.rating || 0;
+        const br = b.seller?.rating || 0;
+        if (br !== ar) return br - ar;
+        return (b.seller?.reviewCount || 0) - (a.seller?.reviewCount || 0);
+      });
+    }
     return list;
-  }, [listings, cat, monetized, minPrice, maxPrice, minAudience]);
+  }, [listings, cat, monetized, minPrice, maxPrice, minAudience, sort]);
 
   const title = useMemo(() => {
     if (cat) return t(`cat.${cat}` as MsgKey);
@@ -126,6 +134,7 @@ function ListingsInner() {
           aria-label="Sort"
           style={{ width: "auto" }}
         >
+          <option value="recommended">{t("home.sortRecommended")}</option>
           <option value="newest">{t("home.newest")}</option>
           <option value="price_asc">{t("home.priceAsc")}</option>
           <option value="price_desc">{t("home.priceDesc")}</option>

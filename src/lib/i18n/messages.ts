@@ -32,6 +32,17 @@ export type MsgKey =
   | "home.accounts"
   | "home.sellers"
   | "home.all"
+  | "home.recommended"
+  | "home.sortRecommended"
+  | "home.dealTitle"
+  | "home.deal1"
+  | "home.deal1d"
+  | "home.deal2"
+  | "home.deal2d"
+  | "home.deal3"
+  | "home.deal3d"
+  | "home.deal4"
+  | "home.deal4d"
   | "cat.youtube"
   | "cat.facebook"
   | "cat.tiktok"
@@ -235,6 +246,17 @@ const en: Dict = {
   "home.accounts": "Accounts",
   "home.sellers": "Sellers",
   "home.all": "All",
+  "home.recommended": "Recommended",
+  "home.sortRecommended": "Highest rating",
+  "home.dealTitle": "How a safe deal works",
+  "home.deal1": "Find a listing",
+  "home.deal1d": "Choose the account, service, or tool.",
+  "home.deal2": "Pay into escrow",
+  "home.deal2d": "USDT stays held until delivery.",
+  "home.deal3": "Receive it",
+  "home.deal3d": "The seller transfers the account or delivers the work.",
+  "home.deal4": "Confirm",
+  "home.deal4d": "You confirm, then escrow releases the payment.",
   "cat.youtube": "YouTube",
   "cat.facebook": "Facebook",
   "cat.tiktok": "TikTok",
