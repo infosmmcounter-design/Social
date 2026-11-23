@@ -18,6 +18,9 @@ export type AuthUser = {
   role: "buyer" | "seller" | "admin";
   country: string;
   bio: string;
+  phone?: string;
+  avatarUrl?: string;
+  walletBalance?: number;
   verified: boolean;
   rating: number;
   reviewCount: number;

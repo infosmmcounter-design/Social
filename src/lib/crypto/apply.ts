@@ -16,12 +16,15 @@ import { claimTx } from "./lock";
 import { assignExpectedMicro, planPayments, type ChainTransfer, type PaySnap } from "./match";
 import { microToUsd, sameAddress, usdToMicro } from "./money";
 
-function takenMicros(data: StoreData) {
+export function takenMicros(data: StoreData) {
   const taken = new Set<string>();
   for (const p of data.cryptoPayments || []) {
     if (p.status === "waiting" || p.status === "detected" || p.status === "confirming") {
       taken.add(p.expectedMicro);
     }
+  }
+  for (const d of data.walletDeposits || []) {
+    if (d.status === "pending" && d.expectedMicro) taken.add(d.expectedMicro);
   }
   return taken;
 }
@@ -255,6 +258,44 @@ export async function applyCryptoScan(data: StoreData, transfers: ChainTransfer[
           : `Received ${microToUsd(action.micro)} USDT, expected ${microToUsd(BigInt(pay.expectedMicro))}. Not marked paid until escrow reviews it.`;
     mirror(order, pay);
     addSystemMessage(order, pay.reason + ` Tx ${pay.txHash}.`);
+  }
+  await creditWalletDeposits(data, transfers);
+}
+
+async function creditWalletDeposits(data: StoreData, transfers: ChainTransfer[]) {
+  if (!data.walletDeposits) return;
+  if (!data.cryptoTxLocks) data.cryptoTxLocks = [];
+  for (const dep of data.walletDeposits) {
+    if (dep.status !== "pending" || !dep.expectedMicro || !dep.network || !dep.address) continue;
+    const expected = BigInt(dep.expectedMicro);
+    const created = new Date(dep.createdAt).getTime();
+    const expires = dep.expiresAt ? new Date(dep.expiresAt).getTime() : created + 60 * 60_000;
+    const hit = transfers.find(
+      (tx) =>
+        tx.tokenOk &&
+        tx.exact &&
+        tx.network === dep.network &&
+        sameAddress(tx.to, dep.address || "", dep.network === "USDT_BEP20") &&
+        tx.micro === expected &&
+        tx.blockTimeMs + 120_000 >= created &&
+        tx.blockTimeMs <= expires + 120_000
+    );
+    if (!hit) continue;
+    const claim = await claimTx(hit.txHash, dep.network, -dep.id, data.cryptoTxLocks);
+    if (claim === "other") continue;
+    dep.txHash = hit.txHash.toLowerCase();
+    dep.confirmations = hit.confirmations;
+    const need = REQUIRED_CONFIRMATIONS[dep.network];
+    if (hit.confirmations < need) {
+      dep.note = `Confirming ${hit.confirmations}/${need}`;
+      continue;
+    }
+    dep.status = "approved";
+    dep.note = `Auto-credited ${microToUsd(hit.micro)} USDT`;
+    const user = data.users.find((u) => u.id === dep.userId);
+    if (user) {
+      user.walletBalance = Math.round((Number(user.walletBalance || 0) + dep.amount) * 100) / 100;
+    }
   }
 }
 

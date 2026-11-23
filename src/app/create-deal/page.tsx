@@ -70,15 +70,18 @@ export default function CreateDealPage() {
 
   return (
     <section className="sec" style={{ maxWidth: 640 }}>
-      <h1 style={{ fontSize: "2rem" }}>{t("createDeal.title")}</h1>
-      <p className="mut">{t("createDeal.sub")}</p>
-      <p className="sm">
-        The buyer and the deal creator can both be outside SocialsFlip. Enter
-        the creator’s name and email. Admin sees every link under Created deals.
-        The buyer opens the link and pays escrow without an account.
-      </p>
+      <div className="deal-hero">
+        <p className="crypto-kicker">Escrow link</p>
+        <h1 style={{ fontSize: "2rem" }}>{t("createDeal.title")}</h1>
+        <p className="mut">{t("createDeal.sub")}</p>
+        <p className="sm">
+          The buyer and the deal creator can both be outside SocialsFlip. Enter
+          the creator’s name and email. Admin sees every link under Created deals.
+          The buyer opens the link and pays escrow without an account.
+        </p>
+      </div>
 
-      <div className="card">
+      <div className="card hl-card">
         {!user ? (
           <>
             <label>Your name (deal creator)</label>
@@ -186,7 +189,7 @@ export default function CreateDealPage() {
           </p>
         )}
 
-        <div className="note sm" style={{ marginTop: 12 }}>
+        <div className="hl-card deal-hold">
           {t("deal.holdGuide")}
         </div>
 
@@ -203,7 +206,7 @@ export default function CreateDealPage() {
         </button>
 
         {link ? (
-          <div className="card f" style={{ marginTop: 14 }}>
+          <div className="card f hl-card" style={{ marginTop: 14 }}>
             <label>Share this link with your buyer</label>
             <input readOnly value={link} onFocus={(e) => e.target.select()} />
             <button

@@ -306,8 +306,8 @@ const en: Dict = {
   "account.view": "View profile",
   "account.wallet": "Wallet",
   "account.walletHint":
-    "Send USDT to escrow, then submit the amount and transaction hash. Admin credits this wallet after checking the payment.",
-  "account.deposit": "Submit deposit",
+    "Pick TRC20 or BEP20, copy the address, and send the exact amount shown. The balance updates on its own after the network confirms.",
+  "account.deposit": "Show exact amount",
   "account.depositAmount": "Amount (USDT)",
   "account.depositNote": "Transaction hash or note",
   "account.applySell": "Apply to sell",

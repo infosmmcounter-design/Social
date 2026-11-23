@@ -176,6 +176,13 @@ export interface WalletDeposit {
   note: string;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
+  network?: CryptoAsset;
+  address?: string;
+  /** Exact on-chain amount in 6-decimal micro-USDT. */
+  expectedMicro?: string;
+  txHash?: string | null;
+  expiresAt?: string;
+  confirmations?: number;
 }
 
 export interface SellerApplication {

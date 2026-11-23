@@ -54,7 +54,7 @@ export default function HelpPage() {
         </p>
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card hl-card" style={{ marginTop: 16 }}>
         <h2 style={{ marginTop: 0 }}>{t("help.quickLinks")}</h2>
         <div className="row" style={{ flexWrap: "wrap", gap: 8 }}>
           <Link className="btn s o" href="/orders">
@@ -74,7 +74,7 @@ export default function HelpPage() {
 
       <h2 style={{ marginTop: 28 }}>{t("help.faq")}</h2>
       {FAQS.map((f) => (
-        <div className="card" key={f.q} style={{ marginBottom: 10 }}>
+        <div className="card hl-card" key={f.q} style={{ marginBottom: 10 }}>
           <strong>{f.q}</strong>
           <p className="sm" style={{ margin: "8px 0 0" }}>
             {f.a}
