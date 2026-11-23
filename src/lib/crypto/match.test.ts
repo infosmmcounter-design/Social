@@ -165,6 +165,26 @@ describe("matching", () => {
     assert.equal(actions.some((a) => a.type === "progress" && a.next === "paid"), false);
   });
 
+  it("still pays when the scan runs after the window but the transfer was on time", () => {
+    const created = now - 3 * 60 * 60_000;
+    const p = pay({
+      id: "1",
+      orderId: 1,
+      network: "USDT_TRC20",
+      expectedMicro: 7n,
+      createdAtMs: created,
+      expiresAtMs: created + 60 * 60_000,
+    });
+    const actions = planPayments(
+      [p],
+      [tx({ network: "USDT_TRC20", micro: 7n, blockTimeMs: created + 10 * 60_000, txHash: "ontime" })],
+      now,
+      new Set()
+    );
+    assert.equal(actions.some((a) => a.type === "progress" && a.next === "paid"), true);
+    assert.equal(actions.some((a) => a.type === "expire" || a.type === "late"), false);
+  });
+
   it("expires an unpaid order and ignores a repeated transaction hash", () => {
     const p = pay({
       id: "1",

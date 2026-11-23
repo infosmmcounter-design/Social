@@ -109,14 +109,7 @@ export function planPayments(
   knownHashes: Set<string>
 ): PlanAction[] {
   const actions: PlanAction[] = [];
-  const expired = new Set<string>();
-
-  for (const pay of payments) {
-    if (pay.status !== "waiting" || pay.txHash) continue;
-    if (nowMs <= pay.expiresAtMs) continue;
-    expired.add(pay.id);
-    actions.push({ type: "expire", paymentId: pay.id });
-  }
+  const claimed = new Set<string>();
 
   const used = new Set(knownHashes);
 
@@ -169,7 +162,7 @@ export function planPayments(
 
     const exact = payments.filter(
       (p) =>
-        (OPEN.includes(p.status) || p.status === "expired" || expired.has(p.id)) &&
+        (OPEN.includes(p.status) || p.status === "expired") &&
         p.network === tx.network &&
         addressOk(p, tx.to) &&
         p.expectedMicro === tx.micro &&
@@ -189,6 +182,7 @@ export function planPayments(
         to: tx.to,
         reason: "This amount matches more than one open order",
       });
+      for (const id of exact.map((p) => p.id)) claimed.add(id);
       used.add(hash);
       continue;
     }
@@ -212,7 +206,8 @@ export function planPayments(
         used.add(hash);
         continue;
       }
-      if (tx.blockTimeMs > pay.expiresAtMs + SKEW_MS || pay.status === "expired" || expired.has(pay.id)) {
+      claimed.add(pay.id);
+      if (tx.blockTimeMs > pay.expiresAtMs + SKEW_MS) {
         actions.push({ type: "late", ...base });
         used.add(hash);
         continue;
@@ -227,7 +222,7 @@ export function planPayments(
     }
 
     const near = payments.filter((p) => {
-      if (!OPEN.includes(p.status) || expired.has(p.id) || p.txHash) return false;
+      if (!OPEN.includes(p.status) || claimed.has(p.id) || p.txHash) return false;
       if (p.network !== tx.network || !addressOk(p, tx.to)) return false;
       const diff = p.expectedMicro > tx.micro ? p.expectedMicro - tx.micro : tx.micro - p.expectedMicro;
       return diff > 0n && diff < NEAR;
@@ -243,6 +238,7 @@ export function planPayments(
         confirmations: tx.confirmations,
         blockTimeMs: tx.blockTimeMs,
       });
+      claimed.add(only.id);
       used.add(hash);
       continue;
     }
@@ -253,6 +249,12 @@ export function planPayments(
       reason: "No single open order has this exact amount on this network",
     });
     used.add(hash);
+  }
+
+  for (const pay of payments) {
+    if (pay.status !== "waiting" || pay.txHash || claimed.has(pay.id)) continue;
+    if (nowMs <= pay.expiresAtMs) continue;
+    actions.push({ type: "expire", paymentId: pay.id });
   }
 
   return actions;
