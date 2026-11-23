@@ -10,6 +10,7 @@ import {
   isFreelanceListing,
 } from "@/lib/db";
 import { getCurrentUser, requireUser } from "@/lib/auth";
+import { attachCryptoPayment } from "@/lib/crypto/apply";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -179,7 +180,7 @@ export async function POST(req: Request) {
       const paymentInstructions = useWallet
         ? `Paid ${totals.total.toFixed(2)} USDT from the buyer wallet. Funds are held in escrow.`
         : wallet?.address
-        ? `Send exactly ${totals.total.toFixed(2)} USDT via ${coin} to SocialsFlip ESCROW wallet (${wallet.network}): ${wallet.address}. Do NOT pay the seller directly. Wrong network = lost funds. Pay within ${windowMins} minutes.`
+        ? `Send the exact USDT amount shown at checkout via ${coin} to SocialsFlip ESCROW wallet (${wallet.network}): ${wallet.address}. Do NOT pay the seller directly. Wrong network = lost funds. Pay within ${windowMins} minutes.`
         : `Pay ${totals.total.toFixed(2)} USDT via ${coin} to SocialsFlip escrow within ${windowMins} minutes. Wallet address appears once admin configures it.`;
 
       orderId = nextId(data);
@@ -221,6 +222,7 @@ export async function POST(req: Request) {
         msgs: [],
         createdAt: new Date().toISOString(),
       };
+      if (!useWallet) attachCryptoPayment(data, order);
 
       if (useWallet && user) {
         const payer = data.users.find((u) => u.id === user.id);

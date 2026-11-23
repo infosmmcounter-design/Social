@@ -1186,6 +1186,132 @@ html[data-theme="dark"] .backup-code {
   background: #fef2f2;
   border-color: #fca5a5;
 }
+.crypto-pay {
+  background: linear-gradient(180deg, #fffdf6, #fff);
+  border: 2px solid #e2b93d;
+  border-radius: 18px;
+  padding: 16px;
+  margin: 12px 0;
+  box-shadow: 0 12px 28px rgba(201, 162, 39, 0.16);
+}
+.crypto-pay-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+.crypto-kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a6410;
+}
+.crypto-pay h3 {
+  margin: 2px 0 0;
+}
+.crypto-amount {
+  margin: 12px 0 0;
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.crypto-amount small {
+  font-size: 1rem;
+  color: #8a6410;
+}
+.crypto-nets {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+.crypto-nets button {
+  flex: 1;
+  border: 1px solid #ead9a4;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.crypto-nets button small {
+  display: block;
+  font-weight: 600;
+  color: #6d6252;
+}
+.crypto-nets button.on {
+  background: #1a1408;
+  color: #f6e08a;
+  border-color: #1a1408;
+}
+.crypto-nets button.on small {
+  color: #f8e7b0;
+}
+.crypto-net {
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 700;
+  margin: 8px 0;
+}
+.crypto-net.trc {
+  background: #e11d2e;
+  color: #fff;
+}
+.crypto-net.bep {
+  background: #f0b90b;
+  color: #1a1408;
+}
+.crypto-grid {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+.crypto-qr svg {
+  width: 150px;
+  height: 150px;
+  background: #fff;
+  border-radius: 12px;
+}
+.crypto-pay code {
+  display: block;
+  word-break: break-all;
+  background: #1a1408;
+  color: #f6e08a;
+  padding: 8px 10px;
+  border-radius: 10px;
+  margin-top: 4px;
+}
+.pay-pill {
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: #fff4cc;
+  color: #3a2e12;
+}
+.pay-pill.paid {
+  background: #166534;
+  color: #ecfdf3;
+}
+.pay-pill.expired,
+.pay-pill.late,
+.pay-pill.underpaid,
+.pay-pill.needs_review {
+  background: #7f1d1d;
+  color: #fee2e2;
+}
+.pay-pill.confirming,
+.pay-pill.detected {
+  background: #1d4ed8;
+  color: #eff6ff;
+}
+@media (max-width: 640px) {
+  .crypto-grid {
+    grid-template-columns: 1fr;
+  }
+}
 .pay-timer .clock {
   font-weight: 800;
   font-variant-numeric: tabular-nums;

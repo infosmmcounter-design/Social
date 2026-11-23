@@ -504,6 +504,9 @@ export function normalizeStore(data: StoreData): StoreData {
   });
   data.fee = data.settings.fee ?? data.fee ?? 10;
   if (!data.walletDeposits) data.walletDeposits = [];
+  if (!data.cryptoPayments) data.cryptoPayments = [];
+  if (!data.unmatchedTxs) data.unmatchedTxs = [];
+  if (!data.cryptoTxLocks) data.cryptoTxLocks = [];
   for (const u of data.users) {
     if (!u.paymentMethods) u.paymentMethods = [];
     if (!u.avatarUrl) u.avatarUrl = avatarDataUrl(u.name, u.verified);

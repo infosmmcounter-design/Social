@@ -8,6 +8,7 @@ import { DEAL_STATUS_LABEL, type DealStatus } from "@/lib/types";
 import { useAuth } from "@/components/AuthProvider";
 import { useLang } from "@/components/LanguageProvider";
 import { LocaleLink as Link } from "@/components/LocaleLink";
+import { CryptoCheckout } from "@/components/CryptoCheckout";
 
 type Order = {
   id: number;
@@ -59,10 +60,6 @@ function DealInner() {
     dummy?: boolean;
     verified?: boolean;
   } | null>(null);
-  const [wallets, setWallets] = useState<
-    { asset: string; network: string; address: string }[]
-  >([]);
-  const [txHash, setTxHash] = useState("");
   const [text, setText] = useState("");
   const [asRole, setAsRole] = useState<"admin" | "seller">("admin");
   const [stars, setStars] = useState(5);
@@ -84,7 +81,6 @@ function DealInner() {
     }>(`/api/orders?id=${id}${q}`);
     setOrder(d.order);
     setSeller(d.seller);
-    setWallets(d.wallets || []);
     const listing = d.listing;
     setServiceDeal(
       !!(
@@ -123,21 +119,10 @@ function DealInner() {
   const isAdmin = user?.role === "admin";
   const adminAsDummy = isAdmin && seller?.dummy;
 
-  const remainMs = useMemo(() => {
-    if (!order?.paymentDueAt) return 0;
-    return new Date(order.paymentDueAt).getTime() - now;
-  }, [order?.paymentDueAt, now]);
-
   const deliveryRemainMs = useMemo(() => {
     if (!order?.deliveryDueAt) return 0;
     return new Date(order.deliveryDueAt).getTime() - now;
   }, [order?.deliveryDueAt, now]);
-
-  const expired =
-    !!order &&
-    order.status === "awaiting_payment" &&
-    !!order.paymentDueAt &&
-    remainMs <= 0;
 
   const deliveryOverdue =
     !!order &&
@@ -155,30 +140,6 @@ function DealInner() {
       });
       await load();
       setMsg(`Status → ${DEAL_STATUS_LABEL[status]}`);
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Failed");
-    }
-  }
-
-  async function submitProof(markPaidOnly = false) {
-    setErr("");
-    setMsg("");
-    try {
-      await api(`/api/orders/${id}/proof`, {
-        method: "POST",
-        json: {
-          txHash: markPaidOnly ? "" : txHash,
-          markPaidOnly,
-          email: emailQ || order?.buyerEmail,
-        },
-      });
-      setTxHash("");
-      await load();
-      setMsg(
-        markPaidOnly
-          ? "Marked as paid — seller & admin notified. Add TX hash when ready."
-          : "Payment proof sent. Seller notified."
-      );
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed");
     }
@@ -240,13 +201,6 @@ function DealInner() {
     if (from === "buyer") return order.buyerName || "Buyer";
     return from;
   };
-
-  const wallet =
-    wallets.find((w) =>
-      order.coin.toUpperCase().includes("BEP")
-        ? w.asset.includes("BEP")
-        : w.asset.includes("TRC")
-    ) || wallets[0];
 
   const steps: DealStatus[] = [
     "awaiting_payment",
@@ -334,82 +288,18 @@ function DealInner() {
         </div>
       ) : null}
 
-      <div className="card f">
-        <h3>{t("deal.escrowPay")}</h3>
-        {order.status === "awaiting_payment" && order.paymentDueAt ? (
-          <div className={`pay-timer ${expired ? "expired" : ""}`}>
-            <span>
-              {expired
-                ? "Payment window ended — you can still pay & come back; escrow will verify."
-                : `Pay within ${order.paymentWindowMins || 60} min window`}
-            </span>
-            <span className="clock" aria-live="polite">
-              {expired ? "00:00" : formatRemain(remainMs)}
-            </span>
-          </div>
-        ) : null}
-
-        {wallet?.address ? (
-          <p>
-            Send <b>{money(order.total)}</b> USDT to:
-            <br />
-            <code style={{ wordBreak: "break-all" }}>{wallet.address}</code>
-            <br />
-            <span className="sm mut">
-              Network: {wallet.network} ({wallet.asset})
-            </span>
-          </p>
-        ) : (
-          <p className="err">Escrow wallet not configured yet.</p>
-        )}
-        <p className="sm mut" style={{ marginTop: 8 }}>
-          {order.paymentInstructions}
-        </p>
-        {order.buyerMarkedPaid || order.paymentProof ? (
-          <p className="okmsg">
-            {order.paymentProof
-              ? `Proof submitted: ${order.paymentProof}`
-              : "Buyer marked payment as done (awaiting TX / confirmation)."}
-          </p>
-        ) : null}
-
-        {isBuyer && order.status === "awaiting_payment" ? (
-          <div style={{ marginTop: 12 }}>
-            <label>TX hash / payment proof</label>
-            <div className="row" style={{ flexWrap: "nowrap" }}>
-              <input
-                value={txHash}
-                onChange={(e) => setTxHash(e.target.value)}
-                placeholder="Paste transaction hash after sending USDT"
-              />
-            </div>
-            <div className="row" style={{ marginTop: 10 }}>
-              <button
-                className="btn"
-                type="button"
-                onClick={() => submitProof(false)}
-                disabled={!txHash.trim()}
-              >
-                {t("deal.iPaid")}
-              </button>
-              <button
-                className="btn o"
-                type="button"
-                onClick={() => submitProof(true)}
-              >
-                Mark paid (TX later)
-              </button>
-              <Link className="btn o" href="/">
-                {t("deal.comeAgain")}
-              </Link>
-            </div>
-            <p className="sm mut" style={{ marginTop: 8 }}>
-              You can leave and return anytime — this deal stays open. Seller is
-              notified when you mark payment done.
-            </p>
-          </div>
-        ) : null}
-      </div>
+      {order.coin === "Wallet balance" ? (
+        <div className="card f">
+          <h3>{t("deal.escrowPay")}</h3>
+          <p className="okmsg">{order.paymentInstructions}</p>
+        </div>
+      ) : (
+        <CryptoCheckout
+          orderId={order.id}
+          email={emailQ || order.buyerEmail}
+          isBuyer={!!isBuyer}
+        />
+      )}
 
       <div className="note sm">
         <b>Buyer:</b> {order.buyerName} ({order.buyerEmail}) · <b>Seller:</b>{" "}

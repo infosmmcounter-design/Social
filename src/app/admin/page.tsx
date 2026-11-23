@@ -15,6 +15,7 @@ import {
 import { LocaleLink as Link } from "@/components/LocaleLink";
 import { useLang } from "@/components/LanguageProvider";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
+import { AdminCrypto } from "@/components/AdminCrypto";
 
 type Tab =
   | "dash"
@@ -29,6 +30,7 @@ type Tab =
   | "reviews"
   | "blog"
   | "people"
+  | "crypto"
   | "set";
 
 export default function AdminPage() {
@@ -328,6 +330,7 @@ export default function AdminPage() {
     ["people", "People & wallets"],
     ["listings", "Listings"],
     ["orders", "Orders"],
+    ["crypto", "Crypto payments"],
     ["created", "Created deals"],
     ["chats", "Seller chats"],
     ["dummy", "Dummy Data / Seller Generator"],
@@ -1387,6 +1390,8 @@ export default function AdminPage() {
         </>
       )}
 
+      {tab === "crypto" && <AdminCrypto />}
+
       {tab === "orders" && (
         <div className="tbl">
           <table>
@@ -1908,7 +1913,7 @@ export default function AdminPage() {
               }
               style={{ width: "auto", marginRight: 8 }}
             />
-            Auto-hold funds when buyer submits TX proof
+            Legacy switch. USDT is held only after the blockchain confirms the exact transfer. A pasted hash does not mark an order paid.
           </label>
           <h3 style={{ marginTop: 18 }}>Escrow USDT addresses</h3>
           {settings.cryptoWallets.map((w, i) => (

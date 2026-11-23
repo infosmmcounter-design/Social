@@ -122,6 +122,53 @@ export interface User {
   blockedEmails?: string[];
 }
 
+export type CryptoPayStatus =
+  | "waiting"
+  | "detected"
+  | "confirming"
+  | "paid"
+  | "expired"
+  | "underpaid"
+  | "overpaid"
+  | "late"
+  | "needs_review"
+  | "cancelled";
+
+export interface CryptoPayment {
+  id: string;
+  orderId: number;
+  network: CryptoAsset;
+  address: string;
+  expectedMicro: string;
+  receivedMicro: string | null;
+  txHash: string | null;
+  fromAddress: string | null;
+  status: CryptoPayStatus;
+  confirmations: number;
+  createdAt: string;
+  expiresAt: string;
+  confirmedAt: string | null;
+  blockTime: string | null;
+  reason: string | null;
+}
+
+export interface UnmatchedTx {
+  txHash: string;
+  network: CryptoAsset;
+  amountMicro: string;
+  fromAddress: string;
+  toAddress: string;
+  blockTime: string | null;
+  reason: string;
+  confirmations: number;
+  createdAt: string;
+}
+
+export interface CryptoTxLock {
+  txHash: string;
+  orderId: number;
+}
+
 export interface WalletDeposit {
   id: number;
   userId: number;
@@ -217,6 +264,15 @@ export interface Order {
   buyerMarkedPaid: boolean;
   /** ISO deadline for escrow payment window. */
   paymentDueAt: string | null;
+  payId?: string | null;
+  payStatus?: CryptoPayStatus | null;
+  payNetwork?: CryptoAsset | null;
+  payAddress?: string | null;
+  /** Exact USDT amount in 6-decimal micro units. */
+  payExpectedMicro?: string | null;
+  payReceivedMicro?: string | null;
+  payTxHash?: string | null;
+  payConfirmations?: number;
   /** 30 or 60 typical. */
   paymentWindowMins: number;
   /** ISO deadline for seller delivery after funds held (usually +24h). */
@@ -336,6 +392,9 @@ export interface StoreData {
   reviews: Review[];
   posts: BlogPost[];
   walletDeposits?: WalletDeposit[];
+  cryptoPayments?: CryptoPayment[];
+  unmatchedTxs?: UnmatchedTx[];
+  cryptoTxLocks?: CryptoTxLock[];
 }
 
 export const CATEGORIES: [Category, string][] = [
