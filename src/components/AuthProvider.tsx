@@ -13,6 +13,7 @@ import { api } from "@/lib/api";
 export type AuthUser = {
   id: number;
   email: string;
+  username?: string;
   name: string;
   role: "buyer" | "seller" | "admin";
   country: string;

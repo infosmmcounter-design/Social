@@ -39,12 +39,15 @@ export default function LoginPage() {
     <section className="sec" style={{ maxWidth: 420 }}>
       <h1 style={{ fontSize: "2rem" }}>{t("nav.login")}</h1>
       <form className="card" onSubmit={submit}>
-        <label>Email</label>
+        <label>{t("auth.loginId")}</label>
         <input
-          type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          aria-label={t("auth.loginId")}
         />
         <label>Password</label>
         <input
@@ -60,6 +63,9 @@ export default function LoginPage() {
           </button>
         </div>
       </form>
+      <p className="sm mut" style={{ marginTop: 12 }}>
+        <Link href="/auth/recover">{t("auth.recoverLink")}</Link>
+      </p>
       <p className="sm mut" style={{ marginTop: 12 }}>
         New here? <Link href="/auth/signup">Create a buyer account</Link>. Guests
         can also checkout without signing up.

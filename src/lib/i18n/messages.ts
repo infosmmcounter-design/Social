@@ -101,6 +101,18 @@ export type MsgKey =
   | "account.save"
   | "account.saved"
   | "account.days"
+  | "auth.username"
+  | "auth.generateUser"
+  | "auth.emailOptional"
+  | "auth.backupTitle"
+  | "auth.backupHint"
+  | "auth.savedCode"
+  | "auth.continue"
+  | "auth.loginId"
+  | "auth.recoverLink"
+  | "auth.recoverTitle"
+  | "auth.recoverHint"
+  | "auth.newBackup"
   | "listings.freelanceIntro"
   | "home.newest"
   | "home.priceAsc"
@@ -307,6 +319,19 @@ const en: Dict = {
   "account.save": "Save profile",
   "account.saved": "Profile saved.",
   "account.days": "Days",
+  "auth.username": "Username",
+  "auth.generateUser": "Generate username",
+  "auth.emailOptional": "Email (optional, for your own record)",
+  "auth.backupTitle": "Save your backup code",
+  "auth.backupHint":
+    "This is the only time we show this code. Keep it somewhere safe. If you lose the password, this code opens the account.",
+  "auth.savedCode": "I saved this code",
+  "auth.continue": "Continue",
+  "auth.loginId": "Username or email",
+  "auth.recoverLink": "Lost password? Use your backup code",
+  "auth.recoverTitle": "Recover account",
+  "auth.recoverHint": "Enter your username and the backup code you saved, then choose a new password.",
+  "auth.newBackup": "Create a new backup code",
   "listings.freelanceIntro":
     "Freelance services — YouTube editing, Instagram growth, AI setup, and more. Buyers pay escrow; you deliver in chat.",
   "home.newest": "Newest",

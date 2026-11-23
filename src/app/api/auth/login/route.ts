@@ -5,16 +5,20 @@ import { friendlyStoreError } from "@/lib/store-backend";
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const email = String(body.email || "")
+  const login = String(body.email || body.login || "")
     .trim()
     .toLowerCase();
   const password = String(body.password || "");
 
   try {
     const store = await readStore();
-    const user = store.users.find((u) => u.email === email && u.active);
+    const user = store.users.find(
+      (u) =>
+        u.active &&
+        (u.email === login || (u.username || "").toLowerCase() === login)
+    );
     if (!user || !(await verifyPassword(password, user.passwordHash))) {
-      return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+      return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
     }
 
     await createSession(user.id, user.role);

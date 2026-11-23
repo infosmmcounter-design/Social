@@ -443,6 +443,7 @@ export function publicUser(
   return {
     id: u.id,
     email: u.email,
+    username: u.username || "",
     name: u.name,
     role: u.role,
     country: u.country,
@@ -512,6 +513,23 @@ export function normalizeStore(data: StoreData): StoreData {
     if (typeof u.completedDeals !== "number") u.completedDeals = 0;
     if (!u.blockedUserIds) u.blockedUserIds = [];
     if (!u.blockedEmails) u.blockedEmails = [];
+  }
+  const taken = new Set<string>();
+  for (const u of data.users) {
+    let name = (u.username || "").trim().toLowerCase();
+    if (!/^[a-z0-9_]{3,20}$/.test(name)) {
+      const fromEmail = (u.email || "").split("@")[0] || "";
+      name = (fromEmail || u.name || "user")
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, "")
+        .slice(0, 16);
+      if (name.length < 3) name = `user${u.id}`;
+    }
+    let pick = name;
+    let n = 2;
+    while (taken.has(pick)) pick = `${name.slice(0, 16)}${n++}`.slice(0, 20);
+    u.username = pick;
+    taken.add(pick);
   }
   for (const l of data.listings) {
     if (!l.images) l.images = [];

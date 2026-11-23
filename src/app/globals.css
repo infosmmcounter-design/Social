@@ -928,6 +928,24 @@ footer.sf-footer {
 .chip.on .chip-n {
   background: rgba(255, 255, 255, 0.22);
 }
+.backup-code {
+  margin: 14px 0;
+  padding: 14px 12px;
+  border: 1px solid var(--a);
+  border-radius: 12px;
+  background: #fff8e6;
+  color: #1a1408;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-align: center;
+  word-break: break-all;
+}
+html[data-theme="dark"] .backup-code {
+  background: #2a2416;
+  color: #fff4cc;
+}
 .deal-how h2 {
   margin: 0 0 14px;
 }

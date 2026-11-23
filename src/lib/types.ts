@@ -91,6 +91,10 @@ export function isFreelanceCategory(cat: string | undefined | null): boolean {
 export interface User {
   id: number;
   email: string;
+  /** Login name. Filled for older accounts from the email. */
+  username?: string;
+  /** bcrypt hash of the one-time recovery code. The code itself is never stored. */
+  backupCodeHash?: string;
   passwordHash: string;
   name: string;
   role: Role;

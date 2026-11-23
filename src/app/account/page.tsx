@@ -36,6 +36,8 @@ export default function AccountPage() {
     "notes" | "help" | "settings" | "how" | "escrow" | "fees" | "rules" | "chats" | ""
   >("");
   const [currentPw, setCurrentPw] = useState("");
+  const [backupPw, setBackupPw] = useState("");
+  const [freshCode, setFreshCode] = useState("");
   const [nextPw, setNextPw] = useState("");
   const [deletePw, setDeletePw] = useState("");
   const [chats, setChats] = useState<{ id: number; sellerName?: string; buyerName?: string; subject: string; lastMsg?: { text: string } | null }[]>([]);
@@ -133,9 +135,16 @@ export default function AccountPage() {
         </div>
         <div>
           <strong>{user.name}</strong>
-          <p className="sm" style={{ margin: "2px 0 0", opacity: 0.85 }}>
-            {user.email}
-          </p>
+          {user.username ? (
+            <p className="sm" style={{ margin: "2px 0 0", opacity: 0.85 }}>
+              @{user.username}
+            </p>
+          ) : null}
+          {user.email ? (
+            <p className="sm" style={{ margin: "2px 0 0", opacity: 0.85 }}>
+              {user.email}
+            </p>
+          ) : null}
           <p className="sm" style={{ margin: "2px 0 0", opacity: 0.75 }}>
             {user.role === "seller" ? t("account.seller") : t("account.buyer")}
             {user.country ? ` · ${user.country}` : ""}
@@ -309,6 +318,39 @@ export default function AccountPage() {
             <label>New password</label>
             <input type="password" value={nextPw} onChange={(e) => setNextPw(e.target.value)} />
             <button className="btn" type="submit" style={{ marginTop: 10 }}>Update password</button>
+          </form>
+          <form
+            style={{ marginTop: 16 }}
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setErr("");
+              setMsg("");
+              setFreshCode("");
+              try {
+                const d = await api<{ backupCode: string }>("/api/account/backup-code", {
+                  method: "POST",
+                  json: { password: backupPw },
+                });
+                setFreshCode(d.backupCode);
+                setBackupPw("");
+                setMsg("New backup code ready. The old code no longer works.");
+              } catch (ex) {
+                setErr(ex instanceof Error ? ex.message : "Failed");
+              }
+            }}
+          >
+            <label>{t("auth.newBackup")}</label>
+            <p className="sm mut">{t("auth.backupHint")}</p>
+            <input
+              type="password"
+              value={backupPw}
+              onChange={(e) => setBackupPw(e.target.value)}
+              placeholder="Current password"
+            />
+            <button className="btn o" type="submit" style={{ marginTop: 10 }}>
+              {t("auth.newBackup")}
+            </button>
+            {freshCode ? <p className="backup-code">{freshCode}</p> : null}
           </form>
           <p style={{ marginTop: 14 }}>
             <Link href="/privacy">Terms and privacy</Link>

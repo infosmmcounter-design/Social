@@ -14,6 +14,7 @@ const PATHS = [
   "/privacy",
   "/auth/login",
   "/auth/signup",
+  "/auth/recover",
 ];
 
 function alts(path: string) {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { updateStore, nextId, publicUser } from "@/lib/db";
 import { createSession, hashPassword } from "@/lib/auth";
 import { avatarDataUrl } from "@/lib/placeholders";
+import { cleanUsername, newBackupCode, usernameError } from "@/lib/username";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -10,12 +11,18 @@ export async function POST(req: Request) {
     .toLowerCase();
   const password = String(body.password || "");
   const name = String(body.name || "").trim();
+  const username = cleanUsername(String(body.username || ""));
 
-  if (!email || !password || !name) {
+  if (!name || !password || !username) {
     return NextResponse.json(
-      { error: "Name, email and password are required." },
+      { error: "Name, username and password are required." },
       { status: 400 }
     );
+  }
+  const nameErr = usernameError(username);
+  if (nameErr) return NextResponse.json({ error: nameErr }, { status: 400 });
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ error: "Enter a valid email, or leave it blank." }, { status: 400 });
   }
   if (password.length < 6) {
     return NextResponse.json(
@@ -25,17 +32,24 @@ export async function POST(req: Request) {
   }
 
   const passwordHash = await hashPassword(password);
+  const backupCode = newBackupCode();
+  const backupCodeHash = await hashPassword(backupCode.replace(/[^A-Za-z0-9]/g, "").toUpperCase());
   let userId = 0;
 
   try {
     await updateStore((data) => {
-      if (data.users.some((u) => u.email === email)) {
+      if (email && data.users.some((u) => u.email === email)) {
         throw new Error("Email already registered.");
+      }
+      if (data.users.some((u) => (u.username || "").toLowerCase() === username)) {
+        throw new Error("That username is taken.");
       }
       userId = nextId(data);
       data.users.push({
         id: userId,
         email,
+        username,
+        backupCodeHash,
         passwordHash,
         name,
         role: "buyer",
@@ -65,5 +79,6 @@ export async function POST(req: Request) {
   await createSession(user.id, user.role);
   return NextResponse.json({
     user: publicUser(user, false, { includeWallet: true }),
+    backupCode,
   });
 }
