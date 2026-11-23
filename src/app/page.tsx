@@ -173,6 +173,7 @@ export default function HomePage() {
               {t("home.searchBtn")}
             </button>
           </div>
+          <EscrowBand />
         </div>
       </section>
 
@@ -247,7 +248,7 @@ export default function HomePage() {
             />
 
             <div className="listing-grid" style={{ marginTop: 14 }}>
-              {filtered.slice(0, 6).map((l) => (
+              {filtered.map((l) => (
                 <ListingCard key={l.id} listing={l} />
               ))}
               {!filtered.length ? (
@@ -256,14 +257,6 @@ export default function HomePage() {
                 </p>
               ) : null}
             </div>
-            <EscrowBand />
-            {filtered.length > 6 ? (
-              <div className="listing-grid" style={{ marginTop: 14 }}>
-                {filtered.slice(6).map((l) => (
-                  <ListingCard key={l.id} listing={l} />
-                ))}
-              </div>
-            ) : null}
           </>
         ) : (
           <div className="seller-grid" id="sellers" style={{ marginTop: 14 }}>
@@ -298,8 +291,6 @@ export default function HomePage() {
           </div>
         )}
       </section>
-
-      {view !== "listings" ? <EscrowBand /> : null}
 
       <section className="sec deal-how">
         <h2>{t("home.dealTitle")}</h2>
@@ -344,8 +335,8 @@ function EscrowBand() {
           </svg>
         </div>
         <div className="escrow-band-copy">
-          <h2>Protected by USDT Escrow</h2>
-          <p>Your payment is safe until you approve.</p>
+          <h2>Protected by Escrow</h2>
+          <p>Your payment is protected by escrow until you approve.</p>
         </div>
         <div className="usdt-coin" aria-hidden>
           <span>₮</span>

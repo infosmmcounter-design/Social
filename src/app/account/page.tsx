@@ -48,6 +48,10 @@ export default function AccountPage() {
   const [amount, setAmount] = useState("");
   const [net, setNet] = useState<"USDT_TRC20" | "USDT_BEP20">("USDT_TRC20");
   const [qr, setQr] = useState("");
+  const [walletOpen, setWalletOpen] = useState(false);
+  const [depositOpen, setDepositOpen] = useState(false);
+  const [sawPending, setSawPending] = useState(false);
+  const [clock, setClock] = useState(Date.now());
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [wallets, setWallets] = useState<WalletAddr[]>([]);
@@ -79,7 +83,17 @@ export default function AccountPage() {
   }, [user]);
 
   const openDep = deposits.find((d) => d.status === "pending" && d.expectedMicro && d.address);
+  const depLeft = openDep?.expiresAt ? new Date(openDep.expiresAt).getTime() - clock : 0;
+  useEffect(() => {
+    if (openDep) setSawPending(true);
+  }, [openDep]);
   const openDepId = openDep?.id || 0;
+
+  useEffect(() => {
+    if (!depositOpen) return;
+    const id = window.setInterval(() => setClock(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [depositOpen]);
 
   useEffect(() => {
     if (!user || !openDepId) return;
@@ -239,13 +253,16 @@ export default function AccountPage() {
             <Link className="btn s o" href={`/seller/${user.id}`}>
               {t("account.view")}
             </Link>
-          ) : (
-            <Link className="btn s o" href="/apply">
-              {t("account.applySell")}
-            </Link>
-          )}
+          ) : null}
         </div>
       </div>
+
+      {user.role !== "seller" ? (
+        <Link className="seller-apply" href="/apply">
+          <span>Apply to become a seller</span>
+          <small>Open your store for YouTube channels, pages, and freelance services. Buyers pay through escrow.</small>
+        </Link>
+      ) : null}
 
       {editing ? (
         <form className="card hl-card" onSubmit={saveProfile} style={{ marginTop: 14 }}>
@@ -284,6 +301,15 @@ export default function AccountPage() {
         </form>
       ) : null}
 
+      <button type="button" className="wallet-entry" onClick={() => setWalletOpen((v) => !v)}>
+        <span>
+          <strong>Wallet</strong>
+          <small>Deposit in Wallet</small>
+        </span>
+        <em>{walletOpen ? "Close" : "Open"}</em>
+      </button>
+
+      {walletOpen ? (
       <div className="card wallet-card crypto-pay">
         <div className="row" style={{ justifyContent: "space-between" }}>
           <strong>{t("account.wallet")}</strong>
@@ -292,6 +318,40 @@ export default function AccountPage() {
           </span>
         </div>
         <p className="sm">{t("account.walletHint")}</p>
+        <button className="btn buy-go" type="button" onClick={() => setDepositOpen(true)}>
+          Deposit in Wallet
+        </button>
+        {deposits.length ? (
+          <ul className="wallet-list">
+            {deposits.slice(0, 6).map((d) => (
+              <li key={d.id}>
+                <span>{money(d.amount)}</span>
+                <span className="pill w">{d.status}</span>
+                <span className="sm mut">{d.note}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+      ) : null}
+
+      {depositOpen ? (
+        <div className="dep-modal" role="dialog" aria-label="Deposit">
+          <div className="dep-modal-card">
+            <div className="row" style={{ justifyContent: "space-between" }}>
+              <strong>Deposit USDT</strong>
+              <button type="button" className="btn s o" onClick={() => setDepositOpen(false)}>
+                Back
+              </button>
+            </div>
+            <p className="sm">The payment window is 60 minutes. Send the exact amount shown.</p>
+            {openDep ? (
+              <p className="clock" aria-live="polite">
+                {depLeft <= 0
+                  ? "00:00"
+                  : `${String(Math.floor(depLeft / 60000)).padStart(2, "0")}:${String(Math.floor((depLeft / 1000) % 60)).padStart(2, "0")}`}
+              </p>
+            ) : null}
         <p className="crypto-kicker">Deposit USDT</p>
         <div className="crypto-nets">
           {(["USDT_TRC20", "USDT_BEP20"] as const).map((asset) => {
@@ -372,19 +432,12 @@ export default function AccountPage() {
               {openDep.confirmations ? ` · ${openDep.confirmations} confirmations` : ""}
             </p>
           </div>
+        ) : sawPending ? (
+          <p className="okmsg">Deposit received. Your wallet balance is {money(balance)}.</p>
         ) : null}
-        {deposits.length ? (
-          <ul className="wallet-list">
-            {deposits.slice(0, 6).map((d) => (
-              <li key={d.id}>
-                <span>{money(d.amount)}</span>
-                <span className="pill w">{d.status}</span>
-                <span className="sm mut">{d.note}</span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="account-stats">
         <div>

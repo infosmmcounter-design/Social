@@ -37,6 +37,8 @@ type Order = {
   msgs: { id: number; from: string; text: string; createdAt: string }[];
   sellerId: number;
   buyerId: number | null;
+  payStatus?: string | null;
+  payTxHash?: string | null;
 };
 
 function formatRemain(ms: number) {
@@ -72,6 +74,9 @@ function DealInner() {
   const [msg, setMsg] = useState("");
   const [now, setNow] = useState(Date.now());
   const [serviceDeal, setServiceDeal] = useState(false);
+  const [showPay, setShowPay] = useState(false);
+  const [priceDraft, setPriceDraft] = useState("");
+  const [priceBusy, setPriceBusy] = useState(false);
 
   const load = useCallback(async () => {
     const q = emailQ ? `&email=${encodeURIComponent(emailQ)}` : "";
@@ -132,6 +137,26 @@ function DealInner() {
     (order.status === "awaiting_payment" || order.status === "funds_held");
   const responseOverdue = waitingForSeller && !!order?.deliveryDueAt && responseRemainMs <= 0;
   const dealStarted = !!order?.sellerAcceptedAt && order.status === "funds_held";
+
+  async function savePrice(e: React.FormEvent) {
+    e.preventDefault();
+    setErr("");
+    setPriceBusy(true);
+    try {
+      await api(`/api/orders/${id}/price`, {
+        method: "POST",
+        json: { price: Number(priceDraft) },
+      });
+      setPriceDraft("");
+      setMsg("Price updated. The buyer sees the new total.");
+      setShowPay(false);
+      await load();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not update price");
+    } finally {
+      setPriceBusy(false);
+    }
+  }
 
   async function setStatus(status: DealStatus, action?: string) {
     setErr("");
@@ -328,16 +353,54 @@ function DealInner() {
         </div>
       ) : null}
 
+      {(isSeller || isAdmin) && order.status === "awaiting_payment" && !order.payTxHash ? (
+        <form className="card hl-card price-live" onSubmit={savePrice}>
+          <h3 style={{ marginTop: 0 }}>Update price</h3>
+          <p className="sm mut">
+            Current price {money(order.price)}. Change it while you talk with the buyer. The escrow fee and payment amount update immediately.
+          </p>
+          <label>New price before the escrow fee</label>
+          <input
+            type="number"
+            min="1"
+            step="0.01"
+            value={priceDraft}
+            onChange={(e) => setPriceDraft(e.target.value)}
+            placeholder={String(order.price)}
+            required
+          />
+          <button className="btn" type="submit" disabled={priceBusy} style={{ marginTop: 10 }}>
+            {priceBusy ? "…" : "Update price live"}
+          </button>
+        </form>
+      ) : null}
+
       {order.coin === "Wallet balance" ? (
         <div className="card f">
           <h3>{t("deal.escrowPay")}</h3>
           <p className="okmsg">{order.paymentInstructions}</p>
+        </div>
+      ) : order.status === "awaiting_payment" &&
+        !showPay &&
+        order.payStatus !== "detected" &&
+        order.payStatus !== "confirming" &&
+        order.payStatus !== "paid" &&
+        isBuyer ? (
+        <div className="card hl-card pay-ready">
+          <h3 style={{ marginTop: 0 }}>Make Payment</h3>
+          <p className="sm">
+            Your order is placed. Chat with the seller below about the price, then pay {money(order.total)} with USDT.
+          </p>
+          <button className="btn buy-go" type="button" onClick={() => setShowPay(true)}>
+            Make Payment · {money(order.total)}
+          </button>
         </div>
       ) : (
         <CryptoCheckout
           orderId={order.id}
           email={emailQ || order.buyerEmail}
           isBuyer={!!isBuyer}
+          total={order.total}
         />
       )}
 
