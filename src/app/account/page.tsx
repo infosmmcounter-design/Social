@@ -59,7 +59,7 @@ export default function AccountPage() {
   const [freshCode, setFreshCode] = useState("");
   const [nextPw, setNextPw] = useState("");
   const [deletePw, setDeletePw] = useState("");
-  const [chats, setChats] = useState<{ id: number; sellerName?: string; buyerName?: string; subject: string; lastMsg?: { text: string } | null }[]>([]);
+  const [chats, setChats] = useState<{ id: number; source: "inquiry" | "deal"; kind: string; title: string; subject: string; preview: string }[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -73,8 +73,8 @@ export default function AccountPage() {
         setWallets(d.wallets || []);
       })
       .catch(() => undefined);
-    api<{ inquiries: typeof chats }>("/api/inquiries")
-      .then((d) => setChats(d.inquiries || []))
+    api<{ chats: typeof chats }>("/api/chats")
+      .then((d) => setChats(d.chats || []))
       .catch(() => setChats([]));
   }, [user]);
 
@@ -562,13 +562,13 @@ export default function AccountPage() {
       {panel === "chats" ? (
         <div className="card hl-card" style={{ marginTop: 12 }}>
           <h3>Chat previews</h3>
-          {chats.slice(0, 6).map((c) => (
-            <p key={c.id} className="sm">
-              <Link href={`/chat/${c.id}`}>
-                <b>{c.sellerName || c.buyerName || c.subject}</b>
+          {[...chats.filter((c) => c.kind !== "escrow").slice(0, 6), ...chats.filter((c) => c.kind === "escrow")].map((c) => (
+            <p key={`${c.source}-${c.id}`} className="sm">
+              <Link href={c.source === "deal" ? `/deal/${c.id}` : c.id ? `/chat/${c.id}` : "/chats"}>
+                <b>{c.kind === "escrow" ? "⚖ Chat with Escrow" : c.title}</b>
               </Link>
               <br />
-              <span className="mut">{c.lastMsg?.text || c.subject}</span>
+              <span className="mut">{c.preview || c.subject}</span>
             </p>
           ))}
           {!chats.length ? <p className="sm mut">No chats yet.</p> : null}

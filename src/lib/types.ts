@@ -307,6 +307,8 @@ export interface Order {
   privateRequestStatus: PrivateRequestStatus;
   msgs: ChatMessage[];
   createdAt: string;
+  /** Last time each person opened this deal room. Keys are u:userId or e:email. */
+  seen?: Record<string, string>;
 }
 
 export interface PrivateRequest {
@@ -338,6 +340,10 @@ export interface InquiryThread {
   msgs: ChatMessage[];
   createdAt: string;
   updatedAt: string;
+  /** Linked marketplace order, when this room is about a deal. */
+  orderId?: number | null;
+  /** Last time each person opened the room. Keys are u:userId or e:email. */
+  seen?: Record<string, string>;
   /** User ids who removed this chat from their list. */
   hiddenFor?: number[];
   /** Guest emails who removed this chat from their list. */
