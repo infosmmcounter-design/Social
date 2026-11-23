@@ -246,14 +246,24 @@ export default function HomePage() {
               onMinAudience={setMinFollowers}
             />
 
-            <div className="grid" style={{ marginTop: 14 }}>
-              {filtered.map((l) => (
+            <div className="listing-grid" style={{ marginTop: 14 }}>
+              {filtered.slice(0, 6).map((l) => (
                 <ListingCard key={l.id} listing={l} />
               ))}
               {!filtered.length ? (
-                <p className="mut">{t("home.noListings")}</p>
+                <p className="mut" style={{ gridColumn: "1 / -1" }}>
+                  {t("home.noListings")}
+                </p>
               ) : null}
             </div>
+            <EscrowBand />
+            {filtered.length > 6 ? (
+              <div className="listing-grid" style={{ marginTop: 14 }}>
+                {filtered.slice(6).map((l) => (
+                  <ListingCard key={l.id} listing={l} />
+                ))}
+              </div>
+            ) : null}
           </>
         ) : (
           <div className="seller-grid" id="sellers" style={{ marginTop: 14 }}>
@@ -289,6 +299,8 @@ export default function HomePage() {
         )}
       </section>
 
+      {view !== "listings" ? <EscrowBand /> : null}
+
       <section className="sec deal-how">
         <h2>{t("home.dealTitle")}</h2>
         <div className="deal-steps">
@@ -309,5 +321,37 @@ export default function HomePage() {
         </div>
       </section>
     </>
+  );
+}
+
+function EscrowBand() {
+  return (
+    <section className="escrow-band" aria-label="Protected by USDT Escrow">
+      <div className="escrow-band-inner">
+        <div className="escrow-shield" aria-hidden>
+          <svg width="40" height="40" viewBox="0 0 48 48" fill="none">
+            <path
+              d="M24 4 8 10v12c0 10 6.8 16.6 16 20 9.2-3.4 16-10 16-20V10L24 4z"
+              fill="#1a1408"
+            />
+            <rect x="18" y="20" width="12" height="10" rx="2" fill="#f6e08a" />
+            <path
+              d="M20 20v-2a4 4 0 0 1 8 0v2"
+              stroke="#f6e08a"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        </div>
+        <div className="escrow-band-copy">
+          <h2>Protected by USDT Escrow</h2>
+          <p>Your payment is safe until you approve.</p>
+        </div>
+        <div className="usdt-coin" aria-hidden>
+          <span>₮</span>
+          <small>USDT</small>
+        </div>
+      </div>
+    </section>
   );
 }

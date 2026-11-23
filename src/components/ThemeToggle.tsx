@@ -23,19 +23,28 @@ export function ThemeToggle() {
     document.documentElement.dataset.theme = next;
   }, []);
 
+  function toggle() {
+    const next: Theme = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    applyTheme(next);
+  }
+
+  const dark = theme === "dark";
+
   return (
-    <div className="theme-toggle" role="group" aria-label="Color mode">
-      <button
-        type="button"
-        className={theme === "light" ? "on" : ""}
-        aria-pressed={theme === "light"}
-        aria-label="Light mode"
-        title="Light mode"
-        onClick={() => {
-          setTheme("light");
-          applyTheme("light");
-        }}
-      >
+    <button
+      type="button"
+      className="theme-toggle"
+      aria-pressed={dark}
+      aria-label={dark ? "Light mode" : "Dark mode"}
+      title={dark ? "Light mode" : "Dark mode"}
+      onClick={toggle}
+    >
+      {dark ? (
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+          <path d="M21 14.5A8.5 8.5 0 0 1 9.5 3 7 7 0 1 0 21 14.5z" fill="currentColor" />
+        </svg>
+      ) : (
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
           <circle cx="12" cy="12" r="4" fill="currentColor" />
           <path
@@ -46,25 +55,7 @@ export function ThemeToggle() {
             strokeLinecap="round"
           />
         </svg>
-      </button>
-      <button
-        type="button"
-        className={theme === "dark" ? "on" : ""}
-        aria-pressed={theme === "dark"}
-        aria-label="Dark mode"
-        title="Dark mode"
-        onClick={() => {
-          setTheme("dark");
-          applyTheme("dark");
-        }}
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
-          <path
-            d="M21 14.5A8.5 8.5 0 0 1 9.5 3 7 7 0 1 0 21 14.5z"
-            fill="currentColor"
-          />
-        </svg>
-      </button>
-    </div>
+      )}
+    </button>
   );
 }
