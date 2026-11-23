@@ -346,7 +346,7 @@ const en: Dict = {
   "freelance.orderGig": "Order this gig / Start escrow",
   "freelance.notes": "What you need from the freelancers (brief, links, files…)",
   "freelance.sla":
-    "After payment is held, the freelancers deliver in the stated delivery window. Revisions included are listed on the gig.",
+    "The seller has 24 hours to accept. The deal starts after payment and that acceptance. Delivery is marked when the work is finished.",
   "freelance.sold": "sold",
   "freelance.purchased": "Purchased by customers",
   "freelance.soldTimes": "times sold",
@@ -370,7 +370,7 @@ const en: Dict = {
   "listing.qtyOver": "You are selecting more than the available stock.",
   "listing.each": "each",
   "listing.sla":
-    "After payment is held in escrow, the seller has 24 hours to deliver. If they miss it, you can cancel or claim a refund.",
+    "The seller has 24 hours to respond and accept. If there is no response, the deal can be cancelled. Delivery time is separate and is marked when the work is finished.",
   "listing.yourName": "Your name",
   "listing.yourEmail": "Your email",
   "listing.transferNotes": "Transfer details / notes",
@@ -383,11 +383,11 @@ const en: Dict = {
   "deal.chat": "Deal chat",
   "deal.asEscrow": "As Escrow",
   "deal.send": "Send",
-  "deal.deliverySla": "Seller must deliver within the delivery window",
-  "deal.claimRefund": "Claim refund (24h missed)",
+  "deal.deliverySla": "Seller has 24 hours to accept this deal",
+  "deal.claimRefund": "Claim refund (no response)",
   "deal.cancel": "Cancel deal",
   "deal.holdGuide":
-    "Funds stay held in SocialsFlip escrow until the deal is completed (typically up to 7 days, or until you confirm delivery). Never pay the seller directly.",
+    "Funds stay held in SocialsFlip escrow until the seller accepts, the work is delivered, you confirm receipt, and escrow marks the deal complete. Never pay the seller directly.",
   "createDeal.title": "Create a deal link",
   "createDeal.sub":
     "Copy the link and send it to your buyer. They pay SocialsFlip escrow — not you directly.",

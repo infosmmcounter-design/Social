@@ -203,12 +203,12 @@ export async function POST(req: Request) {
         buyerMarkedPaid: false,
         paymentDueAt,
         paymentWindowMins: windowMins,
-        deliveryDueAt: useWallet
-          ? new Date(
-              now + (data.settings.deliveryWindowHours || 24) * 60 * 60_000
-            ).toISOString()
-          : null,
+        deliveryDueAt: new Date(
+          now + (data.settings.deliveryWindowHours || 24) * 60 * 60_000
+        ).toISOString(),
         deliveryWindowHours: data.settings.deliveryWindowHours || 24,
+        sellerAcceptedAt: null,
+        buyerConfirmedAt: null,
         stockReserved: !freelance,
         deliveredAt: null,
         price: totals.price,
@@ -261,8 +261,8 @@ export async function POST(req: Request) {
       addSystemMessage(
         order,
         freelance
-          ? `Freelance gig ordered × ${qty} (${listing.soldCount} total sold). After funds are held, freelancers have ${data.settings.deliveryWindowHours || 24}h to deliver.`
-          : `Quantity ${qty} reserved. Available stock now: ${listing.stock}. After funds are held, creator has ${data.settings.deliveryWindowHours || 24}h to deliver.`
+          ? `Freelance gig ordered × ${qty} (${listing.soldCount} total sold). The seller has ${data.settings.deliveryWindowHours || 24} hours to accept. The deal starts after payment and that acceptance. Delivery is marked when the work is finished.`
+          : `Quantity ${qty} reserved. Available stock now: ${listing.stock}. The seller has ${data.settings.deliveryWindowHours || 24} hours to accept. The deal starts after payment and that acceptance.`
       );
 
       data.orders.push(order);

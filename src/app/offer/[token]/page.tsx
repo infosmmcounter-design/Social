@@ -219,11 +219,13 @@ export default function OfferPage() {
             delivery — whichever comes with completion).
           </li>
           <li>
-            After funds are held, creator has {settings.deliveryWindowHours}{" "}
-            hours to deliver. If they miss it, you can cancel / claim refund.
+            The creator has {settings.deliveryWindowHours} hours to accept. If
+            there is no response, you can cancel. The deal starts after payment
+            and that acceptance.
           </li>
           <li>
-            When you confirm receipt, escrow releases payment to the creator.
+            When the work is finished, the creator marks it delivered. You confirm
+            receipt, then escrow marks the deal complete and pays the creator.
           </li>
         </ol>
       </div>

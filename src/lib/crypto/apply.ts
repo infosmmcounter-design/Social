@@ -106,7 +106,12 @@ function snap(p: CryptoPayment): PaySnap {
 }
 
 function hold(data: StoreData, order: Order, text: string) {
-  if (order.status === "funds_held" || order.status === "credentials_shared" || order.status === "completed") {
+  if (
+    order.status === "funds_held" ||
+    order.status === "credentials_shared" ||
+    order.status === "release_requested" ||
+    order.status === "completed"
+  ) {
     addSystemMessage(order, text);
     return;
   }
@@ -121,10 +126,18 @@ function hold(data: StoreData, order: Order, text: string) {
   }
   const hours = order.deliveryWindowHours || data.settings.deliveryWindowHours || 24;
   order.deliveryWindowHours = hours;
-  order.deliveryDueAt = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+  if (!order.deliveryDueAt) {
+    order.deliveryDueAt = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+  }
   order.status = "funds_held";
   order.buyerMarkedPaid = true;
   addSystemMessage(order, text);
+  addSystemMessage(
+    order,
+    order.sellerAcceptedAt
+      ? "Seller already accepted. The deal has started. Mark it delivered when the work is finished. There is no 24-hour delivery limit."
+      : `Seller has until ${new Date(order.deliveryDueAt).toLocaleString()} to accept. If there is no response, the buyer can cancel.`
+  );
 }
 
 function rememberUnmatched(data: StoreData, row: UnmatchedTx) {

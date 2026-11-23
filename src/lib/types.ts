@@ -6,6 +6,8 @@ export type DealStatus =
   | "awaiting_payment"
   | "funds_held"
   | "credentials_shared"
+  /** Buyer confirmed receipt and asked escrow to pay the seller. */
+  | "release_requested"
   | "completed"
   | "disputed"
   | "cancelled"
@@ -45,7 +47,7 @@ export interface PlatformSettings {
   paymentWindowMins: number;
   /** When buyer submits proof, auto move to funds_held (manual verify still recommended). */
   autoHoldOnProof: boolean;
-  /** Hours seller has to deliver after funds are held (default 24). */
+  /** Hours the seller has to accept a new deal (default 24). Not a delivery limit. */
   deliveryWindowHours: number;
   /** Escrow hold guidance for buyers (days until complete — funds not released early). */
   escrowHoldDays: number;
@@ -282,10 +284,14 @@ export interface Order {
   payConfirmations?: number;
   /** 30 or 60 typical. */
   paymentWindowMins: number;
-  /** ISO deadline for seller delivery after funds held (usually +24h). */
+  /** ISO deadline for the seller to accept. Not a delivery deadline. */
   deliveryDueAt: string | null;
-  /** Hours allowed for delivery (copied from settings at hold time). */
+  /** Hours allowed for the seller to respond (copied from settings). */
   deliveryWindowHours: number;
+  /** Set when the seller accepts. The deal starts only after this and payment. */
+  sellerAcceptedAt?: string | null;
+  /** Set when the buyer says the service was received and asks escrow to pay. */
+  buyerConfirmedAt?: string | null;
   /** Unit of listing stock reserved for this deal (restored if cancelled/refunded pre-delivery). */
   stockReserved: boolean;
   /** When seller shared credentials / delivered. */
@@ -440,8 +446,9 @@ export const FREELANCE_GIG_IDEAS: string[] = [
 export const DEAL_STATUS_LABEL: Record<DealStatus, string> = {
   awaiting_payment: "Awaiting Payment",
   funds_held: "Funds Held in Escrow",
-  credentials_shared: "Account Credentials Shared",
-  completed: "Completed",
+  credentials_shared: "Delivered to Buyer",
+  release_requested: "Buyer Received — Pay Seller",
+  completed: "Deal Complete",
   disputed: "Disputed",
   cancelled: "Cancelled",
   refunded: "Refunded",
@@ -451,5 +458,6 @@ export const DEAL_FLOW: DealStatus[] = [
   "awaiting_payment",
   "funds_held",
   "credentials_shared",
+  "release_requested",
   "completed",
 ];

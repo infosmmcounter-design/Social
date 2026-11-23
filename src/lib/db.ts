@@ -669,6 +669,21 @@ export function normalizeStore(data: StoreData): StoreData {
     if (o.deliveryDueAt === undefined) o.deliveryDueAt = null;
     if (o.stockReserved === undefined) o.stockReserved = true;
     if (o.deliveredAt === undefined) o.deliveredAt = null;
+    if (o.sellerAcceptedAt === undefined) {
+      o.sellerAcceptedAt =
+        o.status === "credentials_shared" ||
+        o.status === "release_requested" ||
+        o.status === "completed" ||
+        o.deliveredAt
+          ? o.deliveredAt || o.createdAt
+          : null;
+    }
+    if (o.buyerConfirmedAt === undefined) {
+      o.buyerConfirmedAt =
+        o.status === "completed" || o.status === "release_requested"
+          ? o.deliveredAt || o.createdAt
+          : null;
+    }
     if (o.offerId === undefined) o.offerId = null;
     if (!o.qty || o.qty < 1) o.qty = 1;
   }

@@ -25,6 +25,8 @@ type Order = {
   paymentWindowMins?: number;
   deliveryDueAt?: string | null;
   deliveryWindowHours?: number;
+  sellerAcceptedAt?: string | null;
+  buyerConfirmedAt?: string | null;
   deliveredAt?: string | null;
   buyerName: string;
   buyerEmail: string;
@@ -119,27 +121,27 @@ function DealInner() {
   const isAdmin = user?.role === "admin";
   const adminAsDummy = isAdmin && seller?.dummy;
 
-  const deliveryRemainMs = useMemo(() => {
+  const responseRemainMs = useMemo(() => {
     if (!order?.deliveryDueAt) return 0;
     return new Date(order.deliveryDueAt).getTime() - now;
   }, [order?.deliveryDueAt, now]);
 
-  const deliveryOverdue =
+  const waitingForSeller =
     !!order &&
-    order.status === "funds_held" &&
-    !order.deliveredAt &&
-    !!order.deliveryDueAt &&
-    deliveryRemainMs <= 0;
+    !order.sellerAcceptedAt &&
+    (order.status === "awaiting_payment" || order.status === "funds_held");
+  const responseOverdue = waitingForSeller && !!order?.deliveryDueAt && responseRemainMs <= 0;
+  const dealStarted = !!order?.sellerAcceptedAt && order.status === "funds_held";
 
-  async function setStatus(status: DealStatus) {
+  async function setStatus(status: DealStatus, action?: string) {
     setErr("");
     try {
       await api(`/api/orders/${id}/status`, {
         method: "POST",
-        json: { status, email: emailQ || order?.buyerEmail },
+        json: { status, action, email: emailQ || order?.buyerEmail },
       });
       await load();
-      setMsg(`Status → ${DEAL_STATUS_LABEL[status]}`);
+      setMsg(action === "accept" ? "Seller accepted the deal." : `Status → ${DEAL_STATUS_LABEL[status]}`);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed");
     }
@@ -206,6 +208,7 @@ function DealInner() {
     "awaiting_payment",
     "funds_held",
     "credentials_shared",
+    "release_requested",
     "completed",
   ];
 
@@ -246,45 +249,62 @@ function DealInner() {
         </div>
       ) : null}
 
-      {order.status === "funds_held" && order.deliveryDueAt ? (
-        <div className={`pay-timer ${deliveryOverdue ? "expired" : ""}`}>
-          <span>
-            {deliveryOverdue
-              ? `Seller missed the ${order.deliveryWindowHours || 24}h delivery window.`
-              : `Seller must deliver within ${order.deliveryWindowHours || 24} hours`}
-          </span>
+      {waitingForSeller ? (
+        <div className={`deal-hero ${responseOverdue ? "expired" : ""}`}>
+          <p className="crypto-kicker">Next step</p>
+          <h2 style={{ margin: "4px 0 8px", fontSize: "1.25rem" }}>
+            {responseOverdue
+              ? `Seller did not respond within ${order.deliveryWindowHours || 24} hours`
+              : `Seller has ${order.deliveryWindowHours || 24} hours to respond`}
+          </h2>
+          <p className="sm">
+            This is a response window, not a delivery limit. Freelance work can take longer.
+            If the seller does not accept, this deal can be cancelled.
+          </p>
           <span className="clock" aria-live="polite">
-            {deliveryOverdue ? "00:00:00" : formatRemain(deliveryRemainMs)}
+            {responseOverdue ? "00:00:00" : formatRemain(responseRemainMs)}
           </span>
-          {isBuyer && deliveryOverdue ? (
-            <div className="row" style={{ width: "100%", marginTop: 4 }}>
-              <button
-                className="btn s d"
-                type="button"
-                onClick={() => setStatus("refunded")}
-              >
-                {t("deal.claimRefund")}
-              </button>
-              <button
-                className="btn s o"
-                type="button"
-                onClick={() => setStatus("cancelled")}
-              >
+          {(isSeller || adminAsDummy || isAdmin) ? (
+            <button className="btn" type="button" style={{ marginTop: 10 }} onClick={() => setStatus(order.status, "accept")}>
+              Accept deal
+            </button>
+          ) : null}
+          {isBuyer && responseOverdue ? (
+            <div className="row" style={{ width: "100%", marginTop: 8 }}>
+              {order.status === "funds_held" ? (
+                <button className="btn s d" type="button" onClick={() => setStatus("refunded")}>
+                  {t("deal.claimRefund")}
+                </button>
+              ) : null}
+              <button className="btn s o" type="button" onClick={() => setStatus("cancelled")}>
                 {t("deal.cancel")}
               </button>
             </div>
           ) : null}
-          {isBuyer && !deliveryOverdue ? (
-            <p className="sm" style={{ width: "100%", margin: "4px 0 0" }}>
-              If the seller does not deliver before this timer ends, you can
-              cancel or claim a refund here.
-            </p>
-          ) : null}
-          {(isSeller || adminAsDummy) && !deliveryOverdue ? (
-            <p className="sm" style={{ width: "100%", margin: "4px 0 0" }}>
-              Deliver now — use “Share credentials” before the timer hits zero.
-            </p>
-          ) : null}
+        </div>
+      ) : null}
+
+      {order.sellerAcceptedAt && order.status === "awaiting_payment" ? (
+        <div className="hl-card deal-hold">
+          Seller accepted. The deal starts after the buyer payment is in escrow.
+        </div>
+      ) : null}
+
+      {dealStarted ? (
+        <div className="hl-card deal-hold">
+          Deal started. The seller marks it delivered when the work is finished, then the buyer is notified.
+        </div>
+      ) : null}
+
+      {order.status === "credentials_shared" ? (
+        <div className="hl-card deal-hold">
+          Seller marked this delivered successfully. The buyer can confirm receipt.
+        </div>
+      ) : null}
+
+      {order.status === "release_requested" ? (
+        <div className="hl-card deal-hold">
+          Buyer confirmed: I have received the service. Pay the seller. Escrow can now mark the deal complete.
         </div>
       ) : null}
 
@@ -340,8 +360,12 @@ function DealInner() {
             >
               Confirm payment / Hold funds
             </button>
-            <button className="btn s g" onClick={() => setStatus("completed")}>
-              Release funds / Complete
+            <button
+              className="btn s g"
+              disabled={order.status !== "release_requested"}
+              onClick={() => setStatus("completed")}
+            >
+              Deal complete
             </button>
             <button className="btn s d" onClick={() => setStatus("disputed")}>
               Mark disputed
@@ -357,10 +381,10 @@ function DealInner() {
         {(isSeller || adminAsDummy) && (
           <button
             className="btn s"
-            disabled={!["funds_held", "awaiting_payment"].includes(order.status)}
+            disabled={!dealStarted}
             onClick={() => setStatus("credentials_shared")}
           >
-            Mark delivered / transfer done
+            {serviceDeal ? "Mark service delivered" : "Mark delivered successfully"}
           </button>
         )}
         {isBuyer && (
@@ -368,10 +392,10 @@ function DealInner() {
             <button
               className="btn s"
               disabled={order.status !== "credentials_shared"}
-              onClick={() => setStatus("completed")}
-              title="Confirm only after seller shared credentials / delivery"
+              onClick={() => setStatus("release_requested")}
+              title="Tell escrow the service arrived so the seller can be paid"
             >
-              Confirm I received it
+              I received it. Pay the seller.
             </button>
             {order.status === "awaiting_payment" ? (
               <button
@@ -389,6 +413,7 @@ function DealInner() {
                   "awaiting_payment",
                   "funds_held",
                   "credentials_shared",
+                  "release_requested",
                 ].includes(order.status)
               }
               onClick={() => setStatus("disputed")}

@@ -23,7 +23,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Seller did not deliver",
-    a: "If the seller misses the delivery window after funds are held, use Claim refund / Cancel in the deal room. Admin escrow moderators review disputes — or start Chat with Escrow here.",
+    a: "The seller has 24 hours to accept the deal. If there is no response, cancel or claim a refund in the deal room. Delivery itself is marked when the work is finished. Escrow completes the deal after you confirm receipt.",
   },
   {
     q: "How do I become a seller?",

@@ -317,7 +317,7 @@ export default function AdminPage() {
   }
 
   const held = orders.filter((o) =>
-    ["awaiting_payment", "funds_held", "credentials_shared", "disputed"].includes(
+    ["awaiting_payment", "funds_held", "credentials_shared", "release_requested", "disputed"].includes(
       o.status
     )
   );
@@ -1867,7 +1867,7 @@ export default function AdminPage() {
               })
             }
           />
-          <label>Seller delivery window (hours after funds held)</label>
+          <label>Seller response window (hours to accept)</label>
           <input
             type="number"
             min={1}
@@ -1881,8 +1881,8 @@ export default function AdminPage() {
             }
           />
           <p className="sm mut">
-            Default 24h. If seller does not deliver in time, buyer can cancel or
-            claim refund from the deal room.
+            Default 24h to accept a new deal. This is not a delivery limit. If the
+            seller does not respond, the buyer can cancel from the deal room.
           </p>
           <label>Escrow hold guidance (days)</label>
           <input

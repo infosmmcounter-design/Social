@@ -429,8 +429,20 @@ html[dir="rtl"] .account-hero-actions {
   margin-bottom: 14px;
 }
 .deal-hero h1,
+.deal-hero h2,
 .deal-hero p {
   color: #fff8d6;
+}
+.deal-hero .clock {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #f0d78c;
+}
+.deal-hero.expired {
+  background: linear-gradient(145deg, #3a1212, #1a1408);
 }
 .deal-hold {
   margin-top: 12px;
