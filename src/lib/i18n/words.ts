@@ -1,4 +1,5 @@
 import type { LocaleCode } from "./locales";
+import { PHRASES } from "./phrases";
 
 /** Extra marketplace words so a new English listing still reads in the selected language. */
 const EN = [
@@ -134,6 +135,7 @@ function table(locale: Exclude<LocaleCode, "en">) {
     fr: "non monétisé",
     es: "sin monetizar",
   }[locale];
+  Object.assign(map, PHRASES[locale]);
   return map;
 }
 

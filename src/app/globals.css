@@ -364,6 +364,86 @@ html[dir="rtl"] .account-hero-actions {
 .wallet-card {
   margin-top: 14px;
 }
+.account-av img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+.emoji-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.emoji-row button {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #e6d39a;
+  background: #fffdf6;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+.hl-card {
+  border: 1px solid #e6d39a;
+  background: linear-gradient(180deg, #fffdf6, #fff);
+  box-shadow: 0 10px 28px rgba(180, 140, 40, 0.1);
+}
+.hl-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+  padding: 10px;
+  border-radius: 12px;
+  background: #fffdf6;
+  border: 1px solid #f0e2b8;
+}
+.hl-line code {
+  word-break: break-all;
+  font-size: 0.82rem;
+}
+.dep-live {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 16px;
+}
+.dep-exact {
+  margin: 8px 0;
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #8a6a12;
+}
+.dep-addr {
+  display: block;
+  margin: 10px 0;
+  word-break: break-all;
+}
+.deal-hero {
+  padding: 18px 18px 6px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #1a1408, #3d3112);
+  color: #fff8d6;
+  margin-bottom: 14px;
+}
+.deal-hero h1,
+.deal-hero p {
+  color: #fff8d6;
+}
+.deal-hold {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-weight: 600;
+}
+html[data-theme="dark"] .hl-card,
+html[data-theme="dark"] .hl-line,
+html[data-theme="dark"] .emoji-row button {
+  background: #1c1810;
+  color: #fff8d6;
+}
 .wallet-list {
   list-style: none;
   padding: 0;
