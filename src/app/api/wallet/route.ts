@@ -15,6 +15,9 @@ export async function GET() {
   return NextResponse.json({
     balance: Number(me?.walletBalance || 0),
     deposits,
+    wallets: (store.settings.cryptoWallets || []).filter(
+      (w) => w.enabled && w.address
+    ),
   });
 }
 

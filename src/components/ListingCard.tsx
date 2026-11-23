@@ -6,6 +6,7 @@ import { useLang } from "./LanguageProvider";
 import { LocaleLink as Link } from "./LocaleLink";
 import { money, stars } from "@/lib/constants";
 import { isFreelanceCategory } from "@/lib/types";
+import { showsMonetized } from "@/lib/category-filters";
 import type { MsgKey } from "@/lib/i18n/messages";
 
 type Props = {
@@ -108,15 +109,18 @@ export function ListingCard({ listing }: Props) {
           </p>
         ) : listing.followers ? (
           <p className="sm mut" style={{ margin: "0 0 4px" }}>
-            {listing.followers} ·{" "}
-            {listing.monetized ? t("card.monetized") : t("card.notMonetized")}
+            {listing.followers}
+            {showsMonetized(listing.cat)
+              ? ` · ${listing.monetized ? t("card.monetized") : t("card.notMonetized")}`
+              : ""}
           </p>
         ) : null}
         <p className="sm" style={{ margin: "0 0 6px" }}>
-          {s?.reviewCount ? (
+          {(s?.reviewCount || 0) > 0 || (s?.rating || 0) > 0 ? (
             <>
-              <span className="star">{stars(s.rating || 0)}</span>{" "}
-              {(s.rating || 0).toFixed(1)} ({s.reviewCount})
+              <span className="star">{stars(s?.rating || 0)}</span>{" "}
+              {(s?.rating || 0).toFixed(1)}
+              {s?.reviewCount ? ` (${s.reviewCount})` : ""}
             </>
           ) : (
             <span className="mut">{t("card.noReviews")}</span>

@@ -6,6 +6,8 @@ import { ListingCard } from "@/components/ListingCard";
 import { useLang } from "@/components/LanguageProvider";
 import { api } from "@/lib/api";
 import { CATEGORIES } from "@/lib/types";
+import { CategoryFilters, type MonetizedFilter } from "@/components/CategoryFilters";
+import { filtersForCategory } from "@/lib/category-filters";
 import type { MsgKey } from "@/lib/i18n/messages";
 
 type Listing = {
@@ -40,6 +42,10 @@ function ListingsInner() {
   const [q, setQ] = useState(sp.get("q") || "");
   const [cat, setCat] = useState(sp.get("cat") || "");
   const [sort, setSort] = useState("newest");
+  const [monetized, setMonetized] = useState<MonetizedFilter>("all");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [minAudience, setMinAudience] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -51,6 +57,39 @@ function ListingsInner() {
       .then((d) => setListings(d.listings))
       .catch(() => setListings([]));
   }, [q, cat, sort, locale]);
+
+  const shown = useMemo(() => {
+    const spec = filtersForCategory(cat);
+    let list = listings;
+    if (spec?.monetized) {
+      if (monetized === "yes") list = list.filter((l) => l.monetized);
+      if (monetized === "no") list = list.filter((l) => !l.monetized);
+    }
+    const minP = Number(minPrice);
+    const maxP = Number(maxPrice);
+    if (spec?.price && minPrice && !Number.isNaN(minP)) {
+      list = list.filter((l) => l.price >= minP);
+    }
+    if (spec?.price && maxPrice && !Number.isNaN(maxP)) {
+      list = list.filter((l) => l.price <= maxP);
+    }
+    const minF = Number(minAudience);
+    if (spec?.audience && minAudience && !Number.isNaN(minF)) {
+      list = list.filter((l) => {
+        const n = Number(String(l.followers || "").replace(/[^0-9.]/g, ""));
+        return n >= minF;
+      });
+    }
+    if (sort === "recommended") {
+      list = [...list].sort((a, b) => {
+        const ar = a.seller?.rating || 0;
+        const br = b.seller?.rating || 0;
+        if (br !== ar) return br - ar;
+        return (b.seller?.reviewCount || 0) - (a.seller?.reviewCount || 0);
+      });
+    }
+    return list;
+  }, [listings, cat, monetized, minPrice, maxPrice, minAudience, sort]);
 
   const title = useMemo(() => {
     if (cat) return t(`cat.${cat}` as MsgKey);
@@ -72,7 +111,13 @@ function ListingsInner() {
         />
         <select
           value={cat}
-          onChange={(e) => setCat(e.target.value)}
+          onChange={(e) => {
+            setCat(e.target.value);
+            setMonetized("all");
+            setMinPrice("");
+            setMaxPrice("");
+            setMinAudience("");
+          }}
           aria-label="Category"
           style={{ width: "auto" }}
         >
@@ -89,16 +134,28 @@ function ListingsInner() {
           aria-label="Sort"
           style={{ width: "auto" }}
         >
+          <option value="recommended">{t("home.sortRecommended")}</option>
           <option value="newest">{t("home.newest")}</option>
           <option value="price_asc">{t("home.priceAsc")}</option>
           <option value="price_desc">{t("home.priceDesc")}</option>
         </select>
       </div>
+      <CategoryFilters
+        cat={cat}
+        monetized={monetized}
+        onMonetized={setMonetized}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        minAudience={minAudience}
+        onMinPrice={setMinPrice}
+        onMaxPrice={setMaxPrice}
+        onMinAudience={setMinAudience}
+      />
       <div className="grid" style={{ marginTop: 14 }}>
-        {listings.map((l) => (
+        {shown.map((l) => (
           <ListingCard key={l.id} listing={l} />
         ))}
-        {!listings.length ? (
+        {!shown.length ? (
           <p className="mut">{t("home.noListings")}</p>
         ) : null}
       </div>

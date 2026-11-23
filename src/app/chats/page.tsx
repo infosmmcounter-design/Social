@@ -116,6 +116,7 @@ export default function ChatsPage() {
                       : new Date(r.updatedAt).toLocaleString()}
                   </td>
                   <td>
+                    <div className="row">
                     <Link
                       className="btn s"
                       href={`/chat/${r.id}${
@@ -130,6 +131,39 @@ export default function ChatsPage() {
                     >
                       Open
                     </Link>
+                    {user ? (
+                      <>
+                        <button
+                          type="button"
+                          className="btn s o"
+                          onClick={async () => {
+                            await api(`/api/inquiries/${r.id}`, {
+                              method: "POST",
+                              json: { action: "delete", email: email || r.buyerEmail },
+                            });
+                            load();
+                          }}
+                        >
+                          Delete
+                        </button>
+                        {escrow ? null : (
+                          <button
+                            type="button"
+                            className="btn s d"
+                            onClick={async () => {
+                              await api(`/api/inquiries/${r.id}`, {
+                                method: "POST",
+                                json: { action: "block" },
+                              });
+                              setErr(`Blocked ${r.sellerName || r.buyerName}`);
+                            }}
+                          >
+                            Block
+                          </button>
+                        )}
+                      </>
+                    ) : null}
+                    </div>
                   </td>
                 </tr>
               );

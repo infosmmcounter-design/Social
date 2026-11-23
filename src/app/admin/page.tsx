@@ -161,6 +161,7 @@ export default function AdminPage() {
     verified: true,
     dummy: false,
     avatarUrl: "",
+    joinedAt: "",
   });
   const [newListing, setNewListing] = useState({
     sellerId: "2",
@@ -178,6 +179,7 @@ export default function AdminPage() {
     img: "",
     monetized: false,
     teaser: "",
+    soldCount: "0",
   });
   const [blog, setBlog] = useState({ title: "", body: "" });
   const [pw, setPw] = useState({ current: "", next: "" });
@@ -336,7 +338,7 @@ export default function AdminPage() {
   ];
 
   return (
-    <section className="sec">
+    <section className="sec admin-shell">
       <div className="row" style={{ justifyContent: "space-between" }}>
         <h1 style={{ fontSize: "2rem", margin: 0 }}>Admin panel</h1>
         <Link className="l" href="/" style={{ color: "var(--a)", fontWeight: 600 }}>
@@ -621,6 +623,14 @@ export default function AdminPage() {
               />
               Dummy seller (admin replies as them — leave OFF for real sellers)
             </label>
+            <label>Registration date buyers will see</label>
+            <input
+              type="date"
+              value={sellerForm.joinedAt}
+              onChange={(e) =>
+                setSellerForm({ ...sellerForm, joinedAt: e.target.value })
+              }
+            />
             <button
               className="btn"
               style={{ marginTop: 12 }}
@@ -642,6 +652,7 @@ export default function AdminPage() {
                       verified: sellerForm.verified,
                       dummy: sellerForm.dummy,
                       avatarUrl: sellerForm.avatarUrl,
+                      joinedAt: sellerForm.joinedAt || undefined,
                     },
                   });
                   setMsg(
@@ -658,6 +669,7 @@ export default function AdminPage() {
                     verified: true,
                     dummy: false,
                     avatarUrl: "",
+                    joinedAt: "",
                   });
                   refresh();
                 } catch (e) {
@@ -1112,10 +1124,21 @@ export default function AdminPage() {
               }
             />
             {isFreelanceCategory(newListing.cat) ? (
-              <p className="sm mut">
-                Freelance gigs have no stock inventory. Buyers see{" "}
-                <b>total sold / times purchased</b> instead.
-              </p>
+              <>
+                <p className="sm mut">
+                  Freelance gigs have no stock inventory. Buyers see{" "}
+                  <b>total sold / times purchased</b> instead.
+                </p>
+                <label>Times sold (you can set this even if none sold yet)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={newListing.soldCount}
+                  onChange={(e) =>
+                    setNewListing({ ...newListing, soldCount: e.target.value })
+                  }
+                />
+              </>
             ) : (
               <>
                 <label>Available stock</label>
@@ -1212,6 +1235,10 @@ export default function AdminPage() {
                           : 1
                       ),
                       monetized: newListing.monetized,
+                      soldCount: Math.max(
+                        0,
+                        Math.floor(Number(newListing.soldCount) || 0)
+                      ),
                       listed: true,
                     },
                   });

@@ -28,6 +28,7 @@ type Order = {
   buyerName: string;
   buyerEmail: string;
   det: string;
+  qty?: number;
   handleRevealed: boolean;
   privateHandle: string | null;
   msgs: { id: number; from: string; text: string; createdAt: string }[];
@@ -71,6 +72,7 @@ function DealInner() {
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
   const [now, setNow] = useState(Date.now());
+  const [serviceDeal, setServiceDeal] = useState(false);
 
   const load = useCallback(async () => {
     const q = emailQ ? `&email=${encodeURIComponent(emailQ)}` : "";
@@ -78,10 +80,20 @@ function DealInner() {
       order: Order;
       seller: { name: string; dummy?: boolean; verified?: boolean } | null;
       wallets: { asset: string; network: string; address: string }[];
+      listing?: { cat?: string; listingType?: string; isFreelance?: boolean } | null;
     }>(`/api/orders?id=${id}${q}`);
     setOrder(d.order);
     setSeller(d.seller);
     setWallets(d.wallets || []);
+    const listing = d.listing;
+    setServiceDeal(
+      !!(
+        listing &&
+        (listing.listingType === "service" ||
+          listing.cat === "freelance" ||
+          listing.isFreelance)
+      )
+    );
   }, [id, emailQ]);
 
   useEffect(() => {
@@ -94,12 +106,11 @@ function DealInner() {
   }, []);
 
   useEffect(() => {
-    if (!order || order.status !== "awaiting_payment") return;
     const t = setInterval(() => {
       load().catch(() => undefined);
-    }, 12000);
+    }, 4000);
     return () => clearInterval(t);
-  }, [order?.status, load]);
+  }, [load]);
 
   const isBuyer =
     !!order &&
@@ -253,8 +264,8 @@ function DealInner() {
         Deal #{order.id}: {order.title}
       </h1>
       <p className="sm mut">
-        Status: <b>{DEAL_STATUS_LABEL[order.status]}</b> · Total{" "}
-        {money(order.total)} · {order.coin}
+        Status: <b>{DEAL_STATUS_LABEL[order.status]}</b> · Qty{" "}
+        {order.qty || 1} · Total {money(order.total)} · {order.coin}
       </p>
 
       <div className="steps">
@@ -405,7 +416,12 @@ function DealInner() {
         {seller?.name}
         {isAdmin && seller?.dummy ? " (dummy — admin can reply)" : ""}
         <br />
-        <b>Transfer notes:</b> {order.det}
+        <b>
+          {serviceDeal
+            ? "Required info from the seller:"
+            : "Email to transfer ownership:"}
+        </b>{" "}
+        {order.det}
         {order.handleRevealed && order.privateHandle ? (
           <>
             <br />
@@ -454,7 +470,7 @@ function DealInner() {
             disabled={!["funds_held", "awaiting_payment"].includes(order.status)}
             onClick={() => setStatus("credentials_shared")}
           >
-            Share credentials
+            Mark delivered / transfer done
           </button>
         )}
         {isBuyer && (

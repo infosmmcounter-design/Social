@@ -72,6 +72,16 @@ export async function GET(req: Request) {
   }
 
   let list = store.inquiries;
+  if (scope !== "admin") {
+    if (user) {
+      list = list.filter((t) => !(t.hiddenFor || []).includes(user.id));
+    }
+    if (email) {
+      list = list.filter(
+        (t) => !(t.hiddenEmails || []).includes(email.toLowerCase())
+      );
+    }
+  }
   if (scope === "admin") {
     const auth = await requireUser(["admin"]);
     if (auth.error)

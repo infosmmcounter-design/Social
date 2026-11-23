@@ -1,5 +1,6 @@
 import type { LocaleCode } from "./locales";
 import { CATALOG_TITLES } from "./catalog";
+import { translateLoose } from "./words";
 
 type ListingLike = {
   id: number;
@@ -509,7 +510,7 @@ export function localizeText(text: string, locale: LocaleCode): string {
     if (!k) continue;
     out = out.split(k).join(map[k]);
   }
-  return out;
+  return translateLoose(out, locale);
 }
 
 function applyPhrases(text: string, locale: LocaleCode): string {

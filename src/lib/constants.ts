@@ -8,7 +8,7 @@ export const CAT_ICONS: Record<Category, string> = {
   tiktok:
     '<rect width="24" height="24" rx="6" fill="#000"/><g fill="none" stroke-width="2" stroke-linecap="round"><path d="M13 5v9.2a2.6 2.6 0 1 1-2.6-2.6M13 5c.3 2 1.7 3.3 3.6 3.4" stroke="#25F4EE" transform="translate(-.8 .6)"/><path d="M13 5v9.2a2.6 2.6 0 1 1-2.6-2.6M13 5c.3 2 1.7 3.3 3.6 3.4" stroke="#FE2C55" transform="translate(.8 -.6)"/><path d="M13 5v9.2a2.6 2.6 0 1 1-2.6-2.6M13 5c.3 2 1.7 3.3 3.6 3.4" stroke="#fff"/></g>',
   instagram:
-    '<defs><linearGradient id="ig" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FEDA75"/><stop offset=".4" stop-color="#FA7E1E"/><stop offset=".7" stop-color="#D62976"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><rect width="24" height="24" rx="6.5" fill="url(#ig)"/><rect x="5.5" y="5.5" width="13" height="13" rx="4" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="16.3" cy="7.7" r="1" fill="#fff"/>',
+    '<defs><linearGradient id="sfIg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FEDA75"/><stop offset=".4" stop-color="#FA7E1E"/><stop offset=".7" stop-color="#D62976"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><rect width="24" height="24" rx="6.5" fill="url(#sfIg)"/><rect x="5.5" y="5.5" width="13" height="13" rx="4" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="16.3" cy="7.7" r="1" fill="#fff"/>',
   x: '<rect width="24" height="24" rx="6" fill="#000"/><path d="M6.2 6.5h3.1l3.2 4.3 3.7-4.3H18l-4.6 5.3L18.2 17.5h-3.1l-3.4-4.5-3.9 4.5H6l4.9-5.6z" fill="#fff"/>',
   ai: '<rect width="24" height="24" rx="6" fill="#4338ca"/><path d="M11 5l1.7 4.6 4.6 1.7-4.6 1.7L11 17.6l-1.7-4.6-4.6-1.7 4.6-1.7z" fill="#fff"/><path d="M18 14l.8 2.2 2.2.8-2.2.8L18 20l-.8-2.2-2.2-.8 2.2-.8z" fill="#fff"/>',
   other:
@@ -24,4 +24,16 @@ export function money(n: number) {
 export function stars(n: number) {
   const r = Math.round(n);
   return "★".repeat(r) + "☆".repeat(5 - r);
+}
+
+/** Public trust percent from the seller’s average star rating. */
+export function trustFromRating(rating: number, reviewCount: number) {
+  if (!reviewCount) return { percent: 100, risky: false, label: "New" };
+  let percent = 70;
+  if (rating >= 4.8) percent = 100;
+  else if (rating >= 4.5) percent = 95;
+  else if (rating >= 4) percent = 90;
+  else if (rating >= 3.5) percent = 85;
+  else if (rating >= 3) percent = 80;
+  return { percent, risky: percent < 80, label: `${percent}%` };
 }

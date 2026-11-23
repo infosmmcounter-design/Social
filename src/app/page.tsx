@@ -10,6 +10,8 @@ import { LocaleLink as Link } from "@/components/LocaleLink";
 import { api } from "@/lib/api";
 import { stars } from "@/lib/constants";
 import { CATEGORIES } from "@/lib/types";
+import { CategoryFilters, type MonetizedFilter } from "@/components/CategoryFilters";
+import { filtersForCategory } from "@/lib/category-filters";
 import type { MsgKey } from "@/lib/i18n/messages";
 
 type Listing = {
@@ -52,7 +54,7 @@ type Seller = {
   listingCount: number;
 };
 
-type SortKey = "newest" | "price_asc" | "price_desc";
+type SortKey = "recommended" | "newest" | "price_asc" | "price_desc";
 type ViewMode = "listings" | "sellers";
 
 export default function HomePage() {
@@ -61,8 +63,12 @@ export default function HomePage() {
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("");
-  const [sort, setSort] = useState<SortKey>("newest");
+  const [sort, setSort] = useState<SortKey>("recommended");
   const [view, setView] = useState<ViewMode>("listings");
+  const [monetized, setMonetized] = useState<MonetizedFilter>("all");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [minFollowers, setMinFollowers] = useState("");
 
   useEffect(() => {
     try {
@@ -102,11 +108,38 @@ export default function HomePage() {
           .includes(qq)
       );
     }
+    const spec = filtersForCategory(cat);
+    if (spec?.monetized) {
+      if (monetized === "yes") list = list.filter((l) => l.monetized);
+      if (monetized === "no") list = list.filter((l) => !l.monetized);
+    }
+    const minP = Number(minPrice);
+    const maxP = Number(maxPrice);
+    if (spec?.price && minPrice && !Number.isNaN(minP)) {
+      list = list.filter((l) => l.price >= minP);
+    }
+    if (spec?.price && maxPrice && !Number.isNaN(maxP)) {
+      list = list.filter((l) => l.price <= maxP);
+    }
+    const minF = Number(minFollowers);
+    if (spec?.audience && minFollowers && !Number.isNaN(minF)) {
+      list = list.filter((l) => {
+        const n = Number(String(l.followers || "").replace(/[^0-9.]/g, ""));
+        return n >= minF;
+      });
+    }
+    const byRating = (a: Listing, b: Listing) => {
+      const ar = a.seller?.rating || 0;
+      const br = b.seller?.rating || 0;
+      if (br !== ar) return br - ar;
+      return (b.seller?.reviewCount || 0) - (a.seller?.reviewCount || 0);
+    };
     if (sort === "price_asc") list = [...list].sort((a, b) => a.price - b.price);
     else if (sort === "price_desc") list = [...list].sort((a, b) => b.price - a.price);
+    else if (sort === "recommended") list = [...list].sort(byRating);
     else list = [...list].sort((a, b) => b.id - a.id);
     return list;
-  }, [listings, cat, q, sort]);
+  }, [listings, cat, q, sort, monetized, minPrice, maxPrice, minFollowers]);
 
   return (
     <>
@@ -145,23 +178,13 @@ export default function HomePage() {
 
       <section className="sec" style={{ paddingBottom: 6 }}>
         <div className="row" style={{ justifyContent: "space-between", gap: 12 }}>
-          <h2 style={{ margin: 0 }}>{t("home.browse")}</h2>
-          <div className="view-toggle">
-            <button
-              type="button"
-              className={view === "listings" ? "on" : ""}
-              onClick={() => setView("listings")}
-            >
-              {t("home.listings")}
-            </button>
-            <button
-              type="button"
-              className={view === "sellers" ? "on" : ""}
-              onClick={() => setView("sellers")}
-            >
-              {t("home.sellers")}
-            </button>
-          </div>
+          <h2 style={{ margin: 0 }}>
+            {cat
+              ? t(`cat.${cat}` as MsgKey)
+              : sort === "recommended"
+                ? t("home.recommended")
+                : t("home.browse")}
+          </h2>
         </div>
 
         {view === "listings" ? (
@@ -170,7 +193,13 @@ export default function HomePage() {
               <button
                 type="button"
                 className={`chip ${!cat ? "on" : ""}`}
-                onClick={() => setCat("")}
+                onClick={() => {
+                  setCat("");
+                  setMonetized("all");
+                  setMinPrice("");
+                  setMaxPrice("");
+                  setMinFollowers("");
+                }}
               >
                 {t("home.all")}
               </button>
@@ -179,7 +208,14 @@ export default function HomePage() {
                   key={k}
                   type="button"
                   className={`chip ${cat === k ? "on" : ""}`}
-                  onClick={() => setCat(cat === k ? "" : k)}
+                  onClick={() => {
+                    const next = cat === k ? "" : k;
+                    setCat(next);
+                    setMonetized("all");
+                    setMinPrice("");
+                    setMaxPrice("");
+                    setMinFollowers("");
+                  }}
                 >
                   <CatIcon cat={k} size={16} />
                   {t(`cat.${k}` as MsgKey)}
@@ -192,11 +228,23 @@ export default function HomePage() {
                 onChange={(e) => setSort(e.target.value as SortKey)}
                 aria-label="Sort"
               >
+                <option value="recommended">{t("home.sortRecommended")}</option>
                 <option value="newest">{t("home.newest")}</option>
                 <option value="price_asc">{t("home.priceAsc")}</option>
                 <option value="price_desc">{t("home.priceDesc")}</option>
               </select>
             </div>
+            <CategoryFilters
+              cat={cat}
+              monetized={monetized}
+              onMonetized={setMonetized}
+              minPrice={minPrice}
+              maxPrice={maxPrice}
+              minAudience={minFollowers}
+              onMinPrice={setMinPrice}
+              onMaxPrice={setMaxPrice}
+              onMinAudience={setMinFollowers}
+            />
 
             <div className="grid" style={{ marginTop: 14 }}>
               {filtered.map((l) => (
@@ -239,6 +287,26 @@ export default function HomePage() {
             {!sellers.length ? <p className="mut">{t("home.noSellers")}</p> : null}
           </div>
         )}
+      </section>
+
+      <section className="sec deal-how">
+        <h2>{t("home.dealTitle")}</h2>
+        <div className="deal-steps">
+          {(
+            [
+              ["01", "home.deal1", "home.deal1d"],
+              ["02", "home.deal2", "home.deal2d"],
+              ["03", "home.deal3", "home.deal3d"],
+              ["04", "home.deal4", "home.deal4d"],
+            ] as const
+          ).map(([n, title, body]) => (
+            <article key={n} className="deal-step">
+              <span className="deal-n">{n}</span>
+              <h3>{t(title)}</h3>
+              <p>{t(body)}</p>
+            </article>
+          ))}
+        </div>
       </section>
     </>
   );

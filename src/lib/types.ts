@@ -110,6 +110,12 @@ export interface User {
   paymentMethods: SellerPaymentMethod[];
   /** Personal USDT balance. Credited only after admin approves a deposit. */
   walletBalance?: number;
+  /** Completed escrow deals. Moves with each successful close. */
+  completedDeals?: number;
+  /** User ids this person blocked. */
+  blockedUserIds?: number[];
+  /** Emails this person blocked (guest buyers). */
+  blockedEmails?: string[];
 }
 
 export interface WalletDeposit {
@@ -195,6 +201,8 @@ export interface Order {
   buyerEmail: string;
   buyerName: string;
   title: string;
+  /** How many units the buyer reserved in this deal. */
+  qty: number;
   det: string;
   coin: string;
   paymentMode: PaymentMode;
@@ -254,6 +262,10 @@ export interface InquiryThread {
   msgs: ChatMessage[];
   createdAt: string;
   updatedAt: string;
+  /** User ids who removed this chat from their list. */
+  hiddenFor?: number[];
+  /** Guest emails who removed this chat from their list. */
+  hiddenEmails?: string[];
 }
 
 export interface Review {
