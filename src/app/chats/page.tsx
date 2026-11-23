@@ -56,10 +56,11 @@ export default function ChatsPage() {
         Seller chats and direct Escrow support. Deal rooms stay under Orders.
       </p>
 
-      <div className="card f escrow-support-hero" style={{ marginTop: 12 }}>
-        <h3 style={{ marginTop: 0 }}>{t("help.chatEscrow")}</h3>
-        <p className="sm mut">{t("help.chatEscrowSub")}</p>
-        <StartEscrowChat compact />
+      <div className="escrow-support-hero" style={{ marginTop: 12 }}>
+        <p className="escrow-kicker">SocialsFlip</p>
+        <h2>{t("help.chatEscrow")}</h2>
+        <p>{t("help.chatEscrowSub")}</p>
+        <StartEscrowChat />
       </div>
 
       {!user ? (
