@@ -151,12 +151,14 @@ function ListingsInner() {
         onMaxPrice={setMaxPrice}
         onMinAudience={setMinAudience}
       />
-      <div className="grid" style={{ marginTop: 14 }}>
+      <div className="listing-grid" style={{ marginTop: 14 }}>
         {shown.map((l) => (
           <ListingCard key={l.id} listing={l} />
         ))}
         {!shown.length ? (
-          <p className="mut">{t("home.noListings")}</p>
+          <p className="mut" style={{ gridColumn: "1 / -1" }}>
+            {t("home.noListings")}
+          </p>
         ) : null}
       </div>
     </section>

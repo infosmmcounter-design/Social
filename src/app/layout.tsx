@@ -19,17 +19,29 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin()),
-  title: "SocialsFlip: Buy Social Media Accounts, Services and Tools",
+  title: "Buy YouTube Channel, Facebook Page, Instagram Account | SocialsFlip",
   description:
-    "Escrow-protected marketplace for social accounts, services and tools. Pay USDT TRC20/BEP20 — funds held until delivery.",
+    "Buy a YouTube channel, Facebook page, Instagram account, TikTok account, or freelance service with USDT escrow. Your payment stays protected until you approve.",
+  keywords: [
+    "Buy YouTube channel",
+    "Buy Facebook page",
+    "Buy Instagram account",
+    "Buy TikTok account",
+    "Freelance services",
+    "Buy social media account",
+    "USDT escrow",
+    "Buy monetized YouTube channel",
+    "Hire freelancer",
+    "SocialsFlip",
+  ],
   alternates: {
     canonical: "/",
     languages: hreflangAlternates("/").languages,
   },
   openGraph: {
-    title: "SocialsFlip: Buy Social Media Accounts, Services and Tools",
+    title: "Buy YouTube Channel, Facebook Page, Instagram Account | SocialsFlip",
     description:
-      "Escrow-protected marketplace for social accounts, services and tools.",
+      "Buy a YouTube channel, Facebook page, Instagram account, or freelance service. USDT escrow holds payment until you approve.",
     url: siteOrigin(),
     siteName: "SocialsFlip",
     locale: "en_US",
@@ -47,6 +59,24 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html:
               "try{if(localStorage.getItem('sf_theme')==='dark')document.documentElement.dataset.theme='dark';}catch(e){}",
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "SocialsFlip",
+              url: siteOrigin(),
+              description:
+                "Buy a YouTube channel, Facebook page, Instagram account, TikTok account, or freelance service with USDT escrow.",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: `${siteOrigin()}/listings?q={search_term_string}`,
+                "query-input": "required name=search_term_string",
+              },
+            }),
           }}
         />
         <LanguageProvider>

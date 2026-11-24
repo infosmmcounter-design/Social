@@ -274,7 +274,21 @@ export function keywordsFor(locale: LocaleCode, cat?: string | null): string[] {
     : null;
   if (key && SPECIAL[locale]?.[key]) return SPECIAL[locale]![key]!.slice(0, 10);
   if (!key) {
-    return LINES[locale](locale === "en" ? "social account" : NAMES[locale].youtube).slice(0, 10);
+    if (locale === "en") {
+      return [
+        "Buy YouTube channel",
+        "Buy Facebook page",
+        "Buy Instagram account",
+        "Buy TikTok account",
+        "Freelance services",
+        "Buy social media account",
+        "USDT escrow marketplace",
+        "Buy monetized YouTube channel",
+        "Hire freelancer with escrow",
+        "Buy X account",
+      ];
+    }
+    return LINES[locale](NAMES[locale].youtube).slice(0, 10);
   }
   return LINES[locale](NAMES[locale][key]).slice(0, 10);
 }

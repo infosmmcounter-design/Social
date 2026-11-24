@@ -693,6 +693,7 @@ export function normalizeStore(data: StoreData): StoreData {
           : null;
     }
     if (o.offerId === undefined) o.offerId = null;
+    if (!o.seen) o.seen = {};
     if (!o.qty || o.qty < 1) o.qty = 1;
   }
   if (!data.inquiries) data.inquiries = [];
@@ -700,6 +701,8 @@ export function normalizeStore(data: StoreData): StoreData {
     if (!t.kind) t.kind = "seller";
     if (!t.hiddenFor) t.hiddenFor = [];
     if (!t.hiddenEmails) t.hiddenEmails = [];
+    if (t.orderId === undefined) t.orderId = null;
+    if (!t.seen) t.seen = {};
   }
   for (const r of data.reviews) {
     if (!r.about) r.about = "seller";

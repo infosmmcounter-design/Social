@@ -62,6 +62,8 @@ export default function SellerDashboard() {
   const [chats, setChats] = useState<
     {
       id: number;
+      source: "inquiry" | "deal";
+      kind: string;
       subject: string;
       buyerName: string;
       buyerEmail: string;
@@ -116,13 +118,13 @@ export default function SellerDashboard() {
           avatarUrl?: string;
         };
       }>("/api/sellers/me"),
-      api<{ inquiries: typeof chats }>("/api/inquiries?scope=seller"),
+      api<{ chats: typeof chats }>("/api/chats"),
     ]);
     setListings(l.listings);
     setOrders(o.orders);
     setOffers(of.offers || []);
     setRequests(r.requests);
-    setChats(ch.inquiries);
+    setChats((ch.chats || []).filter((c) => c.kind !== "escrow"));
     setProfile({
       name: me.seller.name || "",
       bio: me.seller.bio || "",
@@ -656,7 +658,7 @@ export default function SellerDashboard() {
         {!requests.length ? <p className="mut">No requests.</p> : null}
       </div>
 
-      <h2 style={{ marginTop: 24 }}>Buyer chats (before deal)</h2>
+      <h2 style={{ marginTop: 24 }}>Buyer chats and deal rooms</h2>
       <div className="tbl">
         <table>
           <thead>
@@ -668,7 +670,7 @@ export default function SellerDashboard() {
           </thead>
           <tbody>
             {chats.map((c) => (
-              <tr key={c.id}>
+              <tr key={`${c.source}-${c.id}`}>
                 <td>
                   {c.buyerName}
                   <br />
@@ -676,7 +678,7 @@ export default function SellerDashboard() {
                 </td>
                 <td>{c.subject}</td>
                 <td>
-                  <Link className="btn s" href={`/chat/${c.id}`}>
+                  <Link className="btn s" href={c.source === "deal" ? `/deal/${c.id}` : `/chat/${c.id}`}>
                     Reply as {c.sellerName || profile.name || "you"}
                   </Link>
                 </td>

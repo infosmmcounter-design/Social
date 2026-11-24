@@ -129,7 +129,7 @@ export default function SellerProfilePage() {
       </div>
 
       <h2 style={{ marginTop: 28 }}>{t("home.listings")}</h2>
-      <div className="grid">
+      <div className="listing-grid">
         {data.listings.map((l) => (
           <ListingCard key={l.id} listing={{ ...l, seller: s }} />
         ))}

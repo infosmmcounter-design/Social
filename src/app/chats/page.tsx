@@ -8,16 +8,17 @@ import { StartEscrowChat } from "@/components/StartEscrowChat";
 import { useLang } from "@/components/LanguageProvider";
 
 type Row = {
+  source: "inquiry" | "deal";
   id: number;
-  kind?: "seller" | "escrow";
+  kind: "seller" | "escrow" | "deal";
+  title: string;
   subject: string;
+  preview: string;
+  updatedAt: string;
+  unread: number;
   sellerName: string;
   buyerName: string;
   buyerEmail: string;
-  updatedAt: string;
-  status: string;
-  lastMsg: { text: string; from: string } | null;
-  seller?: { name: string; verified?: boolean } | null;
 };
 
 export default function ChatsPage() {
@@ -32,13 +33,9 @@ export default function ChatsPage() {
     try {
       const q = forEmail
         ? `?email=${encodeURIComponent(forEmail)}`
-        : user?.role === "admin"
-          ? "?scope=admin"
-          : user?.role === "seller"
-            ? "?scope=seller"
-            : "";
-      const d = await api<{ inquiries: Row[] }>(`/api/inquiries${q}`);
-      setRows(d.inquiries);
+        : "";
+      const d = await api<{ chats: Row[] }>(`/api/chats${q}`);
+      setRows(d.chats || []);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed");
       setRows([]);
@@ -53,15 +50,8 @@ export default function ChatsPage() {
     <section className="sec" style={{ maxWidth: 720 }}>
       <h1 style={{ fontSize: "2rem" }}>{t("nav.chats")}</h1>
       <p className="mut">
-        Seller chats and direct Escrow support. Deal rooms stay under Orders.
+        Seller chats and deal rooms stay here. Escrow support is pinned at the bottom.
       </p>
-
-      <div className="escrow-support-hero" style={{ marginTop: 12 }}>
-        <p className="escrow-kicker">SocialsFlip</p>
-        <h2>{t("help.chatEscrow")}</h2>
-        <p>{t("help.chatEscrowSub")}</p>
-        <StartEscrowChat />
-      </div>
 
       {!user ? (
         <div className="card" style={{ marginTop: 14 }}>
@@ -84,97 +74,95 @@ export default function ChatsPage() {
 
       {err ? <p className="err">{err}</p> : null}
 
-      <div className="tbl" style={{ marginTop: 16 }}>
-        <table>
-          <thead>
-            <tr>
-              <th>With</th>
-              <th>Topic</th>
-              <th>Last</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => {
-              const escrow = (r.kind || "seller") === "escrow";
-              return (
-                <tr key={r.id}>
-                  <td>
-                    <b>{escrow ? "SocialsFlip Escrow" : r.sellerName}</b>
-                    {escrow ? (
-                      <>
-                        {" "}
-                        <span className="pill g">Escrow</span>
-                      </>
-                    ) : null}
-                    <br />
-                    <span className="mut sm">Buyer: {r.buyerName}</span>
-                  </td>
-                  <td>{r.subject}</td>
-                  <td className="sm mut">
-                    {r.lastMsg
-                      ? r.lastMsg.text.slice(0, 60)
-                      : new Date(r.updatedAt).toLocaleString()}
-                  </td>
-                  <td>
-                    <div className="row">
-                    <Link
-                      className="btn s"
-                      href={`/chat/${r.id}${
-                        !user
-                          ? `?email=${encodeURIComponent(email || r.buyerEmail)}`
-                          : user.role === "buyer" ||
-                              user.email.toLowerCase() ===
-                                r.buyerEmail.toLowerCase()
-                            ? `?email=${encodeURIComponent(r.buyerEmail)}`
-                            : ""
-                      }`}
+      <div className="chat-page-list">
+        {(rows.some((r) => r.kind === "escrow")
+          ? rows
+          : [
+              ...rows,
+              {
+                source: "inquiry" as const,
+                id: 0,
+                kind: "escrow" as const,
+                title: "Chat with Escrow",
+                subject: "SocialsFlip escrow",
+                preview: "Talk with SocialsFlip escrow. No seller is in this room.",
+                updatedAt: "",
+                unread: 0,
+                sellerName: "SocialsFlip Escrow",
+                buyerName: "",
+                buyerEmail: email,
+              },
+            ]
+        ).map((r) => {
+          const escrow = r.kind === "escrow";
+          const href =
+            r.source === "deal"
+              ? `/deal/${r.id}`
+              : `/chat/${r.id}${
+                  !user || user.email.toLowerCase() === r.buyerEmail.toLowerCase()
+                    ? `?email=${encodeURIComponent(email || r.buyerEmail)}`
+                    : ""
+                }`;
+          return (
+            <article key={`${r.source}-${r.id}`} className={`chat-page-row ${escrow ? "escrow" : ""}`}>
+              <div className="grow">
+                <b>{escrow ? `⚖ ${t("chat.withEscrow")}` : r.title}</b>
+                {r.unread > 0 ? <span className="pill g">{r.unread} new</span> : null}
+                {escrow ? null : <small>{r.subject}</small>}
+                <span>{r.preview}</span>
+              </div>
+              <time className="sm mut">
+                {r.updatedAt && new Date(r.updatedAt).getTime()
+                  ? new Date(r.updatedAt).toLocaleString()
+                  : ""}
+              </time>
+              <div className="row">
+                {r.id ? (
+                  <Link className="btn s" href={href}>
+                    Open
+                  </Link>
+                ) : (
+                  <StartEscrowChat />
+                )}
+                {user && r.source === "inquiry" && r.id ? (
+                  <>
+                    <button
+                      type="button"
+                      className="btn s o"
+                      onClick={async () => {
+                        await api(`/api/inquiries/${r.id}`, {
+                          method: "POST",
+                          json: { action: "delete", email: email || r.buyerEmail },
+                        });
+                        load();
+                      }}
                     >
-                      Open
-                    </Link>
-                    {user ? (
-                      <>
-                        <button
-                          type="button"
-                          className="btn s o"
-                          onClick={async () => {
-                            await api(`/api/inquiries/${r.id}`, {
-                              method: "POST",
-                              json: { action: "delete", email: email || r.buyerEmail },
-                            });
-                            load();
-                          }}
-                        >
-                          Delete
-                        </button>
-                        {escrow ? null : (
-                          <button
-                            type="button"
-                            className="btn s d"
-                            onClick={async () => {
-                              await api(`/api/inquiries/${r.id}`, {
-                                method: "POST",
-                                json: { action: "block" },
-                              });
-                              setErr(`Blocked ${r.sellerName || r.buyerName}`);
-                            }}
-                          >
-                            Block
-                          </button>
-                        )}
-                      </>
-                    ) : null}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                      Delete
+                    </button>
+                    {escrow ? null : (
+                      <button
+                        type="button"
+                        className="btn s d"
+                        onClick={async () => {
+                          await api(`/api/inquiries/${r.id}`, {
+                            method: "POST",
+                            json: { action: "block" },
+                          });
+                          setErr(`Blocked ${r.sellerName || r.buyerName}`);
+                        }}
+                      >
+                        Block
+                      </button>
+                    )}
+                  </>
+                ) : null}
+              </div>
+            </article>
+          );
+        })}
         {!rows.length ? (
           <p className="mut">
-            No chats yet. Use <b>Chat with Escrow</b> above, or open a seller
-            profile and tap Chat.
+            No seller or deal chats yet. Open a listing and tap Chat, or place an order.
           </p>
         ) : null}
       </div>

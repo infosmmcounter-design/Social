@@ -1,7 +1,7 @@
 "use client";
 
 import { useLang } from "./LanguageProvider";
-import { OPEN_CHAT_EVENT } from "./ChatDock";
+import { OPEN_ESCROW_EVENT } from "./ChatDock";
 
 /** Opens the live Escrow chat box. No second picker. */
 export function StartEscrowChat() {
@@ -10,7 +10,7 @@ export function StartEscrowChat() {
     <button
       type="button"
       className="btn escrow-cta"
-      onClick={() => window.dispatchEvent(new Event(OPEN_CHAT_EVENT))}
+      onClick={() => window.dispatchEvent(new Event(OPEN_ESCROW_EVENT))}
     >
       {t("help.chatEscrow")}
     </button>
