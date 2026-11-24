@@ -401,9 +401,9 @@ const en: Dict = {
   "orders.track": "Open escrow deal room",
   "blog.title": "Blog",
   "seo.title":
-    "SocialsFlip: Buy Social Accounts & Freelance Services (YouTube, IG, AI)",
+    "Buy YouTube Channel, Facebook Page, Instagram Account | SocialsFlip",
   "seo.description":
-    "Escrow-protected marketplace for social accounts and Fiverr-style freelance gigs (YouTube, Facebook, Instagram, AI tools). Pay USDT TRC20/BEP20 — funds held until delivery.",
+    "Buy a YouTube channel, Facebook page, Instagram account, TikTok account, or freelance service with USDT escrow. Your payment stays protected until you approve.",
   "footer.escrow": "Escrow-held payments on marketplace orders",
   "help.title": "Help & Support",
   "help.sub":

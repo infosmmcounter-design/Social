@@ -6,6 +6,13 @@ import { readStore } from "@/lib/db";
 const PATHS = [
   "/",
   "/listings",
+  "/listings?cat=youtube",
+  "/listings?cat=facebook",
+  "/listings?cat=instagram",
+  "/listings?cat=tiktok",
+  "/listings?cat=freelance",
+  "/listings?cat=ai",
+  "/listings?cat=x",
   "/create-deal",
   "/apply",
   "/blog",

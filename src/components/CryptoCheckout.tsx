@@ -41,10 +41,12 @@ export function CryptoCheckout({
   orderId,
   email,
   isBuyer,
+  total,
 }: {
   orderId: number;
   email: string;
   isBuyer: boolean;
+  total?: number;
 }) {
   const [pay, setPay] = useState<Pay | null>(null);
   const [err, setErr] = useState("");
@@ -55,7 +57,7 @@ export function CryptoCheckout({
     const q = email ? `?email=${encodeURIComponent(email)}` : "";
     const d = await api<Pay>(`/api/orders/${orderId}/payment${q}`);
     setPay(d);
-  }, [orderId, email]);
+  }, [orderId, email, total]);
 
   useEffect(() => {
     load().catch((e) => setErr(e instanceof Error ? e.message : "Failed"));
