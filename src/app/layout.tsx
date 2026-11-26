@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { AuthProvider } from "@/components/AuthProvider";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { DocumentTitle } from "@/components/DocumentTitle";
@@ -11,17 +11,24 @@ import { ChatDock } from "@/components/ChatDock";
 import { hreflangAlternates, siteOrigin } from "@/lib/i18n/seo";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
+const jakarta = localFont({
+  src: [
+    { path: "../../public/fonts/pj400.ttf", weight: "400", style: "normal" },
+    { path: "../../public/fonts/pj600.ttf", weight: "600", style: "normal" },
+    { path: "../../public/fonts/pj700.ttf", weight: "700", style: "normal" },
+  ],
   display: "swap",
+  variable: "--font-jakarta",
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin()),
-  title: "Buy YouTube Channel, Facebook Page, Instagram Account | SocialsFlip",
+  title: {
+    default: "SocialsFlip – Safe Marketplace for Accounts & Services",
+    template: "%s | SocialsFlip",
+  },
   description:
-    "Buy a YouTube channel, Facebook page, Instagram account, TikTok account, or freelance service with USDT escrow. Your payment stays protected until you approve.",
+    "Buy and sell social accounts, freelance gigs, and digital tools with USDT escrow. Funds stay protected until you confirm delivery.",
   keywords: [
     "Buy YouTube channel",
     "Buy Facebook page",
@@ -59,9 +66,9 @@ export const metadata: Metadata = {
     "msapplication-TileImage": "/brand/mstile-150x150.png",
   },
   openGraph: {
-    title: "Buy YouTube Channel, Facebook Page, Instagram Account | SocialsFlip",
+    title: "SocialsFlip – Safe Marketplace for Accounts & Services",
     description:
-      "Buy a YouTube channel, Facebook page, Instagram account, or freelance service. USDT escrow holds payment until you approve.",
+      "Buy and sell social accounts, freelance gigs, and digital tools with USDT escrow. Funds stay protected until you confirm delivery.",
     url: siteOrigin(),
     siteName: "SocialsFlip",
     locale: "en_US",
@@ -77,9 +84,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "SocialsFlip",
+    title: "SocialsFlip – Safe Marketplace for Accounts & Services",
     description:
-      "Buy a YouTube channel, Facebook page, Instagram account, or freelance service with USDT escrow.",
+      "Buy and sell social accounts, freelance gigs, and digital tools with USDT escrow.",
     images: ["/brand/og.png"],
   },
 };
@@ -123,7 +130,7 @@ export default function RootLayout({
                   name: "SocialsFlip",
                   url: siteOrigin(),
                   description:
-                    "Buy a YouTube channel, Facebook page, Instagram account, TikTok account, or freelance service with USDT escrow.",
+                    "Buy and sell social accounts, freelance gigs, and digital tools with USDT escrow.",
                   publisher: { "@type": "Organization", name: "SocialsFlip" },
                   potentialAction: {
                     "@type": "SearchAction",

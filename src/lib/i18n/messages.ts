@@ -21,7 +21,35 @@ export type MsgKey =
   | "nav.language"
   | "nav.help"
   | "nav.privacy"
+  | "nav.terms"
+  | "nav.refund"
+  | "nav.escrowFees"
+  | "nav.prohibited"
+  | "nav.about"
+  | "nav.contact"
+  | "nav.faq"
+  | "nav.scamAlerts"
   | "home.kicker"
+  | "home.buyPath"
+  | "home.sellPath"
+  | "home.trustTitle"
+  | "home.trustDeals"
+  | "home.trustProtected"
+  | "home.trustFee"
+  | "home.trustDispute"
+  | "home.trustSellers"
+  | "home.trustListings"
+  | "home.trustNote"
+  | "home.browseHint"
+  | "home.emptyHint"
+  | "home.viewAll"
+  | "home.supportTitle"
+  | "home.supportBody"
+  | "home.supportChat"
+  | "footer.buySell"
+  | "footer.trust"
+  | "footer.legal"
+  | "footer.supportPromise"
   | "home.headline"
   | "home.sub"
   | "home.search"
@@ -239,7 +267,7 @@ const en: Dict = {
   "nav.listings": "Listings",
   "nav.services": "Services",
   "nav.sellers": "Sellers",
-  "nav.createDeal": "Create deal",
+  "nav.createDeal": "Start a deal with a seller",
   "nav.sell": "Sell",
   "nav.chats": "Chats",
   "nav.orders": "Orders",
@@ -254,10 +282,36 @@ const en: Dict = {
   "nav.language": "Language",
   "nav.help": "Help & Support",
   "nav.privacy": "Privacy Policy",
+  "nav.terms": "Terms of Service",
+  "nav.refund": "Refund & Dispute Policy",
+  "nav.escrowFees": "Escrow Fees",
+  "nav.prohibited": "Prohibited Items",
+  "nav.about": "About",
+  "nav.contact": "Contact",
+  "nav.faq": "FAQ",
+  "nav.scamAlerts": "Scam Alerts",
   "home.kicker": "Escrow-protected marketplace",
   "home.headline": "Buy social accounts, freelance services & tools with confidence.",
   "home.sub":
     "Pay USDT (TRC20 / BEP20) into escrow. Chat with seller and admin until delivery is confirmed.",
+  "home.buyPath": "Browse & buy",
+  "home.sellPath": "Start selling",
+  "home.trustTitle": "Why buyers trust SocialsFlip",
+  "home.trustDeals": "Completed deals",
+  "home.trustProtected": "Protected in escrow volume",
+  "home.trustFee": "Published escrow fee",
+  "home.trustDispute": "Hold / dispute window",
+  "home.trustSellers": "Verified sellers",
+  "home.trustListings": "Live listings",
+  "home.trustNote":
+    "Reviews come from completed deals. Escrow fee and hold windows are shown again before you pay.",
+  "home.browseHint": "Pick a category to filter — counts show live listings on this board.",
+  "home.emptyHint": "No listings yet in this category. Try another board or check back soon.",
+  "home.viewAll": "View all listings",
+  "home.supportTitle": "Need help?",
+  "home.supportBody":
+    "Chat with escrow support from Help. We aim to respond within a few hours on business days.",
+  "home.supportChat": "Open Help & chat",
   "home.search": "Search listings on this page",
   "home.searchBtn": "Search",
   "home.browse": "Browse",
@@ -354,7 +408,7 @@ const en: Dict = {
   "home.newest": "Newest",
   "home.priceAsc": "Price: low → high",
   "home.priceDesc": "Price: high → low",
-  "home.noListings": "No listings match this filter.",
+  "home.noListings": "No listings yet in this category",
   "home.noSellers": "No sellers yet.",
   "freelance.badge": "Freelance gig",
   "freelance.delivery": "Delivery",
@@ -439,11 +493,14 @@ const en: Dict = {
   "orders.title": "Track your order",
   "orders.track": "Open escrow deal room",
   "blog.title": "Blog",
-  "seo.title":
-    "Buy YouTube Channel, Facebook Page, Instagram Account | SocialsFlip",
+  "seo.title": "SocialsFlip – Safe Marketplace for Accounts & Services",
   "seo.description":
-    "Buy a YouTube channel, Facebook page, Instagram account, TikTok account, or freelance service with USDT escrow. Your payment stays protected until you approve.",
+    "Buy and sell social accounts, freelance gigs, and digital tools with USDT escrow. Funds stay protected until you confirm delivery.",
   "footer.escrow": "Escrow-held payments on marketplace orders",
+  "footer.buySell": "Buy & sell",
+  "footer.trust": "Trust & support",
+  "footer.legal": "Legal",
+  "footer.supportPromise": "Support aims to reply within a few hours on business days.",
   "help.title": "Help & Support",
   "help.sub":
     "Escrow deals, freelance gigs, payments, and reviews — quick answers.",

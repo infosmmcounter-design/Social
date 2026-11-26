@@ -142,8 +142,16 @@ export function CryptoCheckout({
         </div>
       ) : null}
 
-      <div className={`crypto-net ${pay.network === "USDT_BEP20" ? "bep" : "trc"}`}>
-        Network: {pay.networkLabel}. Sending on the other network can lose the funds.
+      <div
+        className={`crypto-net crypto-net-warn ${pay.network === "USDT_BEP20" ? "bep" : "trc"}`}
+        role="alert"
+      >
+        <strong>Network check — {pay.networkLabel}</strong>
+        <span>
+          {pay.network === "USDT_BEP20"
+            ? "Send only USDT on BNB Smart Chain (BEP20). TRC20 / Tron, ERC20, or other networks will not credit this order and funds may be lost."
+            : "Send only USDT on Tron (TRC20). BEP20 / BNB Smart Chain, ERC20, or other networks will not credit this order and funds may be lost."}
+        </span>
       </div>
 
       {open ? (

@@ -21,8 +21,11 @@ export function StoreHeader() {
           <ThemeToggle />
           <LanguageSwitcher compact />
           <div className="nav-actions">
-            <Link className="nav-chip" href="/create-deal">
-              {t("nav.createDeal")}
+            <Link className="nav-chip" href="/listings">
+              {t("home.buyPath")}
+            </Link>
+            <Link className="nav-chip nav-chip-sell" href="/dashboard/seller">
+              {t("home.sellPath")}
             </Link>
             {user ? (
               <>
