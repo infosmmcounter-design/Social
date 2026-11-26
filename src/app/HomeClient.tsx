@@ -15,7 +15,6 @@ import { CategoryFilters, type MonetizedFilter } from "@/components/CategoryFilt
 import { filtersForCategory } from "@/lib/category-filters";
 import { compareListings } from "@/lib/listing-rank";
 import type { MsgKey } from "@/lib/i18n/messages";
-import type { TrustStats } from "@/lib/home-data";
 
 type Listing = {
   id: number;
@@ -63,11 +62,9 @@ type ViewMode = "listings" | "sellers";
 export function HomeClient({
   initialListings,
   initialSellers,
-  trust,
 }: {
   initialListings: Listing[];
   initialSellers: Seller[];
-  trust: TrustStats;
 }) {
   const { t, locale } = useLang();
   const [listings, setListings] = useState<Listing[]>(initialListings);
@@ -209,7 +206,6 @@ export function HomeClient({
           <BrandLogo size={48} />
           <p className="hero-kicker">{t("home.kicker")}</p>
           <h1>{t("home.headline")}</h1>
-          <p className="hero-sub">{t("home.sub")}</p>
           <div className="sbox">
             <svg
               width="20"
@@ -241,37 +237,6 @@ export function HomeClient({
           </div>
           <EscrowBand />
         </div>
-      </section>
-
-      <section className="sec trust-strip" aria-label={t("home.trustTitle")}>
-        <h2 className="trust-title">{t("home.trustTitle")}</h2>
-        <div className="trust-grid">
-          <div className="trust-cell">
-            <strong>{trust.completedDeals.toLocaleString()}</strong>
-            <span>{t("home.trustDeals")}</span>
-          </div>
-          <div className="trust-cell">
-            <strong>{trust.protectedUsdt.toLocaleString()} USDT</strong>
-            <span>{t("home.trustProtected")}</span>
-          </div>
-          <div className="trust-cell">
-            <strong>{trust.feePercent}%</strong>
-            <span>{t("home.trustFee")}</span>
-          </div>
-          <div className="trust-cell">
-            <strong>{trust.disputeDays} days</strong>
-            <span>{t("home.trustDispute")}</span>
-          </div>
-          <div className="trust-cell">
-            <strong>{trust.verifiedSellers}</strong>
-            <span>{t("home.trustSellers")}</span>
-          </div>
-          <div className="trust-cell">
-            <strong>{trust.liveListings}</strong>
-            <span>{t("home.trustListings")}</span>
-          </div>
-        </div>
-        <p className="sm mut trust-note">{t("home.trustNote")}</p>
       </section>
 
       <section className="sec" id="browse" style={{ paddingBottom: 6 }}>

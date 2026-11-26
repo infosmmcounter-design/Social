@@ -37,6 +37,10 @@ export function StartSellerChat({
     }
   }, [user]);
 
+  if (user?.id === sellerId) {
+    return null;
+  }
+
   async function start(nextName: string, nextEmail: string, nextMessage: string) {
     setErr("");
     setBusy(true);

@@ -72,9 +72,9 @@ export default function CreateDealPage() {
   return (
     <section className="sec create-deal-page">
       <div className="deal-hero">
-        <p className="crypto-kicker">Off-platform buyer · Escrow protected</p>
+        <p className="deal-hero-kicker">Off-platform buyer · Escrow protected</p>
         <h1>{t("createDeal.title")}</h1>
-        <p className="mut">{t("createDeal.sub")}</p>
+        <p className="deal-hero-lead">{t("createDeal.sub")}</p>
         <ul className="deal-steps-mini">
           <li>Fill in the offer details</li>
           <li>Get a unique escrow payment link</li>
@@ -99,7 +99,7 @@ export default function CreateDealPage() {
             />
           </>
         ) : (
-          <p className="sm mut">
+          <p className="sm create-deal-as">
             Creating as <b>{user.name}</b> ({user.email})
             {!user.verified && user.role !== "admin" ? (
               <>

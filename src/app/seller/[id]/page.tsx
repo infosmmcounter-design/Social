@@ -6,6 +6,7 @@ import { ListingCard } from "@/components/ListingCard";
 import { VerifiedTick } from "@/components/VerifiedTick";
 import { StartSellerChat } from "@/components/StartSellerChat";
 import { CatIcon } from "@/components/Icons";
+import { useAuth } from "@/components/AuthProvider";
 import { useLang } from "@/components/LanguageProvider";
 import { LocaleLink as Link } from "@/components/LocaleLink";
 import { PublicReview } from "@/components/PublicReview";
@@ -16,6 +17,7 @@ import type { MsgKey } from "@/lib/i18n/messages";
 
 export default function SellerProfilePage() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const { t, locale } = useLang();
   const [shareMsg, setShareMsg] = useState("");
   const [data, setData] = useState<{
@@ -199,7 +201,9 @@ export default function SellerProfilePage() {
       ) : null}
 
       <div className="seller-actions">
-        <StartSellerChat sellerId={s.id} sellerName={s.name} />
+        {user?.id !== s.id ? (
+          <StartSellerChat sellerId={s.id} sellerName={s.name} />
+        ) : null}
         <button type="button" className="btn s o" onClick={shareProfile}>
           Share profile
         </button>
