@@ -194,6 +194,9 @@ export default function HomePage() {
   return (
     <>
       <section className="hero hero-home">
+        <span className="hero-orb hero-orb-a" aria-hidden />
+        <span className="hero-orb hero-orb-b" aria-hidden />
+        <span className="hero-orb hero-orb-c" aria-hidden />
         <div className="hero-inner">
           <BrandLogo size={48} />
           <p className="hero-kicker">{t("home.kicker")}</p>
@@ -245,39 +248,18 @@ export default function HomePage() {
 
         {view === "listings" ? (
           <>
-            <div className="filter-bar">
-              <button
-                type="button"
-                className={`chip ${!cat ? "on" : ""}`}
-                onClick={() => {
-                  setCat("");
-                  setMonetized("all");
-                  setMinPrice("");
-                  setMaxPrice("");
-                  setMinFollowers("");
-                }}
-              >
-                {t("home.all")}
-              </button>
-              {CATEGORIES.map(([k]) => (
-                <button
-                  key={k}
-                  type="button"
-                  className={`chip ${cat === k ? "on" : ""}`}
-                  onClick={() => {
-                    const next = cat === k ? "" : k;
-                    setCat(next);
-                    setMonetized("all");
-                    setMinPrice("");
-                    setMaxPrice("");
-                    setMinFollowers("");
-                  }}
-                >
-                  <CatIcon cat={k} size={16} />
-                  {t(`cat.${k}` as MsgKey)}
-                  {counts[k] ? <span className="chip-n">{counts[k]}</span> : null}
-                </button>
-              ))}
+            <LiveCategoryRail
+              cat={cat}
+              counts={counts}
+              onPick={(next) => {
+                setCat(next);
+                setMonetized("all");
+                setMinPrice("");
+                setMaxPrice("");
+                setMinFollowers("");
+              }}
+            />
+            <div className="filter-bar filter-bar-sort">
               <select
                 className="sort-select"
                 value={sort}
@@ -380,6 +362,69 @@ export default function HomePage() {
   );
 }
 
+function LiveCategoryRail({
+  cat,
+  counts,
+  onPick,
+}: {
+  cat: string;
+  counts: Record<string, number>;
+  onPick: (next: string) => void;
+}) {
+  const { t } = useLang();
+  const boards = useMemo(
+    () => [
+      { key: "", label: t("home.all"), icon: "" as string },
+      ...CATEGORIES.map(([k]) => ({
+        key: k,
+        label: t(`cat.${k}` as MsgKey),
+        icon: k,
+      })),
+    ],
+    [t]
+  );
+
+  function renderSet(dup: boolean) {
+    return boards.map((b, i) => {
+      const on = cat === b.key;
+      return (
+        <button
+          key={`${dup ? "d" : "m"}-${b.key || "all"}-${i}`}
+          type="button"
+          className={`cat-tile cat-tile-${b.key || "all"} ${on ? "on" : ""}`}
+          style={{ animationDelay: `${(i % 5) * -0.55}s` }}
+          tabIndex={dup ? -1 : undefined}
+          aria-pressed={dup ? undefined : on}
+          onClick={() => onPick(on && b.key ? "" : b.key)}
+        >
+          <span className="cat-tile-glow" aria-hidden />
+          <span className="cat-tile-icon" aria-hidden>
+            {b.icon ? <CatIcon cat={b.icon} size={22} /> : <span className="cat-tile-all">✦</span>}
+          </span>
+          <span className="cat-tile-label">{b.label}</span>
+          {b.key && counts[b.key] ? (
+            <span className="cat-tile-n">{counts[b.key]}</span>
+          ) : null}
+          <span className="cat-tile-live" aria-hidden />
+        </button>
+      );
+    });
+  }
+
+  return (
+    <div className="cat-live" aria-label={t("home.browse")}>
+      <div className="cat-live-viewport">
+        <div className="cat-live-track">
+          <div className="cat-live-set">{renderSet(false)}</div>
+          <div className="cat-live-set" aria-hidden="true">
+            {renderSet(true)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EscrowBand() {
   return (
     <section className="escrow-band" aria-label="Protected by USDT Escrow">
@@ -403,7 +448,7 @@ function EscrowBand() {
           <h2>Protected by Escrow</h2>
           <p>Chat first, pay USDT into escrow, then confirm delivery. Funds stay held until you say you received it.</p>
         </div>
-        <div className="usdt-coin" aria-hidden>
+        <div className="usdt-coin usdt-coin-live" aria-hidden>
           <span>₮</span>
           <small>USDT</small>
         </div>

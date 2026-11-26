@@ -1788,6 +1788,37 @@ footer.sf-footer {
   pointer-events: none;
   animation: heroGlow 8s ease-in-out infinite alternate;
 }
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(2px);
+}
+.hero-orb-a {
+  width: 160px;
+  height: 160px;
+  top: -36px;
+  right: 8%;
+  background: radial-gradient(circle, rgba(246, 224, 138, 0.35), transparent 68%);
+  animation: orbDrift 11s ease-in-out infinite alternate;
+}
+.hero-orb-b {
+  width: 110px;
+  height: 110px;
+  bottom: 18%;
+  left: 6%;
+  background: radial-gradient(circle, rgba(201, 162, 39, 0.28), transparent 70%);
+  animation: orbDrift 9s ease-in-out infinite alternate-reverse;
+}
+.hero-orb-c {
+  width: 70px;
+  height: 70px;
+  top: 42%;
+  right: 28%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.16), transparent 72%);
+  animation: orbDrift 7s ease-in-out infinite alternate;
+}
 @keyframes heroGlow {
   from {
     transform: translateX(0);
@@ -1795,6 +1826,16 @@ footer.sf-footer {
   }
   to {
     transform: translateX(-12%);
+    opacity: 1;
+  }
+}
+@keyframes orbDrift {
+  from {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.75;
+  }
+  to {
+    transform: translate(-18px, 14px) scale(1.12);
     opacity: 1;
   }
 }
@@ -1864,6 +1905,9 @@ footer.sf-footer {
   align-items: center;
   margin-top: 14px;
 }
+.filter-bar-sort {
+  margin-top: 10px;
+}
 .chip {
   display: inline-flex;
   align-items: center;
@@ -1894,6 +1938,227 @@ footer.sf-footer {
 }
 .chip.on .chip-n {
   background: rgba(255, 255, 255, 0.22);
+}
+
+/* Live scrolling category rail on the home page */
+.cat-live {
+  margin: 16px -18px 0;
+  position: relative;
+}
+.cat-live-viewport {
+  overflow: hidden;
+  padding: 10px 0 14px;
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    #000 5%,
+    #000 95%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    #000 5%,
+    #000 95%,
+    transparent 100%
+  );
+}
+.cat-live-track {
+  display: flex;
+  width: max-content;
+  gap: 0;
+  animation: catMarquee 32s linear infinite;
+  will-change: transform;
+}
+.cat-live:hover .cat-live-track,
+.cat-live:focus-within .cat-live-track {
+  animation-play-state: paused;
+}
+.cat-live-set {
+  display: flex;
+  gap: 12px;
+  padding: 0 12px;
+}
+.cat-tile {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 132px;
+  min-height: 112px;
+  padding: 14px 14px 12px;
+  border-radius: 20px;
+  border: 1px solid #ead7a0;
+  background:
+    linear-gradient(165deg, #fffdf6 0%, #fff 55%, #faf3df 100%);
+  color: var(--ink);
+  box-shadow: 0 10px 24px rgba(20, 20, 20, 0.06);
+  cursor: pointer;
+  overflow: hidden;
+  text-align: left;
+  font: inherit;
+  animation: catFloat 3.4s ease-in-out infinite;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.cat-tile-glow {
+  position: absolute;
+  inset: -40% auto auto -20%;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(230, 195, 92, 0.35), transparent 68%);
+  z-index: -1;
+  animation: tileGlow 4.5s ease-in-out infinite alternate;
+}
+.cat-tile-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: #141414;
+  color: #f6e08a;
+}
+.cat-tile-icon svg {
+  color: #f6e08a;
+  fill: #f6e08a;
+}
+.cat-tile-all {
+  font-size: 1.05rem;
+  color: #f6e08a;
+  line-height: 1;
+}
+.cat-tile-label {
+  font: 700 0.92rem/1.2 "Plus Jakarta Sans", sans-serif;
+  letter-spacing: -0.02em;
+  max-width: 9.5rem;
+}
+.cat-tile-n {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  min-width: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(20, 20, 20, 0.08);
+  font: 700 0.72rem/1.2 "Plus Jakarta Sans", sans-serif;
+  color: var(--mut);
+}
+.cat-tile-live {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+  box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.45);
+  animation: livePulse 1.8s ease-out infinite;
+}
+.cat-tile:hover {
+  border-color: #c9a227;
+  box-shadow: 0 14px 28px rgba(20, 20, 20, 0.1);
+}
+.cat-tile.on {
+  background: linear-gradient(160deg, #1f1f1f 0%, #121212 100%);
+  border-color: #c9a227;
+  color: #fff8dc;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
+}
+.cat-tile.on .cat-tile-icon {
+  background: #f6e08a;
+  color: #141414;
+}
+.cat-tile.on .cat-tile-all {
+  color: #141414;
+}
+.cat-tile.on .cat-tile-icon svg {
+  color: #141414;
+  fill: #141414;
+}
+.cat-tile.on .cat-tile-n {
+  background: rgba(246, 224, 138, 0.2);
+  color: #f6e08a;
+}
+.cat-tile-youtube .cat-tile-icon { background: #1a1a1a; }
+.cat-tile-instagram .cat-tile-icon { background: #222; }
+.cat-tile-tiktok .cat-tile-icon { background: #171717; }
+.cat-tile-facebook .cat-tile-icon { background: #1c1c1c; }
+.cat-tile-freelance .cat-tile-icon { background: #3b2308; }
+.cat-tile-ai .cat-tile-icon { background: #16132a; }
+
+@keyframes catMarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes catFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes tileGlow {
+  from {
+    opacity: 0.55;
+    transform: translate(0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate(12px, 10px);
+  }
+}
+@keyframes livePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 9px rgba(22, 163, 74, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+  }
+}
+.usdt-coin-live {
+  animation: coinBob 2.8s ease-in-out infinite;
+}
+@keyframes coinBob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(4deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-orb,
+  .hero::after,
+  .cat-live-track,
+  .cat-tile,
+  .cat-tile-glow,
+  .cat-tile-live,
+  .usdt-coin-live {
+    animation: none !important;
+  }
+  .cat-live-viewport {
+    overflow-x: auto;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+  .cat-live-set[aria-hidden="true"] {
+    display: none;
+  }
 }
 .backup-code {
   margin: 14px 0;
