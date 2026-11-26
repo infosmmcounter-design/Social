@@ -56,9 +56,12 @@ export default function ApplyPage() {
   return (
     <section className="sec" style={{ maxWidth: 600 }}>
       <h1 style={{ fontSize: "2rem" }}>Apply to become a seller</h1>
+      <div className="seller-apply" style={{ marginBottom: 16 }}>
+        <span>Sell accounts and freelance gigs</span>
+        <small>1. Send this form. 2. Admin approves you. 3. Open the seller dashboard and list stock.</small>
+      </div>
       <p className="mut">
-        Submit your application. Admin decides whether to approve selling access.
-        This form is for users — it does not auto-activate a seller store.
+        Approval is manual. After it, your seller dashboard is where new listings are added.
       </p>
       <form className="card" onSubmit={submit}>
         <label>Full name</label>

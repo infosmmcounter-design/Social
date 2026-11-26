@@ -232,7 +232,7 @@ describe("store update", () => {
       msgs: [],
       paymentProof: "",
       buyerMarkedPaid: false,
-    } as Order;
+    } as unknown as Order;
     const data = {
       orders: [order],
       listings: [{ id: 1, stock: 3, soldCount: 1, status: "approved", listed: true }],

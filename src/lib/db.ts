@@ -461,6 +461,8 @@ export function publicUser(
     active: u.active,
     completedDeals: u.completedDeals || 0,
     walletBalance: opts?.includeWallet ? Number(u.walletBalance || 0) : undefined,
+    emailVerified: !!u.emailVerified,
+    google: !!u.googleSub,
     paymentMethods: includePayMethods
       ? (u.paymentMethods || []).filter((m) => m.enabled)
       : undefined,

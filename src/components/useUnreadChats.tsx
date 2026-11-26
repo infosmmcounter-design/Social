@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "./AuthProvider";
+import { readGuestEmail } from "@/lib/guest-email";
 
 export const CHATS_REFRESH_EVENT = "sf-chats-refresh";
 
@@ -11,14 +12,16 @@ export function useUnreadChats() {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    if (!user) {
+    const guest = user ? "" : readGuestEmail();
+    if (!user && !guest) {
       setCount(0);
       return;
     }
     let stop = false;
     async function load() {
       try {
-        const d = await api<{ chats: { unread?: number }[] }>("/api/chats");
+        const q = guest ? `?email=${encodeURIComponent(guest)}` : "";
+        const d = await api<{ chats: { unread?: number }[] }>(`/api/chats${q}`);
         if (stop) return;
         const n = (d.chats || []).reduce((sum, row) => sum + (row.unread || 0), 0);
         setCount(n);

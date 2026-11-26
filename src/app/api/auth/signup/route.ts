@@ -34,6 +34,8 @@ export async function POST(req: Request) {
   const passwordHash = await hashPassword(password);
   const backupCode = newBackupCode();
   const backupCodeHash = await hashPassword(backupCode.replace(/[^A-Za-z0-9]/g, "").toUpperCase());
+  const verifyCode = email ? String(100000 + Math.floor(Math.random() * 900000)) : "";
+  const verifyCodeHash = verifyCode ? await hashPassword(verifyCode) : "";
   let userId = 0;
 
   try {
@@ -58,6 +60,8 @@ export async function POST(req: Request) {
         phone: String(body.phone || ""),
         avatarUrl: avatarDataUrl(name),
         verified: false,
+        emailVerified: false,
+        verifyCodeHash,
         rating: 0,
         reviewCount: 0,
         dummy: false,
@@ -80,5 +84,6 @@ export async function POST(req: Request) {
   return NextResponse.json({
     user: publicUser(user, false, { includeWallet: true }),
     backupCode,
+    verifyCode: verifyCode || undefined,
   });
 }

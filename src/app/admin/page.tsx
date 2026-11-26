@@ -1423,9 +1423,57 @@ export default function AdminPage() {
                       {DEAL_STATUS_LABEL[o.status]}
                     </span>
                   </td>
-                  <td>
+                  <td className="row">
+                    {o.status === "awaiting_payment" ? (
+                      <button
+                        className="btn s"
+                        type="button"
+                        onClick={() =>
+                          run("Funds held. Seller can deliver, then the buyer confirms.", async () => {
+                            await api(`/api/orders/${o.id}/status`, {
+                              method: "POST",
+                              json: { status: "funds_held" },
+                            });
+                          })
+                        }
+                      >
+                        Hold funds
+                      </button>
+                    ) : null}
+                    {o.status === "funds_held" ? (
+                      <button
+                        className="btn s buy-go"
+                        type="button"
+                        onClick={() =>
+                          run("Buyer notified to confirm receipt.", async () => {
+                            await api(`/api/orders/${o.id}/status`, {
+                              method: "POST",
+                              json: { status: "credentials_shared" },
+                            });
+                          })
+                        }
+                      >
+                        Delivered to buyer
+                      </button>
+                    ) : null}
+                    {o.status === "release_requested" ? (
+                      <button
+                        className="btn s g"
+                        type="button"
+                        onClick={() =>
+                          run("Deal complete. Seller payment released.", async () => {
+                            await api(`/api/orders/${o.id}/status`, {
+                              method: "POST",
+                              json: { status: "completed" },
+                            });
+                          })
+                        }
+                      >
+                        Mark complete
+                      </button>
+                    ) : null}
                     <Link className="btn s o" href={`/deal/${o.id}`}>
-                      Open chat / moderate
+                      Open chat
                     </Link>
                   </td>
                 </tr>

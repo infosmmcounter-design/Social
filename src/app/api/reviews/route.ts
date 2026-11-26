@@ -24,8 +24,8 @@ export async function POST(req: Request) {
   try {
     await updateStore((data) => {
       const order = data.orders.find((o) => o.id === orderId);
-      if (!order || order.status !== "completed")
-        throw new Error("Only completed deals can be reviewed");
+      if (!order || (order.status !== "completed" && order.status !== "release_requested"))
+        throw new Error("Confirm that you received the order before leaving a review.");
 
       if (about === "seller") {
         const guestEmail = String(body.email || "")

@@ -407,6 +407,35 @@ html[dir="rtl"] .chat-fab {
 }
 .chat-live-compose input {
   flex: 1;
+  min-width: 0;
+}
+.chat-sections h2 {
+  font-size: 1.05rem;
+  margin: 22px 0 0;
+}
+.receive-card {
+  border: 2px solid #e2b93d;
+  background: linear-gradient(180deg, #fff8e4, #fff);
+  padding: 16px;
+  border-radius: 16px;
+  margin: 0 0 14px;
+}
+.receive-card .buy-go {
+  width: auto;
+  margin-top: 8px;
+}
+.deal-compose {
+  flex-wrap: wrap;
+}
+.deal-compose input {
+  flex: 1;
+  min-width: 180px;
+}
+.lc-stock {
+  margin: 0 0 4px;
+}
+.google-btn {
+  width: 100%;
 }
 .chat-live-gate {
   flex: 1;
@@ -910,6 +939,13 @@ textarea:focus-visible {
 .hero .escrow-band {
   margin: 16px 0 0;
 }
+.hero-sell {
+  width: auto;
+  background: linear-gradient(180deg, #ffe9a0, #e2b93d 55%, #b8860b);
+  color: #1a1408;
+  border: 0;
+  font-weight: 800;
+}
 .lang-switch {
   position: relative;
 }
@@ -983,15 +1019,29 @@ textarea:focus-visible {
   width: 100%;
   margin-top: 16px;
   display: flex;
-  justify-content: space-between;
+  gap: 10px;
   align-items: center;
-  text-align: start;
-  padding: 16px 18px;
+  padding: 12px;
   border-radius: 18px;
   border: 1px solid var(--line);
   background: var(--s);
   color: var(--ink);
+}
+.wallet-open {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: start;
+  border: 0;
+  background: transparent;
+  color: inherit;
   cursor: pointer;
+  padding: 4px;
+}
+.wallet-entry .buy-go {
+  width: auto;
+  min-width: 120px;
 }
 .wallet-entry strong,
 .wallet-entry small {

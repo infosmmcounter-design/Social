@@ -6,6 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { LocaleLink as Link } from "@/components/LocaleLink";
 import { StartEscrowChat } from "@/components/StartEscrowChat";
 import { useLang } from "@/components/LanguageProvider";
+import { readGuestEmail, saveGuestEmail } from "@/lib/guest-email";
 
 type Row = {
   source: "inquiry" | "deal";
@@ -22,148 +23,139 @@ type Row = {
 };
 
 export default function ChatsPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { t } = useLang();
   const [rows, setRows] = useState<Row[]>([]);
   const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [ready, setReady] = useState(false);
 
   async function load(forEmail?: string) {
     setErr("");
+    setBusy(true);
     try {
-      const q = forEmail
-        ? `?email=${encodeURIComponent(forEmail)}`
-        : "";
+      const mail = (forEmail || "").trim().toLowerCase();
+      if (mail) saveGuestEmail(mail);
+      const q = !user && mail ? `?email=${encodeURIComponent(mail)}` : "";
       const d = await api<{ chats: Row[] }>(`/api/chats${q}`);
       setRows(d.chats || []);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Failed");
+      setErr(e instanceof Error ? e.message : "Could not load chats");
       setRows([]);
+    } finally {
+      setBusy(false);
+      setReady(true);
     }
   }
 
   useEffect(() => {
-    if (user) load().catch(() => undefined);
-  }, [user]);
+    if (loading) return;
+    const saved = readGuestEmail();
+    if (saved) setEmail(saved);
+    if (user) {
+      load().catch(() => undefined);
+      return;
+    }
+    if (saved) {
+      load(saved).catch(() => undefined);
+      return;
+    }
+    setReady(true);
+  }, [user, loading]);
+
+  const sellerRows = rows.filter((r) => r.kind !== "escrow");
+  const escrowRows = rows.filter((r) => r.kind === "escrow");
+
+  function hrefFor(r: Row) {
+    if (r.source === "deal") return `/deal/${r.id}?email=${encodeURIComponent(email || r.buyerEmail)}`;
+    return `/chat/${r.id}?email=${encodeURIComponent(email || r.buyerEmail)}`;
+  }
+
+  function list(items: Row[]) {
+    return items.map((r) => (
+      <article key={`${r.source}-${r.id}`} className="chat-page-row">
+        <div className="grow">
+          <b>
+            {r.kind === "deal" ? "Deal" : "Seller"} · {r.title}
+            {r.unread > 0 ? <span className="pill g">{r.unread} new</span> : null}
+          </b>
+          <small>{r.subject}</small>
+          <span>{r.preview}</span>
+        </div>
+        <Link className="btn s" href={hrefFor(r)}>
+          Open
+        </Link>
+      </article>
+    ));
+  }
 
   return (
-    <section className="sec" style={{ maxWidth: 720 }}>
+    <section className="sec chat-sections" style={{ maxWidth: 720 }}>
       <h1 style={{ fontSize: "2rem" }}>{t("nav.chats")}</h1>
       <p className="mut">
-        Seller chats and deal rooms stay here. Escrow support is pinned at the bottom.
+        Seller and deal chats are listed first. Escrow support is its own section below.
       </p>
 
       {!user ? (
-        <div className="card" style={{ marginTop: 14 }}>
-          <label>Email used when you started a chat</label>
+        <form
+          className="card"
+          style={{ marginTop: 14 }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            load(email);
+          }}
+        >
+          <label>Find my chats</label>
+          <p className="sm mut">Use the email you typed when you started a chat or a deal.</p>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
+            required
           />
-          <button
-            className="btn"
-            style={{ marginTop: 10 }}
-            onClick={() => load(email.trim())}
-          >
-            Find my chats
+          <button className="btn" style={{ marginTop: 10 }} type="submit" disabled={busy}>
+            {busy ? "Looking…" : "Find my chats"}
           </button>
-        </div>
+        </form>
       ) : null}
 
       {err ? <p className="err">{err}</p> : null}
+      {!ready || busy ? <p className="mut">Loading chats…</p> : null}
 
+      <h2>Seller and deal chats</h2>
       <div className="chat-page-list">
-        {(rows.some((r) => r.kind === "escrow")
-          ? rows
-          : [
-              ...rows,
-              {
-                source: "inquiry" as const,
-                id: 0,
-                kind: "escrow" as const,
-                title: "Chat with Escrow",
-                subject: "SocialsFlip escrow",
-                preview: "Talk with SocialsFlip escrow. No seller is in this room.",
-                updatedAt: "",
-                unread: 0,
-                sellerName: "SocialsFlip Escrow",
-                buyerName: "",
-                buyerEmail: email,
-              },
-            ]
-        ).map((r) => {
-          const escrow = r.kind === "escrow";
-          const href =
-            r.source === "deal"
-              ? `/deal/${r.id}`
-              : `/chat/${r.id}${
-                  !user || user.email.toLowerCase() === r.buyerEmail.toLowerCase()
-                    ? `?email=${encodeURIComponent(email || r.buyerEmail)}`
-                    : ""
-                }`;
-          return (
-            <article key={`${r.source}-${r.id}`} className={`chat-page-row ${escrow ? "escrow" : ""}`}>
-              <div className="grow">
-                <b>{escrow ? `⚖ ${t("chat.withEscrow")}` : r.title}</b>
+        {list(sellerRows)}
+        {ready && !busy && !sellerRows.length ? (
+          <p className="mut">No seller chats yet. Open a listing and tap Chat with Seller.</p>
+        ) : null}
+      </div>
+
+      <h2>Escrow support</h2>
+      <div className="chat-page-list">
+        {escrowRows.map((r) => (
+          <article key={`${r.source}-${r.id}`} className="chat-page-row escrow">
+            <div className="grow">
+              <b>
+                {t("chat.withEscrow")}
                 {r.unread > 0 ? <span className="pill g">{r.unread} new</span> : null}
-                {escrow ? null : <small>{r.subject}</small>}
-                <span>{r.preview}</span>
-              </div>
-              <time className="sm mut">
-                {r.updatedAt && new Date(r.updatedAt).getTime()
-                  ? new Date(r.updatedAt).toLocaleString()
-                  : ""}
-              </time>
-              <div className="row">
-                {r.id ? (
-                  <Link className="btn s" href={href}>
-                    Open
-                  </Link>
-                ) : (
-                  <StartEscrowChat />
-                )}
-                {user && r.source === "inquiry" && r.id ? (
-                  <>
-                    <button
-                      type="button"
-                      className="btn s o"
-                      onClick={async () => {
-                        await api(`/api/inquiries/${r.id}`, {
-                          method: "POST",
-                          json: { action: "delete", email: email || r.buyerEmail },
-                        });
-                        load();
-                      }}
-                    >
-                      Delete
-                    </button>
-                    {escrow ? null : (
-                      <button
-                        type="button"
-                        className="btn s d"
-                        onClick={async () => {
-                          await api(`/api/inquiries/${r.id}`, {
-                            method: "POST",
-                            json: { action: "block" },
-                          });
-                          setErr(`Blocked ${r.sellerName || r.buyerName}`);
-                        }}
-                      >
-                        Block
-                      </button>
-                    )}
-                  </>
-                ) : null}
-              </div>
-            </article>
-          );
-        })}
-        {!rows.length ? (
-          <p className="mut">
-            No seller or deal chats yet. Open a listing and tap Chat, or place an order.
-          </p>
+              </b>
+              <span>{r.preview}</span>
+            </div>
+            <Link className="btn s" href={hrefFor(r)}>
+              Open
+            </Link>
+          </article>
+        ))}
+        {!escrowRows.length ? (
+          <article className="chat-page-row escrow">
+            <div className="grow">
+              <b>{t("chat.withEscrow")}</b>
+              <span>Talk with SocialsFlip escrow. No seller is in this room.</span>
+            </div>
+            <StartEscrowChat />
+          </article>
         ) : null}
       </div>
     </section>

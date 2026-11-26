@@ -218,7 +218,16 @@ function DealInner() {
   }
 
   if (!order) {
-    return <p className="sec mut">{err || "Loading deal…"}</p>;
+    return (
+      <section className="sec">
+        <p className={err ? "err" : "mut"}>{err || "Loading deal…"}</p>
+        {err ? (
+          <Link className="btn" href="/deals">
+            Back to deals
+          </Link>
+        ) : null}
+      </section>
+    );
   }
 
   const sellerName = seller?.name || "Seller";
@@ -461,25 +470,17 @@ function DealInner() {
             </button>
           </>
         ) : null}
-        {(isSeller || adminAsDummy) && (
+        {(isSeller || adminAsDummy || isAdmin) && order.status === "funds_held" ? (
           <button
-            className="btn s"
-            disabled={!dealStarted}
+            className="btn buy-go"
+            type="button"
             onClick={() => setStatus("credentials_shared")}
           >
-            {serviceDeal ? "Mark service delivered" : "Mark delivered successfully"}
+            {serviceDeal ? "Delivered to buyer" : "Delivered to buyer"}
           </button>
-        )}
+        ) : null}
         {isBuyer && (
           <>
-            <button
-              className="btn s"
-              disabled={order.status !== "credentials_shared"}
-              onClick={() => setStatus("release_requested")}
-              title="Tell escrow the service arrived so the seller can be paid"
-            >
-              I received it. Pay the seller.
-            </button>
             {order.status === "awaiting_payment" ? (
               <button
                 className="btn s o"
@@ -507,6 +508,18 @@ function DealInner() {
         )}
       </div>
 
+      {isBuyer && order.status === "credentials_shared" ? (
+        <div className="receive-card">
+          <h3 style={{ marginTop: 0 }}>This order was marked delivered</h3>
+          <p className="sm">
+            Tap below when you have it. Your review opens next, and escrow can release the seller payment.
+          </p>
+          <button className="btn buy-go" type="button" onClick={() => setStatus("release_requested")}>
+            I received it
+          </button>
+        </div>
+      ) : null}
+
       <h2>{t("deal.chat")}</h2>
       <div className="chat" role="log">
         {order.msgs.map((m) => (
@@ -518,7 +531,7 @@ function DealInner() {
           </div>
         ))}
       </div>
-      <div className="row" style={{ marginTop: 8, flexWrap: "nowrap" }}>
+      <div className="row deal-compose" style={{ marginTop: 8 }}>
         {isAdmin ? (
           <select
             value={asRole}
@@ -543,7 +556,7 @@ function DealInner() {
         </button>
       </div>
 
-      {order.status === "completed" && isBuyer ? (
+      {(order.status === "completed" || order.status === "release_requested") && isBuyer ? (
         <div className="card f" style={{ marginTop: 16 }}>
           <h3>{t("reviews.reviewSeller")}</h3>
           <p className="sm mut">{t("reviews.publicNote")}</p>
@@ -574,7 +587,7 @@ function DealInner() {
         </div>
       ) : null}
 
-      {order.status === "completed" && (isSeller || adminAsDummy) ? (
+      {(order.status === "completed" || order.status === "release_requested") && (isSeller || adminAsDummy) ? (
         <div className="card f" style={{ marginTop: 16 }}>
           <h3>Review the buyer</h3>
           <label>Rating</label>
