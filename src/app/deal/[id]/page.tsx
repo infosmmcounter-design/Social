@@ -8,6 +8,7 @@ import { DEAL_STATUS_LABEL, type DealStatus } from "@/lib/types";
 import { useAuth } from "@/components/AuthProvider";
 import { useLang } from "@/components/LanguageProvider";
 import { LocaleLink as Link } from "@/components/LocaleLink";
+import { CryptoCheckout } from "@/components/CryptoCheckout";
 
 type Order = {
   id: number;
@@ -24,6 +25,8 @@ type Order = {
   paymentWindowMins?: number;
   deliveryDueAt?: string | null;
   deliveryWindowHours?: number;
+  sellerAcceptedAt?: string | null;
+  buyerConfirmedAt?: string | null;
   deliveredAt?: string | null;
   buyerName: string;
   buyerEmail: string;
@@ -34,6 +37,8 @@ type Order = {
   msgs: { id: number; from: string; text: string; createdAt: string }[];
   sellerId: number;
   buyerId: number | null;
+  payStatus?: string | null;
+  payTxHash?: string | null;
 };
 
 function formatRemain(ms: number) {
@@ -59,10 +64,6 @@ function DealInner() {
     dummy?: boolean;
     verified?: boolean;
   } | null>(null);
-  const [wallets, setWallets] = useState<
-    { asset: string; network: string; address: string }[]
-  >([]);
-  const [txHash, setTxHash] = useState("");
   const [text, setText] = useState("");
   const [asRole, setAsRole] = useState<"admin" | "seller">("admin");
   const [stars, setStars] = useState(5);
@@ -73,6 +74,9 @@ function DealInner() {
   const [msg, setMsg] = useState("");
   const [now, setNow] = useState(Date.now());
   const [serviceDeal, setServiceDeal] = useState(false);
+  const [showPay, setShowPay] = useState(false);
+  const [priceDraft, setPriceDraft] = useState("");
+  const [priceBusy, setPriceBusy] = useState(false);
 
   const load = useCallback(async () => {
     const q = emailQ ? `&email=${encodeURIComponent(emailQ)}` : "";
@@ -84,7 +88,6 @@ function DealInner() {
     }>(`/api/orders?id=${id}${q}`);
     setOrder(d.order);
     setSeller(d.seller);
-    setWallets(d.wallets || []);
     const listing = d.listing;
     setServiceDeal(
       !!(
@@ -123,62 +126,47 @@ function DealInner() {
   const isAdmin = user?.role === "admin";
   const adminAsDummy = isAdmin && seller?.dummy;
 
-  const remainMs = useMemo(() => {
-    if (!order?.paymentDueAt) return 0;
-    return new Date(order.paymentDueAt).getTime() - now;
-  }, [order?.paymentDueAt, now]);
-
-  const deliveryRemainMs = useMemo(() => {
+  const responseRemainMs = useMemo(() => {
     if (!order?.deliveryDueAt) return 0;
     return new Date(order.deliveryDueAt).getTime() - now;
   }, [order?.deliveryDueAt, now]);
 
-  const expired =
+  const waitingForSeller =
     !!order &&
-    order.status === "awaiting_payment" &&
-    !!order.paymentDueAt &&
-    remainMs <= 0;
+    !order.sellerAcceptedAt &&
+    (order.status === "awaiting_payment" || order.status === "funds_held");
+  const responseOverdue = waitingForSeller && !!order?.deliveryDueAt && responseRemainMs <= 0;
+  const dealStarted = !!order?.sellerAcceptedAt && order.status === "funds_held";
 
-  const deliveryOverdue =
-    !!order &&
-    order.status === "funds_held" &&
-    !order.deliveredAt &&
-    !!order.deliveryDueAt &&
-    deliveryRemainMs <= 0;
+  async function savePrice(e: React.FormEvent) {
+    e.preventDefault();
+    setErr("");
+    setPriceBusy(true);
+    try {
+      await api(`/api/orders/${id}/price`, {
+        method: "POST",
+        json: { price: Number(priceDraft) },
+      });
+      setPriceDraft("");
+      setMsg("Price updated. The buyer sees the new total.");
+      setShowPay(false);
+      await load();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not update price");
+    } finally {
+      setPriceBusy(false);
+    }
+  }
 
-  async function setStatus(status: DealStatus) {
+  async function setStatus(status: DealStatus, action?: string) {
     setErr("");
     try {
       await api(`/api/orders/${id}/status`, {
         method: "POST",
-        json: { status, email: emailQ || order?.buyerEmail },
+        json: { status, action, email: emailQ || order?.buyerEmail },
       });
       await load();
-      setMsg(`Status → ${DEAL_STATUS_LABEL[status]}`);
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Failed");
-    }
-  }
-
-  async function submitProof(markPaidOnly = false) {
-    setErr("");
-    setMsg("");
-    try {
-      await api(`/api/orders/${id}/proof`, {
-        method: "POST",
-        json: {
-          txHash: markPaidOnly ? "" : txHash,
-          markPaidOnly,
-          email: emailQ || order?.buyerEmail,
-        },
-      });
-      setTxHash("");
-      await load();
-      setMsg(
-        markPaidOnly
-          ? "Marked as paid — seller & admin notified. Add TX hash when ready."
-          : "Payment proof sent. Seller notified."
-      );
+      setMsg(action === "accept" ? "Seller accepted the deal." : `Status → ${DEAL_STATUS_LABEL[status]}`);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed");
     }
@@ -241,17 +229,11 @@ function DealInner() {
     return from;
   };
 
-  const wallet =
-    wallets.find((w) =>
-      order.coin.toUpperCase().includes("BEP")
-        ? w.asset.includes("BEP")
-        : w.asset.includes("TRC")
-    ) || wallets[0];
-
   const steps: DealStatus[] = [
     "awaiting_payment",
     "funds_held",
     "credentials_shared",
+    "release_requested",
     "completed",
   ];
 
@@ -264,9 +246,29 @@ function DealInner() {
         Deal #{order.id}: {order.title}
       </h1>
       <p className="sm mut">
-        Status: <b>{DEAL_STATUS_LABEL[order.status]}</b> · Qty{" "}
-        {order.qty || 1} · Total {money(order.total)} · {order.coin}
+        Status: <b>{DEAL_STATUS_LABEL[order.status]}</b> · Qty {order.qty || 1} ·{" "}
+        {order.coin}
       </p>
+      <div className="hl-card deal-hold">
+        <p className="crypto-kicker">
+          Escrow fee
+          {order.price > 0 ? ` ${Math.round((order.fee / order.price) * 100)}%` : ""}
+        </p>
+        <div className="sum">
+          <div>
+            <span>Listing price</span>
+            <span>{money(order.price)}</span>
+          </div>
+          <div>
+            <span>Escrow fee</span>
+            <span>{money(order.fee)}</span>
+          </div>
+          <div className="t">
+            <span>Pay this total</span>
+            <span>{money(order.total)}</span>
+          </div>
+        </div>
+      </div>
 
       <div className="steps">
         {steps.map((s) => (
@@ -292,124 +294,115 @@ function DealInner() {
         </div>
       ) : null}
 
-      {order.status === "funds_held" && order.deliveryDueAt ? (
-        <div className={`pay-timer ${deliveryOverdue ? "expired" : ""}`}>
-          <span>
-            {deliveryOverdue
-              ? `Seller missed the ${order.deliveryWindowHours || 24}h delivery window.`
-              : `Seller must deliver within ${order.deliveryWindowHours || 24} hours`}
-          </span>
+      {waitingForSeller ? (
+        <div className={`deal-hero ${responseOverdue ? "expired" : ""}`}>
+          <p className="crypto-kicker">Next step</p>
+          <h2 style={{ margin: "4px 0 8px", fontSize: "1.25rem" }}>
+            {responseOverdue
+              ? `Seller did not respond within ${order.deliveryWindowHours || 24} hours`
+              : `Seller has ${order.deliveryWindowHours || 24} hours to respond`}
+          </h2>
+          <p className="sm">
+            This is a response window, not a delivery limit. Freelance work can take longer.
+            If the seller does not accept, this deal can be cancelled.
+          </p>
           <span className="clock" aria-live="polite">
-            {deliveryOverdue ? "00:00:00" : formatRemain(deliveryRemainMs)}
+            {responseOverdue ? "00:00:00" : formatRemain(responseRemainMs)}
           </span>
-          {isBuyer && deliveryOverdue ? (
-            <div className="row" style={{ width: "100%", marginTop: 4 }}>
-              <button
-                className="btn s d"
-                type="button"
-                onClick={() => setStatus("refunded")}
-              >
-                {t("deal.claimRefund")}
-              </button>
-              <button
-                className="btn s o"
-                type="button"
-                onClick={() => setStatus("cancelled")}
-              >
+          {(isSeller || adminAsDummy || isAdmin) ? (
+            <button className="btn" type="button" style={{ marginTop: 10 }} onClick={() => setStatus(order.status, "accept")}>
+              Accept deal
+            </button>
+          ) : null}
+          {isBuyer && responseOverdue ? (
+            <div className="row" style={{ width: "100%", marginTop: 8 }}>
+              {order.status === "funds_held" ? (
+                <button className="btn s d" type="button" onClick={() => setStatus("refunded")}>
+                  {t("deal.claimRefund")}
+                </button>
+              ) : null}
+              <button className="btn s o" type="button" onClick={() => setStatus("cancelled")}>
                 {t("deal.cancel")}
               </button>
             </div>
           ) : null}
-          {isBuyer && !deliveryOverdue ? (
-            <p className="sm" style={{ width: "100%", margin: "4px 0 0" }}>
-              If the seller does not deliver before this timer ends, you can
-              cancel or claim a refund here.
-            </p>
-          ) : null}
-          {(isSeller || adminAsDummy) && !deliveryOverdue ? (
-            <p className="sm" style={{ width: "100%", margin: "4px 0 0" }}>
-              Deliver now — use “Share credentials” before the timer hits zero.
-            </p>
-          ) : null}
         </div>
       ) : null}
 
-      <div className="card f">
-        <h3>{t("deal.escrowPay")}</h3>
-        {order.status === "awaiting_payment" && order.paymentDueAt ? (
-          <div className={`pay-timer ${expired ? "expired" : ""}`}>
-            <span>
-              {expired
-                ? "Payment window ended — you can still pay & come back; escrow will verify."
-                : `Pay within ${order.paymentWindowMins || 60} min window`}
-            </span>
-            <span className="clock" aria-live="polite">
-              {expired ? "00:00" : formatRemain(remainMs)}
-            </span>
-          </div>
-        ) : null}
+      {order.sellerAcceptedAt && order.status === "awaiting_payment" ? (
+        <div className="hl-card deal-hold">
+          Seller accepted. The deal starts after the buyer payment is in escrow.
+        </div>
+      ) : null}
 
-        {wallet?.address ? (
-          <p>
-            Send <b>{money(order.total)}</b> USDT to:
-            <br />
-            <code style={{ wordBreak: "break-all" }}>{wallet.address}</code>
-            <br />
-            <span className="sm mut">
-              Network: {wallet.network} ({wallet.asset})
-            </span>
-          </p>
-        ) : (
-          <p className="err">Escrow wallet not configured yet.</p>
-        )}
-        <p className="sm mut" style={{ marginTop: 8 }}>
-          {order.paymentInstructions}
-        </p>
-        {order.buyerMarkedPaid || order.paymentProof ? (
-          <p className="okmsg">
-            {order.paymentProof
-              ? `Proof submitted: ${order.paymentProof}`
-              : "Buyer marked payment as done (awaiting TX / confirmation)."}
-          </p>
-        ) : null}
+      {dealStarted ? (
+        <div className="hl-card deal-hold">
+          Deal started. The seller marks it delivered when the work is finished, then the buyer is notified.
+        </div>
+      ) : null}
 
-        {isBuyer && order.status === "awaiting_payment" ? (
-          <div style={{ marginTop: 12 }}>
-            <label>TX hash / payment proof</label>
-            <div className="row" style={{ flexWrap: "nowrap" }}>
-              <input
-                value={txHash}
-                onChange={(e) => setTxHash(e.target.value)}
-                placeholder="Paste transaction hash after sending USDT"
-              />
-            </div>
-            <div className="row" style={{ marginTop: 10 }}>
-              <button
-                className="btn"
-                type="button"
-                onClick={() => submitProof(false)}
-                disabled={!txHash.trim()}
-              >
-                {t("deal.iPaid")}
-              </button>
-              <button
-                className="btn o"
-                type="button"
-                onClick={() => submitProof(true)}
-              >
-                Mark paid (TX later)
-              </button>
-              <Link className="btn o" href="/">
-                {t("deal.comeAgain")}
-              </Link>
-            </div>
-            <p className="sm mut" style={{ marginTop: 8 }}>
-              You can leave and return anytime — this deal stays open. Seller is
-              notified when you mark payment done.
-            </p>
-          </div>
-        ) : null}
-      </div>
+      {order.status === "credentials_shared" ? (
+        <div className="hl-card deal-hold">
+          Seller marked this delivered successfully. The buyer can confirm receipt.
+        </div>
+      ) : null}
+
+      {order.status === "release_requested" ? (
+        <div className="hl-card deal-hold">
+          Buyer confirmed: I have received the service. Pay the seller. Escrow can now mark the deal complete.
+        </div>
+      ) : null}
+
+      {(isSeller || isAdmin) && order.status === "awaiting_payment" && !order.payTxHash ? (
+        <form className="card hl-card price-live" onSubmit={savePrice}>
+          <h3 style={{ marginTop: 0 }}>Update price</h3>
+          <p className="sm mut">
+            Current price {money(order.price)}. Change it while you talk with the buyer. The escrow fee and payment amount update immediately.
+          </p>
+          <label>New price before the escrow fee</label>
+          <input
+            type="number"
+            min="1"
+            step="0.01"
+            value={priceDraft}
+            onChange={(e) => setPriceDraft(e.target.value)}
+            placeholder={String(order.price)}
+            required
+          />
+          <button className="btn" type="submit" disabled={priceBusy} style={{ marginTop: 10 }}>
+            {priceBusy ? "…" : "Update price live"}
+          </button>
+        </form>
+      ) : null}
+
+      {order.coin === "Wallet balance" ? (
+        <div className="card f">
+          <h3>{t("deal.escrowPay")}</h3>
+          <p className="okmsg">{order.paymentInstructions}</p>
+        </div>
+      ) : order.status === "awaiting_payment" &&
+        !showPay &&
+        order.payStatus !== "detected" &&
+        order.payStatus !== "confirming" &&
+        order.payStatus !== "paid" &&
+        isBuyer ? (
+        <div className="card hl-card pay-ready">
+          <h3 style={{ marginTop: 0 }}>Make Payment</h3>
+          <p className="sm">
+            Your order is placed. Chat with the seller below about the price, then pay {money(order.total)} with USDT.
+          </p>
+          <button className="btn buy-go" type="button" onClick={() => setShowPay(true)}>
+            Make Payment · {money(order.total)}
+          </button>
+        </div>
+      ) : (
+        <CryptoCheckout
+          orderId={order.id}
+          email={emailQ || order.buyerEmail}
+          isBuyer={!!isBuyer}
+          total={order.total}
+        />
+      )}
 
       <div className="note sm">
         <b>Buyer:</b> {order.buyerName} ({order.buyerEmail}) · <b>Seller:</b>{" "}
@@ -450,8 +443,12 @@ function DealInner() {
             >
               Confirm payment / Hold funds
             </button>
-            <button className="btn s g" onClick={() => setStatus("completed")}>
-              Release funds / Complete
+            <button
+              className="btn s g"
+              disabled={order.status !== "release_requested"}
+              onClick={() => setStatus("completed")}
+            >
+              Deal complete
             </button>
             <button className="btn s d" onClick={() => setStatus("disputed")}>
               Mark disputed
@@ -467,10 +464,10 @@ function DealInner() {
         {(isSeller || adminAsDummy) && (
           <button
             className="btn s"
-            disabled={!["funds_held", "awaiting_payment"].includes(order.status)}
+            disabled={!dealStarted}
             onClick={() => setStatus("credentials_shared")}
           >
-            Mark delivered / transfer done
+            {serviceDeal ? "Mark service delivered" : "Mark delivered successfully"}
           </button>
         )}
         {isBuyer && (
@@ -478,10 +475,10 @@ function DealInner() {
             <button
               className="btn s"
               disabled={order.status !== "credentials_shared"}
-              onClick={() => setStatus("completed")}
-              title="Confirm only after seller shared credentials / delivery"
+              onClick={() => setStatus("release_requested")}
+              title="Tell escrow the service arrived so the seller can be paid"
             >
-              Confirm I received it
+              I received it. Pay the seller.
             </button>
             {order.status === "awaiting_payment" ? (
               <button
@@ -499,6 +496,7 @@ function DealInner() {
                   "awaiting_payment",
                   "funds_held",
                   "credentials_shared",
+                  "release_requested",
                 ].includes(order.status)
               }
               onClick={() => setStatus("disputed")}

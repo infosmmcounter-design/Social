@@ -13,10 +13,14 @@ import { api } from "@/lib/api";
 export type AuthUser = {
   id: number;
   email: string;
+  username?: string;
   name: string;
   role: "buyer" | "seller" | "admin";
   country: string;
   bio: string;
+  phone?: string;
+  avatarUrl?: string;
+  walletBalance?: number;
   verified: boolean;
   rating: number;
   reviewCount: number;

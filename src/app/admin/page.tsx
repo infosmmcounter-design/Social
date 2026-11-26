@@ -15,6 +15,7 @@ import {
 import { LocaleLink as Link } from "@/components/LocaleLink";
 import { useLang } from "@/components/LanguageProvider";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
+import { AdminCrypto } from "@/components/AdminCrypto";
 
 type Tab =
   | "dash"
@@ -29,6 +30,7 @@ type Tab =
   | "reviews"
   | "blog"
   | "people"
+  | "crypto"
   | "set";
 
 export default function AdminPage() {
@@ -315,7 +317,7 @@ export default function AdminPage() {
   }
 
   const held = orders.filter((o) =>
-    ["awaiting_payment", "funds_held", "credentials_shared", "disputed"].includes(
+    ["awaiting_payment", "funds_held", "credentials_shared", "release_requested", "disputed"].includes(
       o.status
     )
   );
@@ -328,6 +330,7 @@ export default function AdminPage() {
     ["people", "People & wallets"],
     ["listings", "Listings"],
     ["orders", "Orders"],
+    ["crypto", "Crypto payments"],
     ["created", "Created deals"],
     ["chats", "Seller chats"],
     ["dummy", "Dummy Data / Seller Generator"],
@@ -1387,6 +1390,8 @@ export default function AdminPage() {
         </>
       )}
 
+      {tab === "crypto" && <AdminCrypto />}
+
       {tab === "orders" && (
         <div className="tbl">
           <table>
@@ -1817,7 +1822,7 @@ export default function AdminPage() {
             Payments are crypto-only: USDT TRC20 (Tron) and USDT BEP20 (BNB Smart
             Chain). No JazzCash / bank / local methods.
           </p>
-          <label>Escrow fee on seller listings (%)</label>
+          <label>Escrow fee on every deal (%)</label>
           <input
             type="number"
             min={0}
@@ -1862,7 +1867,7 @@ export default function AdminPage() {
               })
             }
           />
-          <label>Seller delivery window (hours after funds held)</label>
+          <label>Seller response window (hours to accept)</label>
           <input
             type="number"
             min={1}
@@ -1876,8 +1881,8 @@ export default function AdminPage() {
             }
           />
           <p className="sm mut">
-            Default 24h. If seller does not deliver in time, buyer can cancel or
-            claim refund from the deal room.
+            Default 24h to accept a new deal. This is not a delivery limit. If the
+            seller does not respond, the buyer can cancel from the deal room.
           </p>
           <label>Escrow hold guidance (days)</label>
           <input
@@ -1908,7 +1913,7 @@ export default function AdminPage() {
               }
               style={{ width: "auto", marginRight: 8 }}
             />
-            Auto-hold funds when buyer submits TX proof
+            Legacy switch. USDT is held only after the blockchain confirms the exact transfer. A pasted hash does not mark an order paid.
           </label>
           <h3 style={{ marginTop: 18 }}>Escrow USDT addresses</h3>
           {settings.cryptoWallets.map((w, i) => (

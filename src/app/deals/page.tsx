@@ -22,6 +22,7 @@ const OPEN: DealStatus[] = [
   "awaiting_payment",
   "funds_held",
   "credentials_shared",
+  "release_requested",
   "disputed",
 ];
 

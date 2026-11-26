@@ -520,9 +520,14 @@ function applyPhrases(text: string, locale: LocaleCode): string {
 function catalogTitle(title: string, locale: LocaleCode): string | undefined {
   const exact = CATALOG_TITLES[title]?.[locale];
   if (exact) return exact;
-  const key = Object.keys(CATALOG_TITLES).find((k) => title.startsWith(k));
+  const key = Object.keys(CATALOG_TITLES)
+    .sort((a, b) => b.length - a.length)
+    .find((k) => k.length > 12 && title.startsWith(k));
   const mapped = key ? CATALOG_TITLES[key]?.[locale] : undefined;
-  if (key && mapped) return mapped + title.slice(key.length);
+  if (key && mapped) {
+    const rest = title.slice(key.length);
+    return mapped + (rest ? translateLoose(rest, locale) : "");
+  }
   return undefined;
 }
 

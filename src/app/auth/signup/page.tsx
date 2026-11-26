@@ -8,12 +8,26 @@ import { LocaleLink as Link } from "@/components/LocaleLink";
 import { useLang } from "@/components/LanguageProvider";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
 
+function suggestUsername(name: string) {
+  const base =
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "")
+      .slice(0, 12) || "user";
+  const n = 1000 + Math.floor(Math.random() * 9000);
+  return `${base}${n}`.slice(0, 20);
+}
+
 export default function SignupPage() {
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [country, setCountry] = useState("");
   const [err, setErr] = useState("");
+  const [backupCode, setBackupCode] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { setUser } = useAuth();
   const { locale, t } = useLang();
   const router = useRouter();
@@ -22,15 +36,60 @@ export default function SignupPage() {
     e.preventDefault();
     setErr("");
     try {
-      const d = await api<{ user: AuthUser }>("/api/auth/signup", {
+      const d = await api<{ user: AuthUser; backupCode: string }>("/api/auth/signup", {
         method: "POST",
-        json: { name, email, password, country },
+        json: { name, username, email, password, country },
       });
       setUser(d.user);
-      router.push(withLocalePrefix("/dashboard/buyer", locale));
+      setBackupCode(d.backupCode);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Signup failed");
     }
+  }
+
+  if (backupCode) {
+    return (
+      <section className="sec" style={{ maxWidth: 480 }}>
+        <h1 style={{ fontSize: "2rem" }}>{t("auth.backupTitle")}</h1>
+        <p className="mut">{t("auth.backupHint")}</p>
+        <p className="backup-code" aria-label="Backup code">
+          {backupCode}
+        </p>
+        <button
+          className="btn o"
+          type="button"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(backupCode);
+              setCopied(true);
+            } catch {
+              setCopied(false);
+            }
+          }}
+        >
+          {copied ? "Copied" : "Copy code"}
+        </button>
+        <label className="row" style={{ marginTop: 16 }}>
+          <input
+            type="checkbox"
+            checked={saved}
+            onChange={(e) => setSaved(e.target.checked)}
+            style={{ width: "auto" }}
+          />
+          {t("auth.savedCode")}
+        </label>
+        <div style={{ marginTop: 14 }}>
+          <button
+            className="btn"
+            type="button"
+            disabled={!saved}
+            onClick={() => router.push(withLocalePrefix("/dashboard/buyer", locale))}
+          >
+            {t("auth.continue")}
+          </button>
+        </div>
+      </section>
+    );
   }
 
   return (
@@ -43,12 +102,32 @@ export default function SignupPage() {
       <form className="card" onSubmit={submit}>
         <label>Full name</label>
         <input value={name} onChange={(e) => setName(e.target.value)} required />
-        <label>Email</label>
+        <label>{t("auth.username")}</label>
+        <div className="row">
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value.toLowerCase())}
+            required
+            minLength={3}
+            maxLength={20}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            aria-label={t("auth.username")}
+          />
+          <button
+            className="btn o"
+            type="button"
+            onClick={() => setUsername(suggestUsername(name))}
+          >
+            {t("auth.generateUser")}
+          </button>
+        </div>
+        <label>{t("auth.emailOptional")}</label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
         />
         <label>Password</label>
         <input

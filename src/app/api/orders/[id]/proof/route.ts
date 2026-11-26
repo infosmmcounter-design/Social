@@ -1,10 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  updateStore,
-  readStore,
-  addSystemMessage,
-  setDealStatus,
-} from "@/lib/db";
+import { updateStore, readStore, addSystemMessage } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 
 export async function POST(
@@ -49,27 +44,10 @@ export async function POST(
       addSystemMessage(
         order,
         proof
-          ? `Buyer marked payment done and submitted TX / proof: ${proof}. Seller has been notified. Admin please verify on-chain then confirm funds held.`
-          : `Buyer clicked “I have made the payment”. Waiting for TX hash / admin confirmation. Seller notified.`,
+          ? `Buyer says they sent USDT and pasted TX ${proof}. This does not mark the order paid. Escrow checks the blockchain and holds funds only after the transfer matches this order.`
+          : `Buyer says they sent USDT. The order stays unpaid until the blockchain transfer is verified.`,
         "buyer"
       );
-
-      if (data.settings.autoHoldOnProof && proof && order.status === "awaiting_payment") {
-        const hours = data.settings.deliveryWindowHours || 24;
-        order.deliveryWindowHours = hours;
-        order.deliveryDueAt = new Date(
-          Date.now() + hours * 60 * 60 * 1000
-        ).toISOString();
-        setDealStatus(
-          order,
-          "funds_held",
-          `Auto-hold enabled: funds marked held after buyer proof. Seller has ${hours}h to deliver. Admin can still dispute if TX fails.`
-        );
-        addSystemMessage(
-          order,
-          `⏰ Delivery SLA: seller has ${hours} hours to deliver / share credentials.`
-        );
-      }
     });
   } catch (e) {
     return NextResponse.json(

@@ -1,12 +1,16 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { CatIcon } from "./Icons";
 import { VerifiedTick } from "./VerifiedTick";
 import { useLang } from "./LanguageProvider";
 import { LocaleLink as Link } from "./LocaleLink";
-import { money, stars } from "@/lib/constants";
+import { useAuth } from "./AuthProvider";
+import { api } from "@/lib/api";
+import { ESCROW_FEE_PCT, money } from "@/lib/constants";
 import { isFreelanceCategory } from "@/lib/types";
-import { showsMonetized } from "@/lib/category-filters";
+import { withLocalePrefix } from "@/lib/i18n/locale-path";
 import type { MsgKey } from "@/lib/i18n/messages";
 
 type Props = {
@@ -40,7 +44,11 @@ type Props = {
 };
 
 export function ListingCard({ listing }: Props) {
-  const { t } = useLang();
+  const { t, locale } = useLang();
+  const { user } = useAuth();
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
   const catKey = `cat.${listing.cat}` as MsgKey;
   const catName = t(catKey) === catKey ? listing.cat : t(catKey);
   const s = listing.seller;
@@ -51,83 +59,68 @@ export function ListingCard({ listing }: Props) {
   const soldOut =
     !freelance &&
     (listing.soldOut || (listing.stock !== undefined && listing.stock <= 0));
-  const sold = listing.soldCount ?? 0;
+
+  async function buy() {
+    setErr("");
+    if (soldOut) return;
+    if (!user) {
+      router.push(withLocalePrefix(`/listing/${listing.id}`, locale));
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await api<{ order: { id: number } }>("/api/orders", {
+        method: "POST",
+        json: {
+          listingId: listing.id,
+          email: user.email,
+          name: user.name,
+          det: user.email || "Shared in the deal chat",
+          qty: 1,
+          coin: "USDT (TRC20)",
+          paymentMode: "escrow_crypto",
+        },
+      });
+      router.push(withLocalePrefix(`/deal/${res.order.id}`, locale));
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not place the order");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
-    <Link className="card lc" href={`/listing/${listing.id}`}>
-      <div className="im">
-        {listing.img ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={listing.img} alt="" />
-        ) : (
-          <CatIcon cat={listing.cat} size={56} />
-        )}
-        {freelance ? (
-          <span className="stock-badge">
-            {sold} {t("freelance.sold")}
-          </span>
-        ) : soldOut ? (
-          <span className="stock-badge sold">{t("common.soldOut")}</span>
-        ) : listing.stock !== undefined && listing.stock > 0 ? (
-          <span className="stock-badge">
-            {listing.stock} {t("common.available")}
-          </span>
-        ) : null}
-      </div>
-      <div className="bd2">
-        <span
-          className="pill"
-          style={{ display: "inline-flex", gap: 5, alignItems: "center" }}
-        >
-          <CatIcon cat={listing.cat} size={14} />
-          {catName}
-        </span>{" "}
-        {freelance ? <span className="pill w">{t("freelance.badge")}</span> : null}{" "}
-        {s?.official ? <span className="pill g">{t("card.soldBy")}</span> : null}
-        {s?.verified && !s.official ? (
-          <span
-            className="pill bl"
-            style={{ display: "inline-flex", alignItems: "center" }}
-          >
-            {t("common.verified")} <VerifiedTick size={12} />
-          </span>
-        ) : null}
-        <h3 style={{ marginTop: 8 }}>{listing.title}</h3>
-        <p className="sm mut" style={{ margin: "0 0 4px" }}>
-          {s?.official ? "SocialsFlip" : s?.name || t("card.seller")}
-          {s?.verified ? <VerifiedTick size={14} /> : null}
-          {s?.country ? `, ${s.country}` : ""}
-        </p>
-        {freelance ? (
-          <p className="sm mut" style={{ margin: "0 0 4px" }}>
-            {listing.niche ? `${listing.niche} · ` : ""}
-            {t("freelance.delivery")}{" "}
-            {listing.deliveryDays || 3} {t("freelance.days")}
-            {listing.revisions !== undefined
-              ? ` · ${listing.revisions} ${t("freelance.revisions").toLowerCase()}`
-              : ""}
-          </p>
-        ) : listing.followers ? (
-          <p className="sm mut" style={{ margin: "0 0 4px" }}>
-            {listing.followers}
-            {showsMonetized(listing.cat)
-              ? ` · ${listing.monetized ? t("card.monetized") : t("card.notMonetized")}`
-              : ""}
-          </p>
-        ) : null}
-        <p className="sm" style={{ margin: "0 0 6px" }}>
-          {(s?.reviewCount || 0) > 0 || (s?.rating || 0) > 0 ? (
-            <>
-              <span className="star">{stars(s?.rating || 0)}</span>{" "}
-              {(s?.rating || 0).toFixed(1)}
-              {s?.reviewCount ? ` (${s.reviewCount})` : ""}
-            </>
+    <article className="card lc">
+      <Link className="lc-link" href={`/listing/${listing.id}`}>
+        <div className="im">
+          {listing.img ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={listing.img} alt="" />
           ) : (
-            <span className="mut">{t("card.noReviews")}</span>
+            <CatIcon cat={listing.cat} size={48} />
           )}
-        </p>
-        <div className="price">{money(listing.price)}</div>
+          {soldOut ? <span className="stock-badge sold">{t("common.soldOut")}</span> : null}
+        </div>
+        <div className="bd2">
+          <span className="pill" style={{ display: "inline-flex", gap: 5, alignItems: "center" }}>
+            <CatIcon cat={listing.cat} size={14} />
+            {catName}
+          </span>
+          <h3>{listing.title}</h3>
+          <p className="sm mut lc-seller">
+            {s?.official ? "SocialsFlip" : s?.name || t("card.seller")}
+            {s?.verified ? <VerifiedTick size={14} /> : null}
+          </p>
+          <div className="price">{money(listing.price)}</div>
+          <p className="fee-note">+ {ESCROW_FEE_PCT}% {t("common.escrowFee")}</p>
+        </div>
+      </Link>
+      <div className="lc-foot">
+        <button className="btn buy-go" type="button" disabled={busy || soldOut} onClick={buy}>
+          {busy ? "…" : soldOut ? t("common.soldOut") : "Buy"}
+        </button>
+        {err ? <p className="err sm">{err}</p> : null}
       </div>
-    </Link>
+    </article>
   );
 }

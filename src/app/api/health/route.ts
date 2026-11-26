@@ -10,6 +10,8 @@ export async function GET() {
       persistence: persistenceMode(),
       listings: store.listings.filter((l) => l.listed).length,
       walletsConfigured: store.settings.cryptoWallets.filter((w) => w.address).length,
+      tronGrid: !!process.env.TRONGRID_API_KEY,
+      bscRpc: process.env.BSC_RPC_URL ? "custom" : "public",
     });
   } catch (e) {
     return NextResponse.json(

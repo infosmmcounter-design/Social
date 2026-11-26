@@ -13,7 +13,25 @@ type Deposit = {
   note: string;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
+  network?: string;
+  address?: string;
+  expectedMicro?: string;
+  expiresAt?: string;
+  confirmations?: number;
+  txHash?: string | null;
 };
+
+const ICONS = ["😎", "🚀", "🎯", "🦊", "🦁", "🐼", "🌟", "💎", "🔥", "🎵", "📸", "💼", "⚡", "👑", "🤝"];
+
+function iconAvatar(emoji: string) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"><rect width="128" height="128" rx="64" fill="#1a1408"/><text x="64" y="86" text-anchor="middle" font-size="72">${emoji}</text></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+function exactAmount(d: Deposit) {
+  if (!d.expectedMicro) return d.amount.toFixed(2);
+  return (Number(d.expectedMicro) / 1_000_000).toFixed(6);
+}
 
 type WalletAddr = { asset: string; network: string; address: string; label?: string };
 
@@ -28,7 +46,12 @@ export default function AccountPage() {
   const [balance, setBalance] = useState(0);
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [amount, setAmount] = useState("");
-  const [note, setNote] = useState("");
+  const [net, setNet] = useState<"USDT_TRC20" | "USDT_BEP20">("USDT_TRC20");
+  const [qr, setQr] = useState("");
+  const [walletOpen, setWalletOpen] = useState(false);
+  const [depositOpen, setDepositOpen] = useState(false);
+  const [sawPending, setSawPending] = useState(false);
+  const [clock, setClock] = useState(Date.now());
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [wallets, setWallets] = useState<WalletAddr[]>([]);
@@ -36,9 +59,11 @@ export default function AccountPage() {
     "notes" | "help" | "settings" | "how" | "escrow" | "fees" | "rules" | "chats" | ""
   >("");
   const [currentPw, setCurrentPw] = useState("");
+  const [backupPw, setBackupPw] = useState("");
+  const [freshCode, setFreshCode] = useState("");
   const [nextPw, setNextPw] = useState("");
   const [deletePw, setDeletePw] = useState("");
-  const [chats, setChats] = useState<{ id: number; sellerName?: string; buyerName?: string; subject: string; lastMsg?: { text: string } | null }[]>([]);
+  const [chats, setChats] = useState<{ id: number; source: "inquiry" | "deal"; kind: string; title: string; subject: string; preview: string }[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -52,10 +77,83 @@ export default function AccountPage() {
         setWallets(d.wallets || []);
       })
       .catch(() => undefined);
-    api<{ inquiries: typeof chats }>("/api/inquiries")
-      .then((d) => setChats(d.inquiries || []))
+    api<{ chats: typeof chats }>("/api/chats")
+      .then((d) => setChats(d.chats || []))
       .catch(() => setChats([]));
   }, [user]);
+
+  const openDep = deposits.find((d) => d.status === "pending" && d.expectedMicro && d.address);
+  const depLeft = openDep?.expiresAt ? new Date(openDep.expiresAt).getTime() - clock : 0;
+  useEffect(() => {
+    if (openDep) setSawPending(true);
+  }, [openDep]);
+  const openDepId = openDep?.id || 0;
+
+  useEffect(() => {
+    if (!depositOpen) return;
+    const id = window.setInterval(() => setClock(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [depositOpen]);
+
+  useEffect(() => {
+    if (!user || !openDepId) return;
+    const id = window.setInterval(() => {
+      api<{ balance: number; deposits: Deposit[]; wallets?: WalletAddr[] }>("/api/wallet")
+        .then((d) => {
+          setBalance(d.balance);
+          setDeposits(d.deposits || []);
+          setWallets(d.wallets || []);
+        })
+        .catch(() => undefined);
+    }, 8000);
+    return () => window.clearInterval(id);
+  }, [user, openDepId]);
+
+  useEffect(() => {
+    if (!openDep?.address) {
+      setQr("");
+      return;
+    }
+    let stop = false;
+    import("qrcode").then((QR) =>
+      QR.toString(openDep.address || "", { type: "svg", margin: 1, width: 168 }).then((svg) => {
+        if (!stop) setQr(svg);
+      })
+    );
+    return () => {
+      stop = true;
+    };
+  }, [openDep?.address]);
+
+  async function saveAvatar(avatarUrl: string) {
+    if (!user) return;
+    setErr("");
+    setMsg("");
+    try {
+      const d = await api<{ user: NonNullable<typeof user> }>("/api/account", {
+        method: "POST",
+        json: { name: name || user.name, country, bio, phone, avatarUrl },
+      });
+      setUser(d.user);
+      setMsg("Profile photo saved.");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed");
+    }
+  }
+
+  async function onPhoto(file: File) {
+    const img = await createImageBitmap(file);
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const scale = Math.max(256 / img.width, 256 / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    ctx.drawImage(img, (256 - w) / 2, (256 - h) / 2, w, h);
+    await saveAvatar(canvas.toDataURL("image/jpeg", 0.72));
+  }
 
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
@@ -82,11 +180,10 @@ export default function AccountPage() {
     try {
       const d = await api<{ message: string }>("/api/wallet", {
         method: "POST",
-        json: { amount: Number(amount), note },
+        json: { amount: Number(amount), network: net },
       });
       setMsg(d.message);
       setAmount("");
-      setNote("");
       const w = await api<{ balance: number; deposits: Deposit[]; wallets?: WalletAddr[] }>("/api/wallet");
       setWallets(w.wallets || []);
       setBalance(w.balance);
@@ -129,13 +226,20 @@ export default function AccountPage() {
 
       <div className="account-hero">
         <div className="account-av" aria-hidden>
-          {initial}
+          {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : initial}
         </div>
         <div>
           <strong>{user.name}</strong>
-          <p className="sm" style={{ margin: "2px 0 0", opacity: 0.85 }}>
-            {user.email}
-          </p>
+          {user.username ? (
+            <p className="sm" style={{ margin: "2px 0 0", opacity: 0.85 }}>
+              @{user.username}
+            </p>
+          ) : null}
+          {user.email ? (
+            <p className="sm" style={{ margin: "2px 0 0", opacity: 0.85 }}>
+              {user.email}
+            </p>
+          ) : null}
           <p className="sm" style={{ margin: "2px 0 0", opacity: 0.75 }}>
             {user.role === "seller" ? t("account.seller") : t("account.buyer")}
             {user.country ? ` · ${user.country}` : ""}
@@ -149,16 +253,40 @@ export default function AccountPage() {
             <Link className="btn s o" href={`/seller/${user.id}`}>
               {t("account.view")}
             </Link>
-          ) : (
-            <Link className="btn s o" href="/apply">
-              {t("account.applySell")}
-            </Link>
-          )}
+          ) : null}
         </div>
       </div>
 
+      {user.role !== "seller" ? (
+        <Link className="seller-apply" href="/apply">
+          <span>Apply to become a seller</span>
+          <small>Open your store for YouTube channels, pages, and freelance services. Buyers pay through escrow.</small>
+        </Link>
+      ) : null}
+
       {editing ? (
-        <form className="card" onSubmit={saveProfile} style={{ marginTop: 14 }}>
+        <form className="card hl-card" onSubmit={saveProfile} style={{ marginTop: 14 }}>
+          <label>Profile photo or icon</label>
+          <div className="emoji-row">
+            {ICONS.map((emoji) => (
+              <button key={emoji} type="button" onClick={() => saveAvatar(iconAvatar(emoji))}>
+                {emoji}
+              </button>
+            ))}
+          </div>
+          <label className="btn s o" style={{ marginTop: 10, display: "inline-block" }}>
+            Upload photo
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onPhoto(file);
+                e.target.value = "";
+              }}
+            />
+          </label>
           <label>{t("listing.yourName")}</label>
           <input value={name} onChange={(e) => setName(e.target.value)} required />
           <label>{t("account.country")}</label>
@@ -173,43 +301,26 @@ export default function AccountPage() {
         </form>
       ) : null}
 
-      <div className="card wallet-card">
+      <button type="button" className="wallet-entry" onClick={() => setWalletOpen((v) => !v)}>
+        <span>
+          <strong>Wallet</strong>
+          <small>Deposit in Wallet</small>
+        </span>
+        <em>{walletOpen ? "Close" : "Open"}</em>
+      </button>
+
+      {walletOpen ? (
+      <div className="card wallet-card crypto-pay">
         <div className="row" style={{ justifyContent: "space-between" }}>
           <strong>{t("account.wallet")}</strong>
           <span className="price" style={{ margin: 0 }}>
             {money(balance)}
           </span>
         </div>
-        <p className="sm mut">{t("account.walletHint")}</p>
-        <div className="note sm">
-          <b>USDT TRC20</b>
-          <br />
-          {wallets.find((w) => w.asset.includes("TRC"))?.address || "Address appears after admin saves it."}
-          <br />
-          <b>USDT BEP20</b>
-          <br />
-          {wallets.find((w) => w.asset.includes("BEP"))?.address || "Address appears after admin saves it."}
-        </div>
-        <form onSubmit={deposit}>
-          <label>{t("account.depositAmount")}</label>
-          <input
-            type="number"
-            min="1"
-            step="0.01"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="50"
-          />
-          <label>{t("account.depositNote")}</label>
-          <input
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="TX hash"
-          />
-          <button className="btn" type="submit" style={{ marginTop: 12 }}>
-            {t("account.deposit")}
-          </button>
-        </form>
+        <p className="sm">{t("account.walletHint")}</p>
+        <button className="btn buy-go" type="button" onClick={() => setDepositOpen(true)}>
+          Deposit in Wallet
+        </button>
         {deposits.length ? (
           <ul className="wallet-list">
             {deposits.slice(0, 6).map((d) => (
@@ -222,6 +333,111 @@ export default function AccountPage() {
           </ul>
         ) : null}
       </div>
+      ) : null}
+
+      {depositOpen ? (
+        <div className="dep-modal" role="dialog" aria-label="Deposit">
+          <div className="dep-modal-card">
+            <div className="row" style={{ justifyContent: "space-between" }}>
+              <strong>Deposit USDT</strong>
+              <button type="button" className="btn s o" onClick={() => setDepositOpen(false)}>
+                Back
+              </button>
+            </div>
+            <p className="sm">The payment window is 60 minutes. Send the exact amount shown.</p>
+            {openDep ? (
+              <p className="clock" aria-live="polite">
+                {depLeft <= 0
+                  ? "00:00"
+                  : `${String(Math.floor(depLeft / 60000)).padStart(2, "0")}:${String(Math.floor((depLeft / 1000) % 60)).padStart(2, "0")}`}
+              </p>
+            ) : null}
+        <p className="crypto-kicker">Deposit USDT</p>
+        <div className="crypto-nets">
+          {(["USDT_TRC20", "USDT_BEP20"] as const).map((asset) => {
+            const w = wallets.find((x) => x.asset === asset);
+            return (
+              <button
+                key={asset}
+                type="button"
+                className={`crypto-net ${asset === "USDT_TRC20" ? "trc" : "bep"} ${net === asset ? "on" : ""}`}
+                onClick={() => setNet(asset)}
+              >
+                {asset === "USDT_TRC20" ? "USDT TRC20" : "USDT BEP20"}
+                <span className="sm">{w?.network || ""}</span>
+              </button>
+            );
+          })}
+        </div>
+        {wallets.map((w) => (
+          <div key={w.asset} className="hl-line">
+            <b>{w.asset === "USDT_TRC20" ? "TRC20" : "BEP20"}</b>
+            <code>{w.address}</code>
+            <button
+              type="button"
+              className="btn s"
+              onClick={async () => {
+                await navigator.clipboard.writeText(w.address);
+                setMsg("Address copied.");
+              }}
+            >
+              Copy address
+            </button>
+          </div>
+        ))}
+        <form onSubmit={deposit}>
+          <label>{t("account.depositAmount")}</label>
+          <input
+            type="number"
+            min="1"
+            step="0.01"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="50"
+          />
+          <button className="btn" type="submit" style={{ marginTop: 12 }}>
+            {t("account.deposit")}
+          </button>
+        </form>
+        {openDep ? (
+          <div className="hl-card dep-live">
+            <p className="sm" style={{ margin: 0 }}>
+              Send this exact amount on {openDep.network === "USDT_BEP20" ? "BEP20" : "TRC20"}. A different amount stays unmatched.
+            </p>
+            <p className="dep-exact">{exactAmount(openDep)} USDT</p>
+            <button
+              type="button"
+              className="btn s"
+              onClick={async () => {
+                await navigator.clipboard.writeText(exactAmount(openDep));
+                setMsg("Amount copied.");
+              }}
+            >
+              Copy amount
+            </button>
+            <code className="dep-addr">{openDep.address}</code>
+            <button
+              type="button"
+              className="btn s"
+              onClick={async () => {
+                await navigator.clipboard.writeText(openDep.address || "");
+                setMsg("Address copied.");
+              }}
+            >
+              Copy address
+            </button>
+            {qr ? <div className="crypto-qr" dangerouslySetInnerHTML={{ __html: qr }} /> : null}
+            <p className="sm">
+              {openDep.note}
+              {openDep.confirmations ? ` · ${openDep.confirmations} confirmations` : ""}
+            </p>
+          </div>
+        ) : sawPending ? (
+          <p className="okmsg">Deposit received. Your wallet balance is {money(balance)}.</p>
+        ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <div className="account-stats">
         <div>
@@ -265,7 +481,7 @@ export default function AccountPage() {
       </div>
 
       {panel === "notes" ? (
-        <div className="card" style={{ marginTop: 12 }}>
+        <div className="card hl-card" style={{ marginTop: 12 }}>
           <h3>Notifications</h3>
           {deposits.slice(0, 5).map((d) => (
             <p key={d.id} className="sm">
@@ -277,14 +493,14 @@ export default function AccountPage() {
         </div>
       ) : null}
       {panel === "help" ? (
-        <div className="card" style={{ marginTop: 12 }}>
+        <div className="card hl-card" style={{ marginTop: 12 }}>
           <h3>Help and support</h3>
           <p className="sm">Chat goes straight to escrow. No seller is in that room.</p>
           <Link className="btn s" href="/help">Open help</Link>
         </div>
       ) : null}
       {panel === "settings" ? (
-        <div className="card" style={{ marginTop: 12 }}>
+        <div className="card hl-card" style={{ marginTop: 12 }}>
           <h3>Settings</h3>
           <form
             onSubmit={async (e) => {
@@ -309,6 +525,39 @@ export default function AccountPage() {
             <label>New password</label>
             <input type="password" value={nextPw} onChange={(e) => setNextPw(e.target.value)} />
             <button className="btn" type="submit" style={{ marginTop: 10 }}>Update password</button>
+          </form>
+          <form
+            style={{ marginTop: 16 }}
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setErr("");
+              setMsg("");
+              setFreshCode("");
+              try {
+                const d = await api<{ backupCode: string }>("/api/account/backup-code", {
+                  method: "POST",
+                  json: { password: backupPw },
+                });
+                setFreshCode(d.backupCode);
+                setBackupPw("");
+                setMsg("New backup code ready. The old code no longer works.");
+              } catch (ex) {
+                setErr(ex instanceof Error ? ex.message : "Failed");
+              }
+            }}
+          >
+            <label>{t("auth.newBackup")}</label>
+            <p className="sm mut">{t("auth.backupHint")}</p>
+            <input
+              type="password"
+              value={backupPw}
+              onChange={(e) => setBackupPw(e.target.value)}
+              placeholder="Current password"
+            />
+            <button className="btn o" type="submit" style={{ marginTop: 10 }}>
+              {t("auth.newBackup")}
+            </button>
+            {freshCode ? <p className="backup-code">{freshCode}</p> : null}
           </form>
           <p style={{ marginTop: 14 }}>
             <Link href="/privacy">Terms and privacy</Link>
@@ -336,7 +585,7 @@ export default function AccountPage() {
         </div>
       ) : null}
       {panel === "how" ? (
-        <div className="card" style={{ marginTop: 12 }}>
+        <div className="card hl-card" style={{ marginTop: 12 }}>
           <h3>How to use SocialsFlip</h3>
           <ol>
             <li>Pick an account or freelance service.</li>
@@ -346,33 +595,33 @@ export default function AccountPage() {
         </div>
       ) : null}
       {panel === "escrow" ? (
-        <div className="card" style={{ marginTop: 12 }}>
+        <div className="card hl-card" style={{ marginTop: 12 }}>
           <h3>How escrow works</h3>
           <p>The buyer pays SocialsFlip, not the seller. Funds stay held until delivery is confirmed. Admin can hold, refund, or complete the deal.</p>
         </div>
       ) : null}
       {panel === "fees" ? (
-        <div className="card" style={{ marginTop: 12 }}>
+        <div className="card hl-card" style={{ marginTop: 12 }}>
           <h3>Fee and trust</h3>
-          <p>The escrow fee is added at checkout. A seller’s trust percent follows their star rating. Under 80% the profile shows a warning.</p>
+          <p>Every order adds a 5% escrow fee to the listing price. The buyer pays that total. A seller’s trust percent follows their star rating. Under 80% the profile shows a warning.</p>
         </div>
       ) : null}
       {panel === "rules" ? (
-        <div className="card" style={{ marginTop: 12 }}>
+        <div className="card hl-card" style={{ marginTop: 12 }}>
           <h3>Rules and safety</h3>
           <p>Pay only the escrow wallets. Do not send USDT on the wrong network. Keep transfer emails and delivery notes inside the deal.</p>
         </div>
       ) : null}
       {panel === "chats" ? (
-        <div className="card" style={{ marginTop: 12 }}>
+        <div className="card hl-card" style={{ marginTop: 12 }}>
           <h3>Chat previews</h3>
-          {chats.slice(0, 6).map((c) => (
-            <p key={c.id} className="sm">
-              <Link href={`/chat/${c.id}`}>
-                <b>{c.sellerName || c.buyerName || c.subject}</b>
+          {[...chats.filter((c) => c.kind !== "escrow").slice(0, 6), ...chats.filter((c) => c.kind === "escrow")].map((c) => (
+            <p key={`${c.source}-${c.id}`} className="sm">
+              <Link href={c.source === "deal" ? `/deal/${c.id}` : c.id ? `/chat/${c.id}` : "/chats"}>
+                <b>{c.kind === "escrow" ? "⚖ Chat with Escrow" : c.title}</b>
               </Link>
               <br />
-              <span className="mut">{c.lastMsg?.text || c.subject}</span>
+              <span className="mut">{c.preview || c.subject}</span>
             </p>
           ))}
           {!chats.length ? <p className="sm mut">No chats yet.</p> : null}

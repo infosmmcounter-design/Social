@@ -6,6 +6,8 @@ export type DealStatus =
   | "awaiting_payment"
   | "funds_held"
   | "credentials_shared"
+  /** Buyer confirmed receipt and asked escrow to pay the seller. */
+  | "release_requested"
   | "completed"
   | "disputed"
   | "cancelled"
@@ -37,7 +39,10 @@ export interface SellerPaymentMethod {
 }
 
 export interface PlatformSettings {
+  /** Percent added to every order. Standard rate is 5. */
   fee: number;
+  /** Set after the platform fee was moved to 5% so a later admin change is kept. */
+  feeRevised?: boolean;
   cryptoWallets: CryptoWallet[];
   allowDirectPayToSeller: boolean;
   autoDetectCrypto: boolean;
@@ -45,7 +50,7 @@ export interface PlatformSettings {
   paymentWindowMins: number;
   /** When buyer submits proof, auto move to funds_held (manual verify still recommended). */
   autoHoldOnProof: boolean;
-  /** Hours seller has to deliver after funds are held (default 24). */
+  /** Hours the seller has to accept a new deal (default 24). Not a delivery limit. */
   deliveryWindowHours: number;
   /** Escrow hold guidance for buyers (days until complete — funds not released early). */
   escrowHoldDays: number;
@@ -91,6 +96,10 @@ export function isFreelanceCategory(cat: string | undefined | null): boolean {
 export interface User {
   id: number;
   email: string;
+  /** Login name. Filled for older accounts from the email. */
+  username?: string;
+  /** bcrypt hash of the one-time recovery code. The code itself is never stored. */
+  backupCodeHash?: string;
   passwordHash: string;
   name: string;
   role: Role;
@@ -118,6 +127,53 @@ export interface User {
   blockedEmails?: string[];
 }
 
+export type CryptoPayStatus =
+  | "waiting"
+  | "detected"
+  | "confirming"
+  | "paid"
+  | "expired"
+  | "underpaid"
+  | "overpaid"
+  | "late"
+  | "needs_review"
+  | "cancelled";
+
+export interface CryptoPayment {
+  id: string;
+  orderId: number;
+  network: CryptoAsset;
+  address: string;
+  expectedMicro: string;
+  receivedMicro: string | null;
+  txHash: string | null;
+  fromAddress: string | null;
+  status: CryptoPayStatus;
+  confirmations: number;
+  createdAt: string;
+  expiresAt: string;
+  confirmedAt: string | null;
+  blockTime: string | null;
+  reason: string | null;
+}
+
+export interface UnmatchedTx {
+  txHash: string;
+  network: CryptoAsset;
+  amountMicro: string;
+  fromAddress: string;
+  toAddress: string;
+  blockTime: string | null;
+  reason: string;
+  confirmations: number;
+  createdAt: string;
+}
+
+export interface CryptoTxLock {
+  txHash: string;
+  orderId: number;
+}
+
 export interface WalletDeposit {
   id: number;
   userId: number;
@@ -125,6 +181,13 @@ export interface WalletDeposit {
   note: string;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
+  network?: CryptoAsset;
+  address?: string;
+  /** Exact on-chain amount in 6-decimal micro-USDT. */
+  expectedMicro?: string;
+  txHash?: string | null;
+  expiresAt?: string;
+  confirmations?: number;
 }
 
 export interface SellerApplication {
@@ -213,12 +276,25 @@ export interface Order {
   buyerMarkedPaid: boolean;
   /** ISO deadline for escrow payment window. */
   paymentDueAt: string | null;
+  payId?: string | null;
+  payStatus?: CryptoPayStatus | null;
+  payNetwork?: CryptoAsset | null;
+  payAddress?: string | null;
+  /** Exact USDT amount in 6-decimal micro units. */
+  payExpectedMicro?: string | null;
+  payReceivedMicro?: string | null;
+  payTxHash?: string | null;
+  payConfirmations?: number;
   /** 30 or 60 typical. */
   paymentWindowMins: number;
-  /** ISO deadline for seller delivery after funds held (usually +24h). */
+  /** ISO deadline for the seller to accept. Not a delivery deadline. */
   deliveryDueAt: string | null;
-  /** Hours allowed for delivery (copied from settings at hold time). */
+  /** Hours allowed for the seller to respond (copied from settings). */
   deliveryWindowHours: number;
+  /** Set when the seller accepts. The deal starts only after this and payment. */
+  sellerAcceptedAt?: string | null;
+  /** Set when the buyer says the service was received and asks escrow to pay. */
+  buyerConfirmedAt?: string | null;
   /** Unit of listing stock reserved for this deal (restored if cancelled/refunded pre-delivery). */
   stockReserved: boolean;
   /** When seller shared credentials / delivered. */
@@ -231,6 +307,8 @@ export interface Order {
   privateRequestStatus: PrivateRequestStatus;
   msgs: ChatMessage[];
   createdAt: string;
+  /** Last time each person opened this deal room. Keys are u:userId or e:email. */
+  seen?: Record<string, string>;
 }
 
 export interface PrivateRequest {
@@ -262,6 +340,10 @@ export interface InquiryThread {
   msgs: ChatMessage[];
   createdAt: string;
   updatedAt: string;
+  /** Linked marketplace order, when this room is about a deal. */
+  orderId?: number | null;
+  /** Last time each person opened the room. Keys are u:userId or e:email. */
+  seen?: Record<string, string>;
   /** User ids who removed this chat from their list. */
   hiddenFor?: number[];
   /** Guest emails who removed this chat from their list. */
@@ -332,6 +414,9 @@ export interface StoreData {
   reviews: Review[];
   posts: BlogPost[];
   walletDeposits?: WalletDeposit[];
+  cryptoPayments?: CryptoPayment[];
+  unmatchedTxs?: UnmatchedTx[];
+  cryptoTxLocks?: CryptoTxLock[];
 }
 
 export const CATEGORIES: [Category, string][] = [
@@ -370,8 +455,9 @@ export const FREELANCE_GIG_IDEAS: string[] = [
 export const DEAL_STATUS_LABEL: Record<DealStatus, string> = {
   awaiting_payment: "Awaiting Payment",
   funds_held: "Funds Held in Escrow",
-  credentials_shared: "Account Credentials Shared",
-  completed: "Completed",
+  credentials_shared: "Delivered to Buyer",
+  release_requested: "Buyer Received — Pay Seller",
+  completed: "Deal Complete",
   disputed: "Disputed",
   cancelled: "Cancelled",
   refunded: "Refunded",
@@ -381,5 +467,6 @@ export const DEAL_FLOW: DealStatus[] = [
   "awaiting_payment",
   "funds_held",
   "credentials_shared",
+  "release_requested",
   "completed",
 ];

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useLang } from "./LanguageProvider";
 import { LocaleLink as Link } from "./LocaleLink";
 import { OPEN_CHAT_EVENT } from "./ChatDock";
+import { ChatCountBadge, useUnreadChats } from "./useUnreadChats";
 import { stripLocalePrefix } from "@/lib/i18n/locale-path";
 import type { MsgKey } from "@/lib/i18n/messages";
 
@@ -19,6 +20,7 @@ export function BottomNav() {
   const rawPath = usePathname() || "/";
   const path = stripLocalePrefix(rawPath).path;
   const { t } = useLang();
+  const unread = useUnreadChats();
 
   if (path.startsWith("/admin") || rawPath.includes("/admin")) return null;
 
@@ -48,9 +50,12 @@ export function BottomNav() {
           className={`bn-item ${chatOn ? "on" : ""}`}
           onClick={() => window.dispatchEvent(new Event(OPEN_CHAT_EVENT))}
         >
-          <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden>
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
+          <span className="bn-ico">
+            <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden>
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            <ChatCountBadge count={unread} />
+          </span>
           {t("nav.chats")}
         </button>
         {link(

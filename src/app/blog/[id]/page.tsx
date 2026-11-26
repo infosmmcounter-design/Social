@@ -1,32 +1,67 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { api } from "@/lib/api";
-import { useLang } from "@/components/LanguageProvider";
+import { cookies } from "next/headers";
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { readStore } from "@/lib/db";
+import { localizePost } from "@/lib/i18n/blog";
+import { parseLocaleParam } from "@/lib/i18n/content";
+import { t } from "@/lib/i18n/messages";
+import { withLocalePrefix } from "@/lib/i18n/locale-path";
+import { hreflangAlternates, localizedUrl } from "@/lib/i18n/seo";
+import type { LocaleCode } from "@/lib/i18n/locales";
 
-export default function BlogPostPage() {
-  const { id } = useParams<{ id: string }>();
-  const { t, locale } = useLang();
-  const [post, setPost] = useState<{ title: string; body: string } | null>(null);
+async function currentLocale(lang?: string): Promise<LocaleCode> {
+  if (lang) return parseLocaleParam(lang);
+  const jar = await cookies();
+  return parseLocaleParam(jar.get("sf_locale")?.value);
+}
 
-  useEffect(() => {
-    api<{ post: { title: string; body: string } }>(
-      `/api/blog?id=${id}&lang=${encodeURIComponent(locale)}`
-    )
-      .then((d) => setPost(d.post))
-      .catch(() => setPost(null));
-  }, [id, locale]);
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ lang?: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const locale = await currentLocale((await searchParams).lang);
+  const store = await readStore();
+  const post = store.posts.find((p) => p.id === Number(id));
+  if (!post) return { title: t(locale, "blog.title") };
+  const tr = localizePost(post, locale);
+  const description = tr.body.slice(0, 160);
+  return {
+    title: `${tr.title} | SocialsFlip`,
+    description,
+    alternates: {
+      canonical: localizedUrl(`/blog/${post.id}`, locale),
+      languages: hreflangAlternates(`/blog/${post.id}`).languages,
+    },
+    openGraph: { title: tr.title, description },
+  };
+}
 
-  if (!post) return <p className="sec mut">{t("common.loading")}</p>;
+export default async function BlogPostPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ lang?: string }>;
+}) {
+  const { id } = await params;
+  const locale = await currentLocale((await searchParams).lang);
+  const store = await readStore();
+  const post = store.posts.find((p) => p.id === Number(id));
+  if (!post) notFound();
+  const tr = localizePost(post, locale);
+
   return (
     <article className="sec" style={{ maxWidth: 660 }}>
-      <Link className="mut sm" href="/blog">
-        {t("listing.back")} · {t("blog.title")}
+      <Link className="mut sm" href={withLocalePrefix("/blog", locale)}>
+        {t(locale, "listing.back")} · {t(locale, "blog.title")}
       </Link>
-      <h1 style={{ fontSize: "2rem", marginTop: 8 }}>{post.title}</h1>
-      <p style={{ whiteSpace: "pre-wrap" }}>{post.body}</p>
+      <h1 style={{ fontSize: "2rem", marginTop: 8 }}>{tr.title}</h1>
+      <p style={{ whiteSpace: "pre-wrap" }}>{tr.body}</p>
     </article>
   );
 }

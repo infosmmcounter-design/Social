@@ -1,4 +1,5 @@
 import type { LocaleCode } from "./locales";
+import { translateLoose } from "./words";
 
 /** Built-in translated copies of seed blog posts (id → locale → content). */
 const BUILTIN: Record<
@@ -95,7 +96,12 @@ export function localizePost(
   post: { id: number; title: string; body: string; createdAt: string },
   locale: LocaleCode
 ) {
-  const tr = BUILTIN[post.id]?.[locale] || BUILTIN[post.id]?.en;
-  if (!tr) return post;
-  return { ...post, title: tr.title, body: tr.body };
+  const tr = BUILTIN[post.id]?.[locale];
+  if (tr) return { ...post, title: tr.title, body: tr.body };
+  if (locale === "en") return post;
+  return {
+    ...post,
+    title: translateLoose(post.title, locale),
+    body: translateLoose(post.body, locale),
+  };
 }

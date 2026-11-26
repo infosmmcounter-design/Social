@@ -20,13 +20,13 @@ const ADMIN_ACTIONS: DealStatus[] = [
   "refunded",
 ];
 
-function deliveryOverdue(order: {
+function responseOverdue(order: {
   status: DealStatus;
   deliveryDueAt: string | null;
-  deliveredAt: string | null;
+  sellerAcceptedAt?: string | null;
 }): boolean {
-  if (order.deliveredAt) return false;
-  if (order.status !== "funds_held") return false;
+  if (order.sellerAcceptedAt) return false;
+  if (order.status !== "funds_held" && order.status !== "awaiting_payment") return false;
   if (!order.deliveryDueAt) return false;
   return Date.now() > new Date(order.deliveryDueAt).getTime();
 }
@@ -38,6 +38,7 @@ export async function POST(
   const { id } = await params;
   const body = await req.json();
   const status = body.status as DealStatus;
+  const action = String(body.action || "");
   const note = String(body.note || "").trim();
   const guestEmail = String(body.email || "")
     .trim()
@@ -60,21 +61,52 @@ export async function POST(
       const seller = data.users.find((u) => u.id === order.sellerId);
       const adminAsSeller = !!isAdmin && !!seller?.dummy;
 
-      const overdue = deliveryOverdue(order);
+      const overdue = responseOverdue(order);
+
+      if (action === "accept") {
+        if (!(isSeller || adminAsSeller || isAdmin)) {
+          throw new Error("You cannot set this status.");
+        }
+        if (order.sellerAcceptedAt) throw new Error("The seller already accepted this deal.");
+        if (order.status !== "awaiting_payment" && order.status !== "funds_held") {
+          throw new Error("This deal can no longer be accepted.");
+        }
+        order.sellerAcceptedAt = new Date().toISOString();
+        addSystemMessage(
+          order,
+          order.status === "funds_held"
+            ? "Seller accepted the deal. The deal has started. Mark it delivered when the work is finished. The buyer is notified then. There is no 24-hour delivery limit."
+            : "Seller accepted the deal. It starts when the buyer payment is held in escrow."
+        );
+        return;
+      }
+
+      if (status === "credentials_shared" && !(order.status === "funds_held" && order.sellerAcceptedAt)) {
+        throw new Error("The deal starts after payment and the seller accepts. Mark it delivered after that.");
+      }
 
       let allowed = false;
       if (isAdmin && ADMIN_ACTIONS.includes(status)) allowed = true;
-      if ((isSeller || adminAsSeller) && SELLER_ACTIONS.includes(status))
+      if (
+        (isSeller || adminAsSeller) &&
+        SELLER_ACTIONS.includes(status) &&
+        order.status === "funds_held" &&
+        order.sellerAcceptedAt
+      ) {
         allowed = true;
+      }
       // Buyer may dispute while deal is active
       if (isBuyer && status === "disputed") allowed = true;
-      // Buyer confirms receipt only after credentials / delivery shared
+      // Buyer tells escrow the service arrived. Escrow still marks the deal complete.
       if (
         isBuyer &&
-        status === "completed" &&
+        status === "release_requested" &&
         order.status === "credentials_shared"
       ) {
         allowed = true;
+      }
+      if (isAdmin && status === "completed" && order.status !== "release_requested") {
+        throw new Error("The buyer must confirm receipt before escrow completes the deal.");
       }
       if (
         isBuyer &&
@@ -100,23 +132,30 @@ export async function POST(
 
       if (status === "funds_held" && order.status === "awaiting_payment") {
         order.deliveryWindowHours = hours;
-        order.deliveryDueAt = new Date(
-          Date.now() + hours * 60 * 60_000
-        ).toISOString();
+        if (!order.deliveryDueAt) {
+          order.deliveryDueAt = new Date(Date.now() + hours * 60 * 60_000).toISOString();
+        }
+      }
+      if (status === "release_requested") {
+        order.buyerConfirmedAt = new Date().toISOString();
       }
 
       const labels: Partial<Record<DealStatus, string>> = {
-        funds_held: `Payment confirmed. Funds held in escrow. Seller must deliver within ${hours} hours.`,
+        funds_held: order.sellerAcceptedAt
+          ? "Payment confirmed. Funds held in escrow. The seller already accepted, so the deal has started."
+          : `Payment confirmed. Funds held in escrow. The seller has ${hours} hours from the order to accept. If there is no response, the buyer can cancel.`,
         credentials_shared:
-          "Seller shared account credentials. Private handle is now visible in this deal room.",
+          "Seller marked this delivered successfully. The buyer is notified and can confirm receipt.",
+        release_requested:
+          "Buyer confirmed: I have received the service. Escrow, please pay the seller.",
         completed:
-          "Buyer confirmed delivery. Funds released to seller. Deal completed.",
+          "Escrow marked the deal complete. Payment to the seller is released.",
         disputed: "Dispute opened. Admin escrow moderator will review.",
         cancelled: overdue
-          ? "Deal cancelled — seller missed the delivery window. Stock returned."
+          ? "Deal cancelled — the seller did not respond in time. Stock returned."
           : "Deal cancelled.",
         refunded: overdue
-          ? "Refund claimed — seller did not deliver in time. Escrow will return funds; stock restored."
+          ? "Refund claimed — the seller did not respond in time. Escrow will return funds; stock restored."
           : "Buyer refunded. Escrow closed.",
       };
 
@@ -136,16 +175,15 @@ export async function POST(
         }
       }
 
-      if (status === "funds_held") {
+      if (status === "funds_held" && !order.sellerAcceptedAt) {
         addSystemMessage(
           order,
-          `⏰ Delivery SLA: seller has ${hours} hours to deliver / share credentials. Buyer sees a countdown. After the deadline, buyer can cancel or claim a refund.`
+          `Seller has ${hours} hours to respond and accept. If there is no response, the buyer can cancel this deal.`
         );
       }
 
       if (status === "credentials_shared") {
         order.deliveredAt = new Date().toISOString();
-        order.deliveryDueAt = null;
         const listing = data.listings.find((l) => l.id === order.listingId);
         if (listing) {
           order.handleRevealed = true;

@@ -173,6 +173,7 @@ export default function HomePage() {
               {t("home.searchBtn")}
             </button>
           </div>
+          <EscrowBand />
         </div>
       </section>
 
@@ -246,12 +247,14 @@ export default function HomePage() {
               onMinAudience={setMinFollowers}
             />
 
-            <div className="grid" style={{ marginTop: 14 }}>
+            <div className="listing-grid" style={{ marginTop: 14 }}>
               {filtered.map((l) => (
                 <ListingCard key={l.id} listing={l} />
               ))}
               {!filtered.length ? (
-                <p className="mut">{t("home.noListings")}</p>
+                <p className="mut" style={{ gridColumn: "1 / -1" }}>
+                  {t("home.noListings")}
+                </p>
               ) : null}
             </div>
           </>
@@ -309,5 +312,37 @@ export default function HomePage() {
         </div>
       </section>
     </>
+  );
+}
+
+function EscrowBand() {
+  return (
+    <section className="escrow-band" aria-label="Protected by USDT Escrow">
+      <div className="escrow-band-inner">
+        <div className="escrow-shield" aria-hidden>
+          <svg width="40" height="40" viewBox="0 0 48 48" fill="none">
+            <path
+              d="M24 4 8 10v12c0 10 6.8 16.6 16 20 9.2-3.4 16-10 16-20V10L24 4z"
+              fill="#1a1408"
+            />
+            <rect x="18" y="20" width="12" height="10" rx="2" fill="#f6e08a" />
+            <path
+              d="M20 20v-2a4 4 0 0 1 8 0v2"
+              stroke="#f6e08a"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        </div>
+        <div className="escrow-band-copy">
+          <h2>Protected by Escrow</h2>
+          <p>Your payment is protected by escrow until you approve.</p>
+        </div>
+        <div className="usdt-coin" aria-hidden>
+          <span>₮</span>
+          <small>USDT</small>
+        </div>
+      </div>
+    </section>
   );
 }

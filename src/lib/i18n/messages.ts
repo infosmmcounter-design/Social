@@ -101,6 +101,18 @@ export type MsgKey =
   | "account.save"
   | "account.saved"
   | "account.days"
+  | "auth.username"
+  | "auth.generateUser"
+  | "auth.emailOptional"
+  | "auth.backupTitle"
+  | "auth.backupHint"
+  | "auth.savedCode"
+  | "auth.continue"
+  | "auth.loginId"
+  | "auth.recoverLink"
+  | "auth.recoverTitle"
+  | "auth.recoverHint"
+  | "auth.newBackup"
   | "listings.freelanceIntro"
   | "home.newest"
   | "home.priceAsc"
@@ -294,8 +306,8 @@ const en: Dict = {
   "account.view": "View profile",
   "account.wallet": "Wallet",
   "account.walletHint":
-    "Send USDT to escrow, then submit the amount and transaction hash. Admin credits this wallet after checking the payment.",
-  "account.deposit": "Submit deposit",
+    "Pick TRC20 or BEP20, copy the address, and send the exact amount shown. The balance updates on its own after the network confirms.",
+  "account.deposit": "Show exact amount",
   "account.depositAmount": "Amount (USDT)",
   "account.depositNote": "Transaction hash or note",
   "account.applySell": "Apply to sell",
@@ -307,6 +319,19 @@ const en: Dict = {
   "account.save": "Save profile",
   "account.saved": "Profile saved.",
   "account.days": "Days",
+  "auth.username": "Username",
+  "auth.generateUser": "Generate username",
+  "auth.emailOptional": "Email (optional, for your own record)",
+  "auth.backupTitle": "Save your backup code",
+  "auth.backupHint":
+    "This is the only time we show this code. Keep it somewhere safe. If you lose the password, this code opens the account.",
+  "auth.savedCode": "I saved this code",
+  "auth.continue": "Continue",
+  "auth.loginId": "Username or email",
+  "auth.recoverLink": "Lost password? Use your backup code",
+  "auth.recoverTitle": "Recover account",
+  "auth.recoverHint": "Enter your username and the backup code you saved, then choose a new password.",
+  "auth.newBackup": "Create a new backup code",
   "listings.freelanceIntro":
     "Freelance services — YouTube editing, Instagram growth, AI setup, and more. Buyers pay escrow; you deliver in chat.",
   "home.newest": "Newest",
@@ -321,7 +346,7 @@ const en: Dict = {
   "freelance.orderGig": "Order this gig / Start escrow",
   "freelance.notes": "What you need from the freelancers (brief, links, files…)",
   "freelance.sla":
-    "After payment is held, the freelancers deliver in the stated delivery window. Revisions included are listed on the gig.",
+    "The seller has 24 hours to accept. The deal starts after payment and that acceptance. Delivery is marked when the work is finished.",
   "freelance.sold": "sold",
   "freelance.purchased": "Purchased by customers",
   "freelance.soldTimes": "times sold",
@@ -345,7 +370,7 @@ const en: Dict = {
   "listing.qtyOver": "You are selecting more than the available stock.",
   "listing.each": "each",
   "listing.sla":
-    "After payment is held in escrow, the seller has 24 hours to deliver. If they miss it, you can cancel or claim a refund.",
+    "The seller has 24 hours to respond and accept. If there is no response, the deal can be cancelled. Delivery time is separate and is marked when the work is finished.",
   "listing.yourName": "Your name",
   "listing.yourEmail": "Your email",
   "listing.transferNotes": "Transfer details / notes",
@@ -358,11 +383,11 @@ const en: Dict = {
   "deal.chat": "Deal chat",
   "deal.asEscrow": "As Escrow",
   "deal.send": "Send",
-  "deal.deliverySla": "Seller must deliver within the delivery window",
-  "deal.claimRefund": "Claim refund (24h missed)",
+  "deal.deliverySla": "Seller has 24 hours to accept this deal",
+  "deal.claimRefund": "Claim refund (no response)",
   "deal.cancel": "Cancel deal",
   "deal.holdGuide":
-    "Funds stay held in SocialsFlip escrow until the deal is completed (typically up to 7 days, or until you confirm delivery). Never pay the seller directly.",
+    "Funds stay held in SocialsFlip escrow until the seller accepts, the work is delivered, you confirm receipt, and escrow marks the deal complete. Never pay the seller directly.",
   "createDeal.title": "Create a deal link",
   "createDeal.sub":
     "Copy the link and send it to your buyer. They pay SocialsFlip escrow — not you directly.",
@@ -376,9 +401,9 @@ const en: Dict = {
   "orders.track": "Open escrow deal room",
   "blog.title": "Blog",
   "seo.title":
-    "SocialsFlip: Buy Social Accounts & Freelance Services (YouTube, IG, AI)",
+    "Buy YouTube Channel, Facebook Page, Instagram Account | SocialsFlip",
   "seo.description":
-    "Escrow-protected marketplace for social accounts and Fiverr-style freelance gigs (YouTube, Facebook, Instagram, AI tools). Pay USDT TRC20/BEP20 — funds held until delivery.",
+    "Buy a YouTube channel, Facebook page, Instagram account, TikTok account, or freelance service with USDT escrow. Your payment stays protected until you approve.",
   "footer.escrow": "Escrow-held payments on marketplace orders",
   "help.title": "Help & Support",
   "help.sub":
