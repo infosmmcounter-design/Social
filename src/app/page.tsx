@@ -391,21 +391,28 @@ function LiveCategoryRail({
         <button
           key={`${dup ? "d" : "m"}-${b.key || "all"}-${i}`}
           type="button"
-          className={`cat-tile cat-tile-${b.key || "all"} ${on ? "on" : ""}`}
-          style={{ animationDelay: `${(i % 5) * -0.55}s` }}
+          className={`cat-pod cat-pod-${b.key || "all"} ${on ? "on" : ""}`}
           tabIndex={dup ? -1 : undefined}
           aria-pressed={dup ? undefined : on}
+          aria-label={b.label}
           onClick={() => onPick(on && b.key ? "" : b.key)}
         >
-          <span className="cat-tile-glow" aria-hidden />
-          <span className="cat-tile-icon" aria-hidden>
-            {b.icon ? <CatIcon cat={b.icon} size={22} /> : <span className="cat-tile-all">✦</span>}
+          <span className="cat-pod-box" aria-hidden>
+            <span
+              className="cat-pod-spin"
+              style={{ animationDelay: `${(i % 6) * -0.7}s` }}
+            >
+              {b.icon ? (
+                <CatIcon cat={b.icon} size={34} />
+              ) : (
+                <span className="cat-pod-all">✦</span>
+              )}
+            </span>
           </span>
-          <span className="cat-tile-label">{b.label}</span>
+          <span className="cat-pod-label">{b.label}</span>
           {b.key && counts[b.key] ? (
-            <span className="cat-tile-n">{counts[b.key]}</span>
+            <span className="cat-pod-n">{counts[b.key]}</span>
           ) : null}
-          <span className="cat-tile-live" aria-hidden />
         </button>
       );
     });
