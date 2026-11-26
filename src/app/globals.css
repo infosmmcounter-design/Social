@@ -589,13 +589,6 @@ html[data-theme="dark"] .auth-panel {
 html[data-theme="dark"] .auth-panel h1 {
   color: #fff8e4;
 }
-html[data-theme="dark"] .btn.google-btn {
-  background: #221e16;
-  color: #fff8e4;
-}
-html[data-theme="dark"] .btn.google-btn:hover {
-  background: #2c261b;
-}
 html[data-theme="dark"] .auth-foot a {
   color: #f7e7a8;
 }
