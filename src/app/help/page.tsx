@@ -38,6 +38,9 @@ export default function HelpPage() {
     <section className="sec" style={{ maxWidth: 720 }}>
       <h1 style={{ fontSize: "2rem" }}>{t("help.title")}</h1>
       <p className="mut">{t("help.sub")}</p>
+      <p className="sm" style={{ marginTop: 8 }}>
+        {t("footer.supportPromise")}
+      </p>
 
       <div className="card f escrow-support-hero" style={{ marginTop: 16 }}>
         <p className="pill g" style={{ marginBottom: 10 }}>

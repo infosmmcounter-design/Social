@@ -140,7 +140,7 @@ export interface User {
   idDocument?: string;
   /** When the ID photo was stored. */
   idSubmittedAt?: string;
-  /** When the profile should flip to verified. Set 15–20 minutes after submit. */
+  /** When the profile should flip to verified. Set 5 minutes after ID submit. */
   idVerifyAt?: string;
 }
 

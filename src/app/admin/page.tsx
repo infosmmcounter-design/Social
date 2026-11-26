@@ -33,10 +33,42 @@ type Tab =
   | "crypto"
   | "set";
 
+type OrderBucket = "all" | "pending" | "completed" | "disputed" | "unresponded";
+
+type AdminOrder = {
+  id: number;
+  title: string;
+  total: number;
+  status: DealStatus;
+  fee: number;
+  buyerName?: string;
+  buyerEmail?: string;
+  sellerId?: number;
+  createdAt?: string;
+  msgs?: { id: number; from: string; text: string; createdAt: string }[];
+};
+
+const PENDING_STATUSES: DealStatus[] = [
+  "awaiting_payment",
+  "funds_held",
+  "credentials_shared",
+  "release_requested",
+];
+
+function orderNeedsAdminReply(o: AdminOrder): boolean {
+  if (["completed", "cancelled", "refunded"].includes(o.status)) return false;
+  const msgs = o.msgs || [];
+  if (!msgs.length) {
+    return o.status === "disputed" || o.status === "release_requested";
+  }
+  return msgs[msgs.length - 1].from !== "admin";
+}
+
 export default function AdminPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("dash");
+  const [orderBucket, setOrderBucket] = useState<OrderBucket>("pending");
   const [apps, setApps] = useState<
     {
       id: number;
@@ -80,9 +112,7 @@ export default function AdminPage() {
       seller?: { name: string; official?: boolean } | null;
     }[]
   >([]);
-  const [orders, setOrders] = useState<
-    { id: number; title: string; total: number; status: DealStatus; fee: number }[]
-  >([]);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [requests, setRequests] = useState<
     {
       id: number;
@@ -223,7 +253,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "admin"))
-      router.push(withLocalePrefix("/auth/login", locale));
+      router.push(withLocalePrefix("/admin/login", locale));
   }, [user, loading, router, locale]);
 
   const filteredSellers = useMemo(() => {
@@ -323,36 +353,149 @@ export default function AdminPage() {
     )
   );
   const released = orders.filter((o) => o.status === "completed");
+  const pendingOrders = orders.filter((o) => PENDING_STATUSES.includes(o.status));
+  const completedOrders = orders.filter((o) => o.status === "completed");
+  const disputedOrders = orders.filter((o) => o.status === "disputed");
+  const unrespondedOrders = orders.filter(orderNeedsAdminReply);
+
+  const orderBuckets: { key: OrderBucket; label: string; list: AdminOrder[]; hint: string }[] = [
+    {
+      key: "pending",
+      label: "Pending",
+      list: pendingOrders,
+      hint: "Payment, escrow, delivery, or release in progress",
+    },
+    {
+      key: "completed",
+      label: "Completed",
+      list: completedOrders,
+      hint: "Deals finished and paid out",
+    },
+    {
+      key: "disputed",
+      label: "Disputes",
+      list: disputedOrders,
+      hint: "Buyer/seller opened a dispute",
+    },
+    {
+      key: "unresponded",
+      label: "Needs admin reply",
+      list: unrespondedOrders,
+      hint: "Last chat message is not from admin, or dispute/release waiting",
+    },
+    {
+      key: "all",
+      label: "All orders",
+      list: orders,
+      hint: "Every order in the system",
+    },
+  ];
+
+  const visibleOrders =
+    orderBuckets.find((b) => b.key === orderBucket)?.list ?? orders;
 
   const tabs: [Tab, string][] = [
     ["dash", "Dashboard"],
+    ["orders", `Orders${unrespondedOrders.length ? ` (${unrespondedOrders.length})` : ""}`],
     ["apps", "Applications"],
     ["sellers", "Sellers"],
     ["people", "People & wallets"],
     ["listings", "Listings"],
-    ["orders", "Orders"],
     ["crypto", "Crypto payments"],
     ["created", "Created deals"],
     ["chats", "Seller chats"],
-    ["dummy", "Dummy Data / Seller Generator"],
-    ["requests", "Private Requests"],
+    ["dummy", "Dummy sellers"],
+    ["requests", "Private requests"],
     ["reviews", "Reviews"],
     ["blog", "Blog"],
     ["set", "Settings"],
   ];
 
+  function renderOrderActions(o: AdminOrder) {
+    return (
+      <td className="row admin-order-actions">
+        {o.status === "awaiting_payment" ? (
+          <button
+            className="btn s"
+            type="button"
+            onClick={() =>
+              run("Funds held. Seller can deliver, then the buyer confirms.", async () => {
+                await api(`/api/orders/${o.id}/status`, {
+                  method: "POST",
+                  json: { status: "funds_held" },
+                });
+              })
+            }
+          >
+            Hold funds
+          </button>
+        ) : null}
+        {o.status === "funds_held" ? (
+          <button
+            className="btn s buy-go"
+            type="button"
+            onClick={() =>
+              run("Buyer notified to confirm receipt.", async () => {
+                await api(`/api/orders/${o.id}/status`, {
+                  method: "POST",
+                  json: { status: "credentials_shared" },
+                });
+              })
+            }
+          >
+            Delivered to buyer
+          </button>
+        ) : null}
+        {o.status === "release_requested" ? (
+          <button
+            className="btn s g"
+            type="button"
+            onClick={() =>
+              run("Deal complete. Seller payment released.", async () => {
+                await api(`/api/orders/${o.id}/status`, {
+                  method: "POST",
+                  json: { status: "completed" },
+                });
+              })
+            }
+          >
+            Mark complete
+          </button>
+        ) : null}
+        <Link className="btn s o" href={`/deal/${o.id}`}>
+          Open chat
+        </Link>
+      </td>
+    );
+  }
+
   return (
     <section className="sec admin-shell">
-      <div className="row" style={{ justifyContent: "space-between" }}>
-        <h1 style={{ fontSize: "2rem", margin: 0 }}>Admin panel</h1>
-        <Link className="l" href="/" style={{ color: "var(--a)", fontWeight: 600 }}>
-          View storefront
-        </Link>
+      <div className="admin-top">
+        <div>
+          <p className="admin-kicker">SocialsFlip control room</p>
+          <h1 className="admin-title">Admin panel</h1>
+          <p className="sm admin-lead">
+            Escrow moderation, order queues, approvals, wallets, and seller tools — grouped for faster work.
+          </p>
+        </div>
+        <div className="admin-top-actions">
+          <button
+            type="button"
+            className="btn s o"
+            onClick={() => {
+              setTab("orders");
+              setOrderBucket("unresponded");
+            }}
+          >
+            Needs reply ({unrespondedOrders.length})
+          </button>
+          <Link className="btn s o" href="/">
+            View storefront
+          </Link>
+        </div>
       </div>
-      <p className="sm mut">
-        Escrow moderation, approvals, crypto wallets, and dummy seller tools.
-      </p>
-      <div className="tabs">
+      <div className="tabs admin-tabs">
         {tabs.map(([k, n]) => (
           <button
             key={k}
@@ -367,30 +510,55 @@ export default function AdminPage() {
       {err ? <p className="err">{err}</p> : null}
 
       {tab === "dash" && (
-        <div className="grid">
-          <div className="card f">
-            <div className="mut sm">Active escrow volume</div>
-            <div className="price">
-              {money(held.reduce((a, o) => a + o.total, 0))}
+        <>
+          <div className="grid admin-stat-grid">
+            <div className="card f admin-stat-card">
+              <div className="mut sm">Active escrow volume</div>
+              <div className="price">
+                {money(held.reduce((a, o) => a + o.total, 0))}
+              </div>
+            </div>
+            <div className="card f admin-stat-card">
+              <div className="mut sm">Fee revenue (completed)</div>
+              <div className="price">
+                {money(released.reduce((a, o) => a + (o.fee || 0), 0))}
+              </div>
+            </div>
+            <div className="card f admin-stat-card">
+              <div className="mut sm">New applications</div>
+              <div className="price">{apps.filter((a) => a.status === "new").length}</div>
+            </div>
+            <div className="card f admin-stat-card">
+              <div className="mut sm">Live listings</div>
+              <div className="price">
+                {listings.filter((l) => l.listed).length}
+              </div>
             </div>
           </div>
-          <div className="card f">
-            <div className="mut sm">Fee revenue (completed)</div>
-            <div className="price">
-              {money(released.reduce((a, o) => a + (o.fee || 0), 0))}
-            </div>
+          <h2 className="admin-section-title">Order queues</h2>
+          <p className="sm mut admin-section-lead">
+            Jump straight into pending, completed, disputed, or admin-unanswered deals.
+          </p>
+          <div className="grid admin-queue-grid">
+            {orderBuckets
+              .filter((b) => b.key !== "all")
+              .map((b) => (
+                <button
+                  key={b.key}
+                  type="button"
+                  className={`card f admin-queue-card admin-queue-${b.key}`}
+                  onClick={() => {
+                    setTab("orders");
+                    setOrderBucket(b.key);
+                  }}
+                >
+                  <div className="admin-queue-label">{b.label}</div>
+                  <div className="price">{b.list.length}</div>
+                  <p className="sm mut">{b.hint}</p>
+                </button>
+              ))}
           </div>
-          <div className="card f">
-            <div className="mut sm">New applications</div>
-            <div className="price">{apps.filter((a) => a.status === "new").length}</div>
-          </div>
-          <div className="card f">
-            <div className="mut sm">Live listings</div>
-            <div className="price">
-              {listings.filter((l) => l.listed).length}
-            </div>
-          </div>
-        </div>
+        </>
       )}
 
       {tab === "apps" && (
@@ -1396,94 +1564,86 @@ export default function AdminPage() {
       {tab === "crypto" && <AdminCrypto />}
 
       {tab === "orders" && (
-        <div className="tbl">
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Item</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((o) => (
-                <tr key={o.id}>
-                  <td>{o.id}</td>
-                  <td>{o.title}</td>
-                  <td>{money(o.total)}</td>
-                  <td>
-                    <span
-                      className={`pill ${
-                        o.status === "disputed"
-                          ? "b"
-                          : o.status === "completed"
-                            ? "g"
-                            : "w"
-                      }`}
-                    >
-                      {DEAL_STATUS_LABEL[o.status]}
-                    </span>
-                  </td>
-                  <td className="row">
-                    {o.status === "awaiting_payment" ? (
-                      <button
-                        className="btn s"
-                        type="button"
-                        onClick={() =>
-                          run("Funds held. Seller can deliver, then the buyer confirms.", async () => {
-                            await api(`/api/orders/${o.id}/status`, {
-                              method: "POST",
-                              json: { status: "funds_held" },
-                            });
-                          })
-                        }
-                      >
-                        Hold funds
-                      </button>
-                    ) : null}
-                    {o.status === "funds_held" ? (
-                      <button
-                        className="btn s buy-go"
-                        type="button"
-                        onClick={() =>
-                          run("Buyer notified to confirm receipt.", async () => {
-                            await api(`/api/orders/${o.id}/status`, {
-                              method: "POST",
-                              json: { status: "credentials_shared" },
-                            });
-                          })
-                        }
-                      >
-                        Delivered to buyer
-                      </button>
-                    ) : null}
-                    {o.status === "release_requested" ? (
-                      <button
-                        className="btn s g"
-                        type="button"
-                        onClick={() =>
-                          run("Deal complete. Seller payment released.", async () => {
-                            await api(`/api/orders/${o.id}/status`, {
-                              method: "POST",
-                              json: { status: "completed" },
-                            });
-                          })
-                        }
-                      >
-                        Mark complete
-                      </button>
-                    ) : null}
-                    <Link className="btn s o" href={`/deal/${o.id}`}>
-                      Open chat
-                    </Link>
-                  </td>
+        <div className="admin-orders">
+          <div className="admin-order-buckets">
+            {orderBuckets.map((b) => (
+              <button
+                key={b.key}
+                type="button"
+                className={`admin-order-bucket ${orderBucket === b.key ? "on" : ""}`}
+                onClick={() => setOrderBucket(b.key)}
+              >
+                <span className="admin-order-bucket-label">{b.label}</span>
+                <span className="admin-order-bucket-count">{b.list.length}</span>
+              </button>
+            ))}
+          </div>
+          <p className="sm mut admin-order-hint">
+            {orderBuckets.find((b) => b.key === orderBucket)?.hint}
+          </p>
+          <div className="tbl admin-orders-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Item / parties</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Admin reply</th>
+                  <th />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {!orders.length ? <p className="mut">No orders yet.</p> : null}
+              </thead>
+              <tbody>
+                {visibleOrders.map((o) => {
+                  const last = (o.msgs || [])[(o.msgs || []).length - 1];
+                  const needsReply = orderNeedsAdminReply(o);
+                  return (
+                    <tr key={o.id} className={needsReply ? "admin-row-alert" : ""}>
+                      <td>{o.id}</td>
+                      <td>
+                        <strong>{o.title}</strong>
+                        <div className="sm mut">
+                          {o.buyerName || o.buyerEmail || "Buyer"}
+                          {o.sellerId ? ` · seller #${o.sellerId}` : ""}
+                        </div>
+                        {last ? (
+                          <div className="sm admin-last-msg">
+                            Last: {last.from} — {last.text.slice(0, 72)}
+                            {last.text.length > 72 ? "…" : ""}
+                          </div>
+                        ) : null}
+                      </td>
+                      <td>{money(o.total)}</td>
+                      <td>
+                        <span
+                          className={`pill ${
+                            o.status === "disputed"
+                              ? "b"
+                              : o.status === "completed"
+                                ? "g"
+                                : "w"
+                          }`}
+                        >
+                          {DEAL_STATUS_LABEL[o.status]}
+                        </span>
+                      </td>
+                      <td>
+                        {needsReply ? (
+                          <span className="pill b">Waiting on admin</span>
+                        ) : (
+                          <span className="pill g">Handled</span>
+                        )}
+                      </td>
+                      {renderOrderActions(o)}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {!visibleOrders.length ? (
+              <p className="mut">No orders in this queue.</p>
+            ) : null}
+          </div>
         </div>
       )}
 
