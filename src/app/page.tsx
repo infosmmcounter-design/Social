@@ -408,6 +408,8 @@ function LiveCategoryRail({
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el || autoPause) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (reduce.matches) return;
     let raf = 0;
     let last = performance.now();
     const speed = 36;
