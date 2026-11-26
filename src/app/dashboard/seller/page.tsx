@@ -5,13 +5,23 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { api } from "@/lib/api";
 import { money } from "@/lib/constants";
+import { CatIcon } from "@/components/Icons";
 import {
-  CATEGORIES,
   DEAL_STATUS_LABEL,
   FREELANCE_GIG_IDEAS,
   isFreelanceCategory,
+  type Category,
   type DealStatus,
 } from "@/lib/types";
+
+const SELL_BOARDS: [Category, string][] = [
+  ["youtube", "YouTube"],
+  ["instagram", "Instagram"],
+  ["tiktok", "TikTok"],
+  ["facebook", "Facebook"],
+  ["freelance", "Freelance service"],
+  ["ai", "AI Tools"],
+];
 import { LocaleLink as Link } from "@/components/LocaleLink";
 import { StartEscrowChat } from "@/components/StartEscrowChat";
 import { useLang } from "@/components/LanguageProvider";
@@ -74,7 +84,7 @@ export default function SellerDashboard() {
   >([]);
   const [form, setForm] = useState({
     title: "",
-    cat: "youtube",
+    cat: "",
     niche: "",
     followers: "",
     monetized: false,
@@ -146,6 +156,10 @@ export default function SellerDashboard() {
   async function createListing(e: React.FormEvent) {
     e.preventDefault();
     setMsg("");
+    if (!SELL_BOARDS.some(([k]) => k === form.cat)) {
+      setMsg("Choose what you are listing.");
+      return;
+    }
     try {
       const freelance = isFreelanceCategory(form.cat);
       await api("/api/listings", {
@@ -167,7 +181,7 @@ export default function SellerDashboard() {
       refreshAuth().catch(() => undefined);
       setForm({
         title: "",
-        cat: "youtube",
+        cat: "",
         niche: "",
         followers: "",
         monetized: false,
@@ -209,31 +223,44 @@ export default function SellerDashboard() {
       <p className="sm mut">
         This goes live immediately. Buyers pay into escrow.
       </p>
-      <form className="card" onSubmit={createListing}>
-        <label>Category board</label>
-        <select
-          value={form.cat}
-          onChange={(e) => {
-            const cat = e.target.value;
-            const freelance = isFreelanceCategory(cat);
-            setForm({
-              ...form,
-              cat,
-              listingType: freelance ? "service" : "account",
-              stock: freelance ? "25" : form.stock || "1",
-            });
-          }}
-        >
-          {CATEGORIES.map(([k, n]) => (
-            <option key={k} value={k}>
-              {n}
-            </option>
+      <form className="card list-form" onSubmit={createListing}>
+        <p className="list-step">1 · What are you listing?</p>
+        <div className="cat-pick" role="radiogroup" aria-label="Listing category">
+          {SELL_BOARDS.map(([k, n]) => (
+            <button
+              key={k}
+              type="button"
+              role="radio"
+              aria-checked={form.cat === k}
+              className={`cat-pick-btn ${form.cat === k ? "on" : ""}`}
+              onClick={() => {
+                const freelance = isFreelanceCategory(k);
+                setForm({
+                  ...form,
+                  cat: k,
+                  listingType: freelance ? "service" : k === "ai" ? "tool" : "account",
+                  stock: freelance ? "25" : form.stock || "1",
+                });
+              }}
+            >
+              <CatIcon cat={k} size={22} />
+              <span>{n}</span>
+            </button>
           ))}
-        </select>
+        </div>
+        {!form.cat ? (
+          <p className="sm mut">Pick a board, then fill in the listing.</p>
+        ) : null}
+        {form.cat ? (
+          <>
+        <p className="list-step">2 · Complete the listing</p>
         {isFreelanceForm ? (
           <p className="sm mut">
-            This posts on the <b>Freelance Services</b> board (with YouTube,
-            Facebook, TikTok…). Buyer pays escrow; you deliver in chat.
+            This posts on the Freelance Services board. Buyer pays escrow; you deliver in chat.
+          </p>
+        ) : form.cat === "ai" ? (
+          <p className="sm mut">
+            This posts on the AI Tools board. Buyers pay into escrow.
           </p>
         ) : null}
         {!isFreelanceForm ? (
@@ -250,7 +277,7 @@ export default function SellerDashboard() {
                   setForm({ ...form, stock: "1" });
                 }}
               >
-                One account
+                {form.cat === "ai" ? "One tool" : "One account"}
               </button>
               <button
                 type="button"
@@ -260,7 +287,7 @@ export default function SellerDashboard() {
                   setForm({ ...form, stock: form.stock === "1" ? "100" : form.stock });
                 }}
               >
-                Stock of similar accounts
+                {form.cat === "ai" ? "Stock of similar tools" : "Stock of similar accounts"}
               </button>
             </div>
             <p className="sm mut">
@@ -444,6 +471,8 @@ export default function SellerDashboard() {
         <button className="btn" type="submit">
           Publish listing
         </button>
+          </>
+        ) : null}
       </form>
 
       <p className="note sm">

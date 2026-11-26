@@ -257,13 +257,6 @@ export async function POST(req: Request) {
         order,
         `💰 Escrow hold: funds stay held until the deal is completed (typically up to ${holdDays} days, or until you confirm delivery). Seller/creator cannot take payment outside escrow.`
       );
-      addSystemMessage(order, paymentInstructions);
-      addSystemMessage(
-        order,
-        freelance
-          ? `Freelance gig ordered × ${qty} (${listing.soldCount} total sold). The seller has ${data.settings.deliveryWindowHours || 24} hours to accept. The deal starts after payment and that acceptance. Delivery is marked when the work is finished.`
-          : `Quantity ${qty} reserved. Available stock now: ${listing.stock}. The seller has ${data.settings.deliveryWindowHours || 24} hours to accept. The deal starts after payment and that acceptance.`
-      );
 
       data.orders.push(order);
     });

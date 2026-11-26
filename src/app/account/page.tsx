@@ -554,7 +554,7 @@ export default function AccountPage() {
           <span>{t("account.days")}</span>
         </div>
       </div>
-      <div className="row" style={{ marginTop: 16 }}>
+      <div className="account-actions">
         {(
           [
             ["notes", "Notifications"],
@@ -570,13 +570,13 @@ export default function AccountPage() {
           <button
             key={id}
             type="button"
-            className={`btn s ${panel === id ? "" : "o"}`}
+            className={`btn ${panel === id ? "" : "o"}`}
             onClick={() => setPanel(panel === id ? "" : id)}
           >
             {label}
           </button>
         ))}
-        <button className="btn s d" type="button" onClick={() => logout()}>
+        <button className="btn d account-logout" type="button" onClick={() => logout()}>
           {t("nav.logout")}
         </button>
       </div>

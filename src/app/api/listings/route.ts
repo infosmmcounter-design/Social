@@ -80,12 +80,27 @@ export async function POST(req: Request) {
   }
 
   const isAdmin = auth.user.role === "admin";
+  const sellerBoards = new Set([
+    "youtube",
+    "instagram",
+    "tiktok",
+    "facebook",
+    "freelance",
+    "ai",
+  ]);
+  const chosenCat = String(body.cat || "").toLowerCase();
+  if (!isAdmin && !sellerBoards.has(chosenCat)) {
+    return NextResponse.json(
+      { error: "Choose what you are listing." },
+      { status: 400 }
+    );
+  }
   let listingId = 0;
   await updateStore((data) => {
     const me = data.users.find((u) => u.id === auth.user!.id);
     if (me && me.role === "buyer") me.role = "seller";
     listingId = nextId(data);
-    const cat = (body.cat || "other") as Category;
+    const cat = (chosenCat || "other") as Category;
     const img =
       String(body.img || "").trim() || listingCoverDataUrl(cat, title);
     const images = Array.isArray(body.images)
