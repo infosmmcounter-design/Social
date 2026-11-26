@@ -1171,8 +1171,10 @@ export default function AdminPage() {
                   placeholder="Or type any stock qty"
                 />
                 <p className="sm mut">
-                  Example: same “1K monetized YT” offer with 50 units ready →
-                  stock 50. Each sale reduces by 1.
+                  This count sits at the top of the public listing. Example:
+                  100 similar monetized YouTube channels, written once, stock
+                  100. Each sale reduces by 1. One real channel uses stock 1
+                  and its link.
                 </p>
               </>
             )}

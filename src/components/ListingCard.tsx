@@ -67,7 +67,13 @@ export function ListingCard({ listing }: Props) {
           ) : (
             <CatIcon cat={listing.cat} size={48} />
           )}
-          {soldOut ? <span className="stock-badge sold">{t("common.soldOut")}</span> : null}
+          {!freelance ? (
+            <span className={`stock-badge ${soldOut ? "sold" : ""}`}>
+              {soldOut
+                ? t("common.soldOut")
+                : `${listing.stock ?? 1} ${t("common.available")}`}
+            </span>
+          ) : null}
         </div>
         <div className="bd2">
           <span className="pill" style={{ display: "inline-flex", gap: 5, alignItems: "center" }}>
