@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { LocaleLink as Link } from "@/components/LocaleLink";
+import { StartEscrowChat } from "@/components/StartEscrowChat";
 import { VerifiedTick } from "@/components/VerifiedTick";
 import { money } from "@/lib/constants";
 
@@ -21,6 +22,7 @@ function ChatInner() {
     subject: string;
     buyerName: string;
     buyerEmail: string;
+    buyerId?: number | null;
     sellerId: number;
     listingId: number | null;
     status: string;
@@ -45,7 +47,14 @@ function ChatInner() {
   const endRef = useRef<HTMLDivElement>(null);
   const seenFor = useRef(0);
 
+  const numericId = Number(id);
+  const missingId = !Number.isFinite(numericId) || numericId <= 0;
+
   const load = useCallback(async () => {
+    if (!Number.isFinite(Number(id)) || Number(id) <= 0) {
+      setErr("Chat not found");
+      return;
+    }
     const q = emailQ ? `&email=${encodeURIComponent(emailQ)}` : "";
     const d = await api<{
       inquiry: NonNullable<typeof inquiry>;
@@ -55,11 +64,16 @@ function ChatInner() {
     setInquiry(d.inquiry);
     setSeller(d.seller);
     setListing(d.listing);
+    setErr("");
   }, [id, emailQ]);
 
   useEffect(() => {
+    if (missingId) {
+      setErr("Chat not found");
+      return;
+    }
     load().catch((e) => setErr(e instanceof Error ? e.message : "Failed"));
-  }, [load]);
+  }, [load, missingId]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
@@ -76,16 +90,19 @@ function ChatInner() {
   }, [inquiry, emailQ]);
 
   useEffect(() => {
+    if (missingId) return;
     const t = setInterval(() => load().catch(() => undefined), 4000);
     return () => clearInterval(t);
-  }, [load]);
+  }, [load, missingId]);
 
   const isEscrow = (inquiry?.kind || "seller") === "escrow";
   const sellerName = isEscrow ? "SocialsFlip Escrow" : seller?.name || "Seller";
   const isBuyerParty =
     !!inquiry &&
-    ((user &&
-      user.email.toLowerCase() === inquiry.buyerEmail.toLowerCase()) ||
+    ((!!user &&
+      (user.id === inquiry.buyerId ||
+        (!!user.email &&
+          user.email.toLowerCase() === inquiry.buyerEmail.toLowerCase()))) ||
       (!!emailQ &&
         emailQ.toLowerCase() === inquiry.buyerEmail.toLowerCase()));
   const isSellerParty =
@@ -120,7 +137,24 @@ function ChatInner() {
   }
 
   if (!inquiry) {
-    return <p className="sec mut">{err || "Loading chat…"}</p>;
+    const gone = missingId || /not found/i.test(err);
+    if (gone || err) {
+      return (
+        <section className="sec" style={{ maxWidth: 640 }}>
+          <h1 style={{ fontSize: "1.8rem" }}>Chat with Escrow</h1>
+          <p className="mut">
+            {gone
+              ? "That room was not open yet. Escrow is always available for buyers and sellers."
+              : err}
+          </p>
+          <StartEscrowChat />
+          <p style={{ marginTop: 16 }}>
+            <Link href="/chats">All chats</Link>
+          </p>
+        </section>
+      );
+    }
+    return <p className="sec mut">Loading chat…</p>;
   }
 
   return (

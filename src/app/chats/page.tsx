@@ -133,15 +133,15 @@ function ChatsInner() {
   }, [user, loading]);
 
   useEffect(() => {
-    if (!startEscrow || loading || !user?.email || opened.current) return;
+    if (!startEscrow || loading || !user || opened.current) return;
     opened.current = true;
-    saveGuestEmail(user.email);
+    if (user.email) saveGuestEmail(user.email);
     api<{ inquiry: { id: number } }>("/api/inquiries", {
       method: "POST",
       json: {
         kind: "escrow",
-        name: user.name || "Guest",
-        email: user.email,
+        name: user.name || "Member",
+        email: user.email || "",
         message: "",
         subject: "Chat with Escrow",
       },
@@ -155,11 +155,12 @@ function ChatsInner() {
   }, [startEscrow, loading, user, locale, router]);
 
   const sellerRows = rows.filter((r) => r.kind !== "escrow");
-  const escrowRows = rows.filter((r) => r.kind === "escrow");
+  const escrowRows = rows.filter((r) => r.kind === "escrow" && r.id > 0);
 
   function hrefFor(r: Row) {
     const mail = encodeURIComponent(email || r.buyerEmail || "");
     if (r.source === "deal") return `/deal/${r.id}?email=${mail}`;
+    if (!r.id) return "/chats?start=escrow";
     return `/chat/${r.id}?email=${mail}`;
   }
 
@@ -224,6 +225,7 @@ function ChatsInner() {
       </div>
 
       <h2>Escrow support</h2>
+      <p className="sm mut">Escrow stays open for every buyer and every seller.</p>
       <div className="chat-page-list">
         {escrowRows.map((r) => (
           <Link key={`${r.source}-${r.id}`} className="chat-page-row escrow" href={hrefFor(r)}>
@@ -237,7 +239,7 @@ function ChatsInner() {
             <span className="chat-open">Open</span>
           </Link>
         ))}
-        {!escrowRows.length && !startEscrow ? (
+        {!escrowRows.length && !(startEscrow && !user) ? (
           <article className="chat-page-row escrow">
             <div className="grow">
               <b>{t("chat.withEscrow")}</b>

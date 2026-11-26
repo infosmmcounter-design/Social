@@ -133,27 +133,11 @@ export function buildInbox(store: StoreData, user: Viewer, email = ""): InboxRow
   }
 
   const escrow = rows
-    .filter((r) => r.kind === "escrow")
+    .filter((r) => r.kind === "escrow" && r.id > 0)
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   const rest = rows
     .filter((r) => r.kind !== "escrow")
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-
-  if (user?.role !== "admin" && escrow.length === 0 && (user || mail)) {
-    escrow.push({
-      source: "inquiry",
-      id: 0,
-      kind: "escrow",
-      title: "Chat with Escrow",
-      subject: "SocialsFlip escrow",
-      preview: "Talk with SocialsFlip escrow. No seller is in this room.",
-      updatedAt: new Date(0).toISOString(),
-      unread: 0,
-      sellerName: "SocialsFlip Escrow",
-      buyerName: user?.email ? "" : "",
-      buyerEmail: mail || user?.email || "",
-    });
-  }
 
   return [...rest, ...escrow];
 }

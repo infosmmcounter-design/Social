@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { money } from "@/lib/constants";
 import { LocaleLink as Link } from "@/components/LocaleLink";
 import { useLang } from "@/components/LanguageProvider";
+import { StartEscrowChat } from "@/components/StartEscrowChat";
 import { VerifiedTick } from "@/components/VerifiedTick";
 
 type Deposit = {
@@ -715,7 +716,9 @@ export default function AccountPage() {
       {panel === "chats" ? (
         <div className="card hl-card" style={{ marginTop: 12 }}>
           <h3>Chat previews</h3>
-          {[...chats.filter((c) => c.kind !== "escrow").slice(0, 6), ...chats.filter((c) => c.kind === "escrow")].map((c) => (
+          <p className="sm mut">Escrow stays open for buyers and sellers.</p>
+          <StartEscrowChat />
+          {[...chats.filter((c) => c.kind !== "escrow").slice(0, 6), ...chats.filter((c) => c.kind === "escrow" && c.id > 0)].map((c) => (
             <p key={`${c.source}-${c.id}`} className="sm">
               <Link href={c.source === "deal" ? `/deal/${c.id}` : c.id ? `/chat/${c.id}` : "/chats"}>
                 <b>{c.kind === "escrow" ? "⚖ Chat with Escrow" : c.title}</b>

@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { money } from "@/lib/constants";
 import { DEAL_STATUS_LABEL, type DealStatus } from "@/lib/types";
 import { LocaleLink as Link } from "@/components/LocaleLink";
+import { StartEscrowChat } from "@/components/StartEscrowChat";
 import { useLang } from "@/components/LanguageProvider";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
 
@@ -43,6 +44,7 @@ export default function BuyerDashboard() {
         <Link className="btn" href="/dashboard/seller">
           Start selling
         </Link>
+        <StartEscrowChat />
       </div>
       <h2 style={{ marginTop: 24 }}>Your deals</h2>
       <div className="tbl">

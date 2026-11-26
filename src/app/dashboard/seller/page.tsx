@@ -13,6 +13,7 @@ import {
   type DealStatus,
 } from "@/lib/types";
 import { LocaleLink as Link } from "@/components/LocaleLink";
+import { StartEscrowChat } from "@/components/StartEscrowChat";
 import { useLang } from "@/components/LanguageProvider";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
 
@@ -198,6 +199,10 @@ export default function SellerDashboard() {
         </Link>
         .
       </p>
+      <div className="row" style={{ marginTop: 12, alignItems: "center" }}>
+        <StartEscrowChat />
+        <span className="sm mut">Escrow is always available, before and after a listing.</span>
+      </div>
       {msg ? <p className="okmsg">{msg}</p> : null}
 
       <h2>New listing</h2>
@@ -648,7 +653,7 @@ export default function SellerDashboard() {
                 </td>
                 <td>{c.subject}</td>
                 <td>
-                  <Link className="btn s" href={c.source === "deal" ? `/deal/${c.id}` : `/chat/${c.id}`}>
+                  <Link className="btn s" href={c.source === "deal" ? `/deal/${c.id}` : c.id ? `/chat/${c.id}` : "/chats?start=escrow"}>
                     Reply as {c.sellerName || user.name || "you"}
                   </Link>
                 </td>
