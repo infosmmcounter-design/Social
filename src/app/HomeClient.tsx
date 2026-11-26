@@ -235,17 +235,7 @@ export function HomeClient({
             </button>
           </div>
           <div className="row hero-cta-row" style={{ marginTop: 14 }}>
-            <button
-              className="btn"
-              type="button"
-              onClick={() => {
-                setView("listings");
-                document.getElementById("browse")?.scrollIntoView({ behavior: "smooth" });
-              }}
-            >
-              {t("home.buyPath")}
-            </button>
-            <Link className="btn o hero-sell" href="/dashboard/seller">
+            <Link className="btn hero-sell" href="/dashboard/seller">
               {t("home.sellPath")}
             </Link>
           </div>

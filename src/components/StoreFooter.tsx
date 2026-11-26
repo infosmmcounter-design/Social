@@ -26,7 +26,7 @@ export function StoreFooter() {
             <h3 className="footer-h">{t("footer.buySell")}</h3>
             <div className="footer-links footer-links-col">
               <Link href="/listings">{t("nav.listings")}</Link>
-              <Link href="/dashboard/seller">{t("home.sellPath")}</Link>
+              <Link href="/dashboard/seller">{t("nav.sell")}</Link>
               <Link href="/create-deal">{t("nav.createDeal")}</Link>
               <Link href="/blog">{t("nav.blog")}</Link>
             </div>

@@ -1,19 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { ListingCard } from "@/components/ListingCard";
 import { VerifiedTick } from "@/components/VerifiedTick";
 import { StartSellerChat } from "@/components/StartSellerChat";
+import { CatIcon } from "@/components/Icons";
 import { useLang } from "@/components/LanguageProvider";
 import { LocaleLink as Link } from "@/components/LocaleLink";
 import { PublicReview } from "@/components/PublicReview";
 import { api } from "@/lib/api";
 import { stars, trustFromRating } from "@/lib/constants";
+import { CATEGORIES } from "@/lib/types";
+import type { MsgKey } from "@/lib/i18n/messages";
 
 export default function SellerProfilePage() {
   const { id } = useParams<{ id: string }>();
   const { t, locale } = useLang();
+  const [shareMsg, setShareMsg] = useState("");
   const [data, setData] = useState<{
     seller: {
       id: number;
@@ -57,39 +61,70 @@ export default function SellerProfilePage() {
       .catch(() => setData(null));
   }, [id, locale]);
 
+  const profileUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/seller/${id}`
+      : `/seller/${id}`;
+
+  const boards = useMemo(() => {
+    if (!data) return [];
+    const set = new Set(data.listings.map((l) => l.cat));
+    return CATEGORIES.filter(([k]) => set.has(k));
+  }, [data]);
+
+  async function shareProfile() {
+    setShareMsg("");
+    const payload = {
+      title: `${data?.seller.name || "Seller"} on SocialsFlip`,
+      text: "View this seller profile on SocialsFlip (escrow marketplace).",
+      url: profileUrl,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(payload);
+        return;
+      }
+      await navigator.clipboard.writeText(profileUrl);
+      setShareMsg("Profile link copied.");
+    } catch {
+      try {
+        await navigator.clipboard.writeText(profileUrl);
+        setShareMsg("Profile link copied.");
+      } catch {
+        setShareMsg("Could not share. Copy the URL from the address bar.");
+      }
+    }
+  }
+
   if (!data) return <p className="sec mut">{t("common.loading")}</p>;
   const s = data.seller;
   const sellerReviews = data.reviews.filter(
     (r) => (r.about || "seller") === "seller"
   );
+  const trust = trustFromRating(s.rating, s.reviewCount);
 
   return (
-    <section className="sec">
+    <section className="sec seller-profile">
       <Link className="mut sm" href="/#sellers">
         ← {t("nav.sellers")}
       </Link>
-      <div
-        className="row"
-        style={{ marginTop: 12, gap: 16, alignItems: "center" }}
-      >
+
+      <div className="seller-profile-hero">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
+          className="seller-profile-av"
           src={s.avatarUrl || ""}
           alt=""
           style={{
-            width: 88,
-            height: 88,
-            borderRadius: "50%",
-            objectFit: "cover",
             border: s.verified ? "3px solid #1D9BF0" : "2px solid var(--line)",
           }}
         />
-        <div>
-          <h1 style={{ fontSize: "2rem", margin: 0 }}>
+        <div className="seller-profile-main">
+          <h1>
             {s.name}
             {s.verified ? <VerifiedTick size={22} /> : null}
           </h1>
-          <div className="row" style={{ marginTop: 6 }}>
+          <div className="row seller-pills">
             {s.official ? <span className="pill g">Official store</span> : null}
             {s.verified ? (
               <span
@@ -99,34 +134,87 @@ export default function SellerProfilePage() {
                 {t("common.verified")} <VerifiedTick size={12} />
               </span>
             ) : null}
-            <span className="pill">{s.country}</span>
+            {s.country ? <span className="pill">{s.country}</span> : null}
           </div>
           <p className="sm" style={{ margin: "8px 0 0" }}>
             {s.reviewCount ? (
               <>
                 <span className="star">{stars(s.rating)}</span>{" "}
-                {s.rating.toFixed(1)} ({s.reviewCount}) · Trust{" "}
-                {trustFromRating(s.rating, s.reviewCount).percent}%
+                {s.rating.toFixed(1)} ({s.reviewCount}) · Trust {trust.percent}%
               </>
             ) : (
               <span className="mut">New seller · Trust 100%</span>
             )}
-            {s.completedDeals ? ` · ${s.completedDeals} completed deals` : ""}
           </p>
           <p className="sm mut" style={{ margin: "4px 0 0" }}>
             Member since {new Date(s.joinedAt).toLocaleDateString()}
           </p>
-          {s.reviewCount && trustFromRating(s.rating, s.reviewCount).risky ? (
+          {s.reviewCount && trust.risky ? (
             <p className="err">
               Warning: people have not had a good experience with this seller.
             </p>
           ) : null}
         </div>
       </div>
-      {s.bio ? <p style={{ marginTop: 14 }}>{s.bio}</p> : null}
-      <div style={{ marginTop: 12 }}>
-        <StartSellerChat sellerId={s.id} sellerName={s.name} />
+
+      <div className="seller-stat-grid" aria-label="Seller stats">
+        <div className="seller-stat">
+          <strong>{data.listings.length}</strong>
+          <span>Live listings</span>
+        </div>
+        <div className="seller-stat">
+          <strong>{s.completedDeals || 0}</strong>
+          <span>Completed deals</span>
+        </div>
+        <div className="seller-stat">
+          <strong>{s.reviewCount || 0}</strong>
+          <span>Reviews</span>
+        </div>
+        <div className="seller-stat">
+          <strong>{trust.percent}%</strong>
+          <span>Trust score</span>
+        </div>
       </div>
+
+      {s.bio ? <p className="seller-bio">{s.bio}</p> : null}
+
+      {boards.length ? (
+        <div className="seller-boards">
+          <p className="sm mut" style={{ margin: "0 0 8px" }}>
+            Sells on
+          </p>
+          <div className="row" style={{ flexWrap: "wrap", gap: 8 }}>
+            {boards.map(([k]) => (
+              <Link
+                key={k}
+                className="seller-board-chip"
+                href={`/?cat=${k}`}
+              >
+                <CatIcon cat={k} size={16} />
+                {t(`cat.${k}` as MsgKey)}
+              </Link>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="seller-actions">
+        <StartSellerChat sellerId={s.id} sellerName={s.name} />
+        <button type="button" className="btn s o" onClick={shareProfile}>
+          Share profile
+        </button>
+        <button
+          type="button"
+          className="btn s o"
+          onClick={async () => {
+            await navigator.clipboard.writeText(profileUrl);
+            setShareMsg("Profile link copied.");
+          }}
+        >
+          Copy link
+        </button>
+      </div>
+      {shareMsg ? <p className="okmsg sm">{shareMsg}</p> : null}
 
       <h2 style={{ marginTop: 28 }}>{t("home.listings")}</h2>
       <div className="listing-grid">

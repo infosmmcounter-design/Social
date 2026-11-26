@@ -267,7 +267,7 @@ const en: Dict = {
   "nav.listings": "Listings",
   "nav.services": "Services",
   "nav.sellers": "Sellers",
-  "nav.createDeal": "Start a deal with a seller",
+  "nav.createDeal": "Create deal",
   "nav.sell": "Sell",
   "nav.chats": "Chats",
   "nav.orders": "Orders",
@@ -467,7 +467,7 @@ const en: Dict = {
   "listing.deleted": "Listing deleted.",
   "listing.needVerifyTitle": "Verify your profile to list",
   "listing.needVerifyBody":
-    "Upload your ID on Account and wait for the verified mark. Until then you cannot publish social accounts, freelance gigs, AI tools, or subscriptions.",
+    "Submit your ID card on Account to verify your profile. Until then you cannot publish listings.",
   "listing.needVerifyCta": "Go to Account",
   "listing.loadingMore": "Loading more listings…",
   "deal.escrowPay": "Escrow crypto payment",
@@ -481,11 +481,11 @@ const en: Dict = {
   "deal.cancel": "Cancel deal",
   "deal.holdGuide":
     "Funds stay held in SocialsFlip escrow until the seller accepts, the work is delivered, you confirm receipt, and escrow marks the deal complete. Never pay the seller directly.",
-  "createDeal.title": "Create a deal link",
+  "createDeal.title": "Create deal",
   "createDeal.sub":
-    "Copy the link and send it to your buyer. They pay SocialsFlip escrow — not you directly.",
+    "Create a secure escrow link for a buyer outside SocialsFlip. Share it anywhere — they pay into escrow, not to you directly.",
   "createDeal.copy": "Copy link",
-  "createDeal.create": "Create deal & get link",
+  "createDeal.create": "Create deal & get share link",
   "createDeal.privateOptional": "Private handle / URL (optional)",
   "offer.guideTitle": "Buyer guide — how this deal works",
   "offer.payEscrow": "Pay escrow & open deal chat",

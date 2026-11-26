@@ -21,18 +21,13 @@ export function StoreHeader() {
           <ThemeToggle />
           <LanguageSwitcher compact />
           <div className="nav-actions">
-            <Link className="nav-chip" href="/listings">
-              {t("home.buyPath")}
-            </Link>
-            <Link className="nav-chip nav-chip-sell" href="/dashboard/seller">
-              {t("home.sellPath")}
+            <Link className="nav-chip nav-chip-deal" href="/create-deal">
+              {t("nav.createDeal")}
             </Link>
             {user ? (
-              <>
-                <Link className="btn s" href={dash}>
-                  {user.role === "admin" ? t("nav.admin") : t("nav.account")}
-                </Link>
-              </>
+              <Link className="btn s" href={dash}>
+                {user.role === "admin" ? t("nav.admin") : t("nav.account")}
+              </Link>
             ) : (
               <>
                 <Link className="btn s o" href="/auth/signup">

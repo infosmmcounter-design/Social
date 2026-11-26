@@ -310,13 +310,11 @@ function AccountInner() {
           <h2 style={{ marginTop: 0 }}>Verify your profile</h2>
           {user.verified ? (
             <p className="sm">
-              Verified. Buyers see the mark next to your name.
+              Verified. Buyers see the mark next to your name. You can publish listings.
             </p>
           ) : user.idStatus === "pending" ? (
             <>
-              <p className="sm">
-                ID received. Your profile verifies when this timer ends.
-              </p>
+              <p className="sm">Verification in progress.</p>
               <p className="verify-clock" aria-live="polite">
                 {String(Math.floor(Math.ceil(verifyRemain / 1000) / 60)).padStart(2, "0")}:
                 {String(Math.ceil(verifyRemain / 1000) % 60).padStart(2, "0")}
@@ -325,10 +323,10 @@ function AccountInner() {
           ) : (
             <>
               <p className="sm mut">
-                Upload your ID card or a photo. A 20 minute timer starts, then this profile shows verified.
+                Submit your ID card to verify your profile. Listing is available only after verification.
               </p>
               <label className="btn">
-                Verify your profile
+                Submit your ID card to verify your profile
                 <input
                   type="file"
                   accept="image/*"
@@ -359,7 +357,7 @@ function AccountInner() {
                       );
                       setUser(d.user);
                       setNow(Date.now());
-                      setMsg(d.message || "ID received. 20 minutes started.");
+                      setMsg(d.message || "ID submitted. Verification in progress.");
                     } catch (ex) {
                       setErr(ex instanceof Error ? ex.message : "Upload failed");
                     }

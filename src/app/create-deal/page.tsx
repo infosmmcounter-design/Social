@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { CATEGORIES, isFreelanceCategory } from "@/lib/types";
 import { useAuth } from "@/components/AuthProvider";
 import { useLang } from "@/components/LanguageProvider";
+import { LocaleLink as Link } from "@/components/LocaleLink";
 
 export default function CreateDealPage() {
   const { user } = useAuth();
@@ -69,19 +70,20 @@ export default function CreateDealPage() {
   }
 
   return (
-    <section className="sec" style={{ maxWidth: 640 }}>
+    <section className="sec create-deal-page">
       <div className="deal-hero">
-        <p className="crypto-kicker">Escrow link</p>
-        <h1 style={{ fontSize: "2rem" }}>{t("createDeal.title")}</h1>
+        <p className="crypto-kicker">Off-platform buyer · Escrow protected</p>
+        <h1>{t("createDeal.title")}</h1>
         <p className="mut">{t("createDeal.sub")}</p>
-        <p className="sm">
-          The buyer and the deal creator can both be outside SocialsFlip. Enter
-          the creator’s name and email. Admin sees every link under Created deals.
-          The buyer opens the link and pays escrow without an account.
-        </p>
+        <ul className="deal-steps-mini">
+          <li>Fill in the offer details</li>
+          <li>Get a unique escrow payment link</li>
+          <li>Send it to your buyer (WhatsApp, email, Telegram…)</li>
+          <li>Buyer pays USDT into escrow — funds stay held until delivery</li>
+        </ul>
       </div>
 
-      <div className="card hl-card">
+      <div className="card hl-card create-deal-form">
         {!user ? (
           <>
             <label>Your name (deal creator)</label>
@@ -99,6 +101,14 @@ export default function CreateDealPage() {
         ) : (
           <p className="sm mut">
             Creating as <b>{user.name}</b> ({user.email})
+            {!user.verified && user.role !== "admin" ? (
+              <>
+                {" "}
+                ·{" "}
+                <Link href="/account">Verify your profile</Link> before listing
+                on the marketplace. Create deal links still work for off-site buyers.
+              </>
+            ) : null}
           </p>
         )}
 
@@ -189,16 +199,14 @@ export default function CreateDealPage() {
           </p>
         )}
 
-        <div className="hl-card deal-hold">
-          {t("deal.holdGuide")}
-        </div>
+        <div className="hl-card deal-hold">{t("deal.holdGuide")}</div>
 
         {err ? <p className="err">{err}</p> : null}
         {msg ? <p className="okmsg">{msg}</p> : null}
 
         <button
           className="btn"
-          style={{ marginTop: 12 }}
+          style={{ marginTop: 12, width: "100%" }}
           disabled={busy}
           onClick={create}
         >
@@ -209,17 +217,33 @@ export default function CreateDealPage() {
           <div className="card f hl-card" style={{ marginTop: 14 }}>
             <label>Share this link with your buyer</label>
             <input readOnly value={link} onFocus={(e) => e.target.select()} />
-            <button
-              className="btn s"
-              style={{ marginTop: 8 }}
-              type="button"
-              onClick={async () => {
-                await navigator.clipboard.writeText(link);
-                setMsg("Link copied.");
-              }}
-            >
-              {t("createDeal.copy")}
-            </button>
+            <div className="row" style={{ marginTop: 8, flexWrap: "wrap", gap: 8 }}>
+              <button
+                className="btn s"
+                type="button"
+                onClick={async () => {
+                  await navigator.clipboard.writeText(link);
+                  setMsg("Link copied.");
+                }}
+              >
+                {t("createDeal.copy")}
+              </button>
+              {"share" in navigator ? (
+                <button
+                  className="btn s o"
+                  type="button"
+                  onClick={() =>
+                    navigator.share({
+                      title: form.title || "SocialsFlip deal",
+                      text: "Pay safely with SocialsFlip escrow",
+                      url: link,
+                    }).catch(() => undefined)
+                  }
+                >
+                  Share…
+                </button>
+              ) : null}
+            </div>
             {tempPassword ? (
               <div className="note" style={{ marginTop: 12 }}>
                 <p className="sm" style={{ margin: 0 }}>
