@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { money } from "@/lib/constants";
 import { LocaleLink as Link } from "@/components/LocaleLink";
 import { useLang } from "@/components/LanguageProvider";
+import { VerifiedTick } from "@/components/VerifiedTick";
 
 type Deposit = {
   id: number;
@@ -241,17 +242,28 @@ export default function AccountPage() {
             </p>
           ) : null}
           <p className="sm" style={{ margin: "2px 0 0", opacity: 0.75 }}>
-            {user.role === "seller" ? t("account.seller") : t("account.buyer")}
+            {user.role === "admin"
+              ? "Admin"
+              : user.role === "seller"
+                ? t("account.seller")
+                : t("account.buyer")}
+            {user.verified ? " · Verified" : ""}
             {user.country ? ` · ${user.country}` : ""}
             {user.google ? " · Google" : ""}
             {user.emailVerified ? " · Email verified" : ""}
+            {user.verified ? <VerifiedTick size={16} /> : null}
           </p>
         </div>
         <div className="account-hero-actions">
           <button type="button" className="btn s" onClick={() => setEditing((v) => !v)}>
             {t("account.edit")}
           </button>
-          {user.role === "seller" ? (
+          {user.role !== "admin" ? (
+            <Link className="btn s o" href="/dashboard/seller">
+              Sell
+            </Link>
+          ) : null}
+          {user.role === "seller" || user.role === "admin" ? (
             <Link className="btn s o" href={`/seller/${user.id}`}>
               {t("account.view")}
             </Link>
@@ -259,11 +271,70 @@ export default function AccountPage() {
         </div>
       </div>
 
-      {user.role !== "seller" ? (
-        <Link className="seller-apply" href="/apply">
-          <span>Apply to become a seller</span>
-          <small>Open your store for YouTube channels, pages, and freelance services. Buyers pay through escrow.</small>
-        </Link>
+      {user.role !== "admin" ? (
+        <div className="card" style={{ marginTop: 14 }}>
+          <h2 style={{ marginTop: 0 }}>Profile verification</h2>
+          {user.verified ? (
+            <p className="sm">
+              Your profile is verified. Buyers see the verified mark on your name.
+            </p>
+          ) : user.idStatus === "pending" ? (
+            <p className="sm">
+              ID received. The check finishes on its own
+              {user.idVerifyAt
+                ? ` at ${new Date(user.idVerifyAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                : " in 15–20 minutes"}
+              . Then this profile shows verified.
+            </p>
+          ) : (
+            <>
+              <p className="sm mut">
+                Submit a photo of your ID card. The check runs by itself and your profile shows verified 15–20 minutes later. You can list and sell before that.
+              </p>
+              <label className="btn" style={{ display: "inline-block" }}>
+                Submit ID card
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (!file) return;
+                    if (!file.type.startsWith("image/")) {
+                      setErr("Choose a photo of your ID card.");
+                      return;
+                    }
+                    if (file.size > 2_000_000) {
+                      setErr("Use a photo under 2MB.");
+                      return;
+                    }
+                    const image = await new Promise<string>((resolve, reject) => {
+                      const reader = new FileReader();
+                      reader.onload = () => resolve(String(reader.result || ""));
+                      reader.onerror = () => reject(new Error("Could not read the photo."));
+                      reader.readAsDataURL(file);
+                    });
+                    setErr("");
+                    try {
+                      const d = await api<{ user: typeof user; message?: string }>(
+                        "/api/account/id",
+                        { method: "POST", json: { image } }
+                      );
+                      setUser(d.user);
+                      setMsg(d.message || "ID received.");
+                    } catch (ex) {
+                      setErr(ex instanceof Error ? ex.message : "Upload failed");
+                    }
+                  }}
+                />
+              </label>
+            </>
+          )}
+          <p className="sm" style={{ marginBottom: 0 }}>
+            <Link href="/dashboard/seller">Post a listing</Link>
+          </p>
+        </div>
       ) : null}
 
       {editing ? (

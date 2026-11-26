@@ -174,8 +174,8 @@ export default function HomePage() {
             </button>
           </div>
           <div className="row" style={{ marginTop: 14 }}>
-            <Link className="btn hero-sell" href="/apply">
-              Apply to sell
+            <Link className="btn hero-sell" href="/dashboard/seller">
+              Start selling
             </Link>
           </div>
           <EscrowBand />

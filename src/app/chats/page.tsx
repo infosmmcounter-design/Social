@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { LocaleLink as Link } from "@/components/LocaleLink";
 import { StartEscrowChat } from "@/components/StartEscrowChat";
 import { useLang } from "@/components/LanguageProvider";
 import { readGuestEmail, saveGuestEmail } from "@/lib/guest-email";
+import { withLocalePrefix } from "@/lib/i18n/locale-path";
 
 type Row = {
   source: "inquiry" | "deal";
@@ -22,9 +24,75 @@ type Row = {
   buyerEmail: string;
 };
 
-export default function ChatsPage() {
+function EscrowStartForm() {
+  const { user } = useAuth();
+  const { locale } = useLang();
+  const router = useRouter();
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || readGuestEmail());
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function start(e: React.FormEvent) {
+    e.preventDefault();
+    setErr("");
+    setBusy(true);
+    try {
+      const mail = email.trim().toLowerCase();
+      saveGuestEmail(mail);
+      const res = await api<{ inquiry: { id: number } }>("/api/inquiries", {
+        method: "POST",
+        json: {
+          kind: "escrow",
+          name: name.trim() || "Guest",
+          email: mail,
+          message: "",
+          subject: "Chat with Escrow",
+        },
+      });
+      router.push(
+        withLocalePrefix(
+          `/chat/${res.inquiry.id}?email=${encodeURIComponent(mail)}`,
+          locale
+        )
+      );
+    } catch (ex) {
+      setErr(ex instanceof Error ? ex.message : "Could not open the chat");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="card" id="escrow-start" onSubmit={start} style={{ marginTop: 14 }}>
+      <h2 style={{ marginTop: 0 }}>Open a chat with Escrow</h2>
+      <p className="sm mut">
+        This opens its own page. You and SocialsFlip escrow can write there. No seller is in that room.
+      </p>
+      <label>Your name</label>
+      <input value={name} onChange={(e) => setName(e.target.value)} required />
+      <label>Your email</label>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="you@example.com"
+        required
+      />
+      {err ? <p className="err">{err}</p> : null}
+      <button className="btn buy-go" style={{ marginTop: 10, width: "auto" }} type="submit" disabled={busy}>
+        {busy ? "Opening…" : "Open escrow chat"}
+      </button>
+    </form>
+  );
+}
+
+function ChatsInner() {
   const { user, loading } = useAuth();
-  const { t } = useLang();
+  const { t, locale } = useLang();
+  const router = useRouter();
+  const search = useSearchParams();
+  const startEscrow = search.get("start") === "escrow";
+  const opened = useRef(false);
   const [rows, setRows] = useState<Row[]>([]);
   const [email, setEmail] = useState("");
   const [err, setErr] = useState("");
@@ -64,17 +132,40 @@ export default function ChatsPage() {
     setReady(true);
   }, [user, loading]);
 
+  useEffect(() => {
+    if (!startEscrow || loading || !user?.email || opened.current) return;
+    opened.current = true;
+    saveGuestEmail(user.email);
+    api<{ inquiry: { id: number } }>("/api/inquiries", {
+      method: "POST",
+      json: {
+        kind: "escrow",
+        name: user.name || "Guest",
+        email: user.email,
+        message: "",
+        subject: "Chat with Escrow",
+      },
+    })
+      .then((res) => {
+        router.replace(withLocalePrefix(`/chat/${res.inquiry.id}`, locale));
+      })
+      .catch(() => {
+        opened.current = false;
+      });
+  }, [startEscrow, loading, user, locale, router]);
+
   const sellerRows = rows.filter((r) => r.kind !== "escrow");
   const escrowRows = rows.filter((r) => r.kind === "escrow");
 
   function hrefFor(r: Row) {
-    if (r.source === "deal") return `/deal/${r.id}?email=${encodeURIComponent(email || r.buyerEmail)}`;
-    return `/chat/${r.id}?email=${encodeURIComponent(email || r.buyerEmail)}`;
+    const mail = encodeURIComponent(email || r.buyerEmail || "");
+    if (r.source === "deal") return `/deal/${r.id}?email=${mail}`;
+    return `/chat/${r.id}?email=${mail}`;
   }
 
   function list(items: Row[]) {
     return items.map((r) => (
-      <article key={`${r.source}-${r.id}`} className="chat-page-row">
+      <Link key={`${r.source}-${r.id}`} className="chat-page-row" href={hrefFor(r)}>
         <div className="grow">
           <b>
             {r.kind === "deal" ? "Deal" : "Seller"} · {r.title}
@@ -83,10 +174,8 @@ export default function ChatsPage() {
           <small>{r.subject}</small>
           <span>{r.preview}</span>
         </div>
-        <Link className="btn s" href={hrefFor(r)}>
-          Open
-        </Link>
-      </article>
+        <span className="chat-open">Open</span>
+      </Link>
     ));
   }
 
@@ -94,10 +183,12 @@ export default function ChatsPage() {
     <section className="sec chat-sections" style={{ maxWidth: 720 }}>
       <h1 style={{ fontSize: "2rem" }}>{t("nav.chats")}</h1>
       <p className="mut">
-        Seller and deal chats are listed first. Escrow support is its own section below.
+        Each conversation opens on its own page, so you can read and reply without a small box in the way.
       </p>
 
-      {!user ? (
+      {startEscrow && !user ? <EscrowStartForm /> : null}
+
+      {!user && !startEscrow ? (
         <form
           className="card"
           style={{ marginTop: 14 }}
@@ -135,7 +226,7 @@ export default function ChatsPage() {
       <h2>Escrow support</h2>
       <div className="chat-page-list">
         {escrowRows.map((r) => (
-          <article key={`${r.source}-${r.id}`} className="chat-page-row escrow">
+          <Link key={`${r.source}-${r.id}`} className="chat-page-row escrow" href={hrefFor(r)}>
             <div className="grow">
               <b>
                 {t("chat.withEscrow")}
@@ -143,12 +234,10 @@ export default function ChatsPage() {
               </b>
               <span>{r.preview}</span>
             </div>
-            <Link className="btn s" href={hrefFor(r)}>
-              Open
-            </Link>
-          </article>
+            <span className="chat-open">Open</span>
+          </Link>
         ))}
-        {!escrowRows.length ? (
+        {!escrowRows.length && !startEscrow ? (
           <article className="chat-page-row escrow">
             <div className="grow">
               <b>{t("chat.withEscrow")}</b>
@@ -159,5 +248,13 @@ export default function ChatsPage() {
         ) : null}
       </div>
     </section>
+  );
+}
+
+export default function ChatsPage() {
+  return (
+    <Suspense fallback={<p className="sec mut">Loading chats…</p>}>
+      <ChatsInner />
+    </Suspense>
   );
 }

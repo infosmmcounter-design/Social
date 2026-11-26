@@ -62,7 +62,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const auth = await requireUser(["seller", "admin"]);
+  const auth = await requireUser(["buyer", "seller", "admin"]);
   if (auth.error || !auth.user)
     return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -80,6 +80,8 @@ export async function POST(req: Request) {
   const isAdmin = auth.user.role === "admin";
   let listingId = 0;
   await updateStore((data) => {
+    const me = data.users.find((u) => u.id === auth.user!.id);
+    if (me && me.role === "buyer") me.role = "seller";
     listingId = nextId(data);
     const cat = (body.cat || "other") as Category;
     const img =
@@ -125,8 +127,8 @@ export async function POST(req: Request) {
       listingType,
       deliveryDays,
       revisions,
-      status: isAdmin ? "approved" : "pending",
-      listed: isAdmin ? !!body.listed : false,
+      status: "approved",
+      listed: isAdmin ? !!body.listed : isFreelance || stock > 0,
       createdAt: new Date().toISOString(),
     });
   });
@@ -135,9 +137,7 @@ export async function POST(req: Request) {
   const listing = store.listings.find((l) => l.id === listingId)!;
   return NextResponse.json({
     listing: publicListing(listing, true),
-    message: isAdmin
-      ? "Listing created."
-      : "Listing submitted for admin approval.",
+    message: isAdmin ? "Listing created." : "Your listing is live.",
   });
 }
 

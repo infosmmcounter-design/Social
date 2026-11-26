@@ -132,7 +132,7 @@ export default function SignupPage() {
             className="btn"
             type="button"
             disabled={!saved}
-            onClick={() => router.push(withLocalePrefix("/dashboard/buyer", locale))}
+            onClick={() => router.push(withLocalePrefix("/dashboard/seller", locale))}
           >
             {t("auth.continue")}
           </button>
@@ -145,8 +145,8 @@ export default function SignupPage() {
     <section className="sec" style={{ maxWidth: 420 }}>
       <h1 style={{ fontSize: "2rem" }}>{t("nav.signup")}</h1>
       <p className="mut">
-        Create a buyer account. To sell, submit an application — approval is up
-        to admin.
+        Create your account with email or Google. You can buy, list, and sell
+        right away. Escrow still holds every payment.
       </p>
       <form className="card" onSubmit={submit}>
         <label>Full name</label>

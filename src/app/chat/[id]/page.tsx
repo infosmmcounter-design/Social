@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
@@ -42,6 +42,8 @@ function ChatInner() {
   const [text, setText] = useState("");
   const [asRole, setAsRole] = useState<"admin" | "seller">("admin");
   const [err, setErr] = useState("");
+  const endRef = useRef<HTMLDivElement>(null);
+  const seenFor = useRef(0);
 
   const load = useCallback(async () => {
     const q = emailQ ? `&email=${encodeURIComponent(emailQ)}` : "";
@@ -58,6 +60,20 @@ function ChatInner() {
   useEffect(() => {
     load().catch((e) => setErr(e instanceof Error ? e.message : "Failed"));
   }, [load]);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "end" });
+  }, [inquiry?.msgs.length]);
+
+  useEffect(() => {
+    if (!inquiry || seenFor.current === inquiry.id) return;
+    seenFor.current = inquiry.id;
+    const mail = emailQ || inquiry.buyerEmail;
+    api("/api/chats/seen", {
+      method: "POST",
+      json: { source: "inquiry", id: inquiry.id, email: mail },
+    }).catch(() => undefined);
+  }, [inquiry, emailQ]);
 
   useEffect(() => {
     const t = setInterval(() => load().catch(() => undefined), 4000);
@@ -108,7 +124,7 @@ function ChatInner() {
   }
 
   return (
-    <section className="sec" style={{ maxWidth: 720 }}>
+    <section className="sec chat-screen">
       <Link className="mut sm" href="/chats">
         ← All chats
       </Link>
@@ -216,7 +232,7 @@ function ChatInner() {
 
       {err ? <p className="err">{err}</p> : null}
 
-      <div className="chat" role="log" style={{ marginTop: 12 }}>
+      <div className="chat chat-thread" role="log">
         {inquiry.msgs.map((m) => (
           <div key={m.id} className={`m ${m.from}`}>
             <small>
@@ -225,10 +241,17 @@ function ChatInner() {
             {m.text}
           </div>
         ))}
+        <div ref={endRef} />
       </div>
 
       {canSend ? (
-        <div className="row" style={{ marginTop: 8, flexWrap: "nowrap" }}>
+        <form
+          className="chat-compose"
+          onSubmit={(e) => {
+            e.preventDefault();
+            send();
+          }}
+        >
           {isAdmin && !isEscrow ? (
             <select
               value={asRole}
@@ -257,14 +280,11 @@ function ChatInner() {
                     : "Message…"
             }
             aria-label="Message"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") send();
-            }}
           />
-          <button className="btn" onClick={send}>
+          <button className="btn buy-go" type="submit">
             Send
           </button>
-        </div>
+        </form>
       ) : (
         <p className="mut sm" style={{ marginTop: 10 }}>
           Open this chat with the buyer email used to start it, or log in.

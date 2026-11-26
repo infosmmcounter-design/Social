@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { money } from "@/lib/constants";
@@ -77,6 +77,7 @@ function DealInner() {
   const [showPay, setShowPay] = useState(false);
   const [priceDraft, setPriceDraft] = useState("");
   const [priceBusy, setPriceBusy] = useState(false);
+  const seenFor = useRef(0);
 
   const load = useCallback(async () => {
     const q = emailQ ? `&email=${encodeURIComponent(emailQ)}` : "";
@@ -102,6 +103,15 @@ function DealInner() {
   useEffect(() => {
     load().catch((e) => setErr(e instanceof Error ? e.message : "Failed"));
   }, [load]);
+
+  useEffect(() => {
+    if (!order || seenFor.current === order.id) return;
+    seenFor.current = order.id;
+    api("/api/chats/seen", {
+      method: "POST",
+      json: { source: "deal", id: order.id, email: emailQ || order.buyerEmail },
+    }).catch(() => undefined);
+  }, [order, emailQ]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -521,7 +531,7 @@ function DealInner() {
       ) : null}
 
       <h2>{t("deal.chat")}</h2>
-      <div className="chat" role="log">
+      <div className="chat chat-thread" role="log">
         {order.msgs.map((m) => (
           <div key={m.id} className={`m ${m.from}`}>
             <small>

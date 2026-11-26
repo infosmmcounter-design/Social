@@ -24,6 +24,8 @@ export type AuthUser = {
   verified: boolean;
   emailVerified?: boolean;
   google?: boolean;
+  idStatus?: "none" | "pending" | "verified";
+  idVerifyAt?: string;
   rating: number;
   reviewCount: number;
   dummy: boolean;

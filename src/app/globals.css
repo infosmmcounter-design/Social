@@ -1367,6 +1367,50 @@ th {
   overflow: auto;
   background: var(--bg);
 }
+.chat-screen {
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 150px);
+}
+.chat-thread {
+  flex: 1;
+  max-height: none;
+  min-height: min(62vh, 680px);
+  margin-top: 12px;
+}
+.chat-compose {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  position: sticky;
+  bottom: 78px;
+  z-index: 4;
+  margin-top: 8px;
+  padding: 10px 0 4px;
+  background: var(--bg);
+}
+.chat-compose input,
+.chat-compose select {
+  flex: 1;
+  min-width: 0;
+}
+.chat-compose .buy-go {
+  width: auto;
+  flex-shrink: 0;
+  padding: 12px 18px;
+}
+.chat-page-row {
+  text-decoration: none;
+}
+.chat-open {
+  font-weight: 800;
+  color: #0d7a3c;
+  flex-shrink: 0;
+}
+a.chat-fab {
+  text-decoration: none;
+}
 .m {
   max-width: 85%;
   margin: 8px 0;

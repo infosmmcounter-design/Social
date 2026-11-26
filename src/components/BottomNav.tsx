@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import { useLang } from "./LanguageProvider";
 import { LocaleLink as Link } from "./LocaleLink";
-import { OPEN_CHAT_EVENT } from "./ChatDock";
 import { ChatCountBadge, useUnreadChats } from "./useUnreadChats";
 import { stripLocalePrefix } from "@/lib/i18n/locale-path";
 import type { MsgKey } from "@/lib/i18n/messages";
@@ -24,7 +23,7 @@ export function BottomNav() {
 
   if (path.startsWith("/admin") || rawPath.includes("/admin")) return null;
 
-  const chatOn = path.startsWith("/chat") || path.startsWith("/chats") || path.startsWith("/help");
+  const chatOn = path.startsWith("/chat");
 
   function link(n: { href: string; labelKey: MsgKey; d: string }, sell = false) {
     const on =
@@ -45,11 +44,7 @@ export function BottomNav() {
     <>
       <nav className="bn" aria-label="Main">
         {LEFT.map((n) => link(n))}
-        <button
-          type="button"
-          className={`bn-item ${chatOn ? "on" : ""}`}
-          onClick={() => window.dispatchEvent(new Event(OPEN_CHAT_EVENT))}
-        >
+        <Link href="/chats" className={chatOn ? "on" : ""}>
           <span className="bn-ico">
             <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden>
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -57,10 +52,10 @@ export function BottomNav() {
             <ChatCountBadge count={unread} />
           </span>
           {t("nav.chats")}
-        </button>
+        </Link>
         {link(
           {
-            href: "/apply",
+            href: "/dashboard/seller",
             labelKey: "nav.sell",
             d: '<path d="M12 5v14M5 12h14"/>',
           },
