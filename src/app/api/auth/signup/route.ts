@@ -54,7 +54,7 @@ export async function POST(req: Request) {
         backupCodeHash,
         passwordHash,
         name,
-        role: "buyer",
+        role: "seller",
         country: String(body.country || ""),
         bio: "",
         phone: String(body.phone || ""),

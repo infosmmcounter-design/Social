@@ -17,7 +17,7 @@ import { useLang } from "@/components/LanguageProvider";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
 
 export default function SellerDashboard() {
-  const { user, loading, refresh: refreshAuth } = useAuth();
+  const { user, loading, refresh: refreshAuth, setUser } = useAuth();
   const { locale } = useLang();
   const router = useRouter();
   const [listings, setListings] = useState<
@@ -99,10 +99,19 @@ export default function SellerDashboard() {
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
-    if (!loading && (!user || (user.role !== "seller" && user.role !== "admin"))) {
+    if (loading) return;
+    if (!user) {
       router.push(withLocalePrefix("/auth/login", locale));
+      return;
     }
-  }, [user, loading, router, locale]);
+    if (user.role === "buyer") {
+      api<{ user: NonNullable<typeof user> }>("/api/account/become-seller", {
+        method: "POST",
+      })
+        .then((d) => setUser(d.user))
+        .catch(() => undefined);
+    }
+  }, [user, loading, router, locale, setUser]);
 
   async function refresh() {
     const [l, o, of, r, me, ch] = await Promise.all([
@@ -136,7 +145,7 @@ export default function SellerDashboard() {
   }
 
   useEffect(() => {
-    if (user) refresh().catch(() => {});
+    if (user && user.role !== "buyer") refresh().catch(() => {});
   }, [user]);
 
   function readImageFile(file: File): Promise<string> {
@@ -176,11 +185,8 @@ export default function SellerDashboard() {
           revisions: Number(form.revisions) || 1,
         },
       });
-      setMsg(
-        freelance
-          ? "Freelance gig submitted for admin approval."
-          : "Listing submitted for admin approval."
-      );
+      setMsg(freelance ? "Your gig is live." : "Your listing is live.");
+      refreshAuth().catch(() => undefined);
       setForm({
         title: "",
         cat: "youtube",
@@ -287,6 +293,9 @@ export default function SellerDashboard() {
       </form>
 
       <h2 style={{ marginTop: 24 }}>Post a listing</h2>
+      <p className="sm mut">
+        This goes live immediately. Buyers pay into escrow. To show a verified mark, submit your ID card on Account. It turns verified on its own after 15–20 minutes.
+      </p>
       <form className="card" onSubmit={createListing}>
         <label>Category board</label>
         <select
@@ -520,7 +529,7 @@ export default function SellerDashboard() {
           onChange={(e) => setForm({ ...form, desc: e.target.value })}
         />
         <button className="btn" type="submit">
-          Submit for approval
+          Publish listing
         </button>
       </form>
 

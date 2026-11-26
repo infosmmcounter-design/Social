@@ -413,8 +413,31 @@ async function createSeed(): Promise<StoreData> {
   };
 }
 
+/** Flip profiles to verified once their ID wait has passed. */
+export function settleIdVerification(data: StoreData): boolean {
+  const now = Date.now();
+  let changed = false;
+  for (const user of data.users) {
+    if (user.verified || !user.idVerifyAt) continue;
+    const at = Date.parse(user.idVerifyAt);
+    if (Number.isFinite(at) && at <= now) {
+      user.verified = true;
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 export async function readStore(): Promise<StoreData> {
-  return normalizeStore(await ensureStore());
+  const data = normalizeStore(await ensureStore());
+  if (!settleIdVerification(data)) return data;
+  const run = writeQueue.then(async () => {
+    const fresh = normalizeStore(await ensureStore());
+    if (settleIdVerification(fresh)) await saveRawStore(fresh);
+    return fresh;
+  });
+  writeQueue = run.catch(() => undefined);
+  return run;
 }
 
 export async function updateStore(
@@ -441,6 +464,7 @@ export function publicUser(
   includePayMethods = false,
   opts?: { revealDummy?: boolean; includeWallet?: boolean }
 ) {
+  const self = !!opts?.includeWallet;
   return {
     id: u.id,
     email: u.email,
@@ -463,6 +487,14 @@ export function publicUser(
     walletBalance: opts?.includeWallet ? Number(u.walletBalance || 0) : undefined,
     emailVerified: !!u.emailVerified,
     google: !!u.googleSub,
+    idStatus: self
+      ? u.verified
+        ? "verified"
+        : u.idSubmittedAt
+          ? "pending"
+          : "none"
+      : undefined,
+    idVerifyAt: self ? u.idVerifyAt || "" : undefined,
     paymentMethods: includePayMethods
       ? (u.paymentMethods || []).filter((m) => m.enabled)
       : undefined,

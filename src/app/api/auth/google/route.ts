@@ -89,7 +89,7 @@ export async function POST(req: Request) {
         username,
         passwordHash,
         name,
-        role: "buyer",
+        role: "seller",
         country: "",
         bio: "",
         phone: "",

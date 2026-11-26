@@ -40,8 +40,8 @@ export default function BuyerDashboard() {
         <Link className="btn" href="/listings">
           Browse listings
         </Link>
-        <Link className="btn o" href="/apply">
-          Apply to sell
+        <Link className="btn" href="/dashboard/seller">
+          Start selling
         </Link>
       </div>
       <h2 style={{ marginTop: 24 }}>Your deals</h2>

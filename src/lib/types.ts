@@ -131,6 +131,12 @@ export interface User {
   emailVerified?: boolean;
   /** bcrypt hash of the one-time email code. Cleared after a successful check. */
   verifyCodeHash?: string;
+  /** Private ID photo. Never sent to other users. */
+  idDocument?: string;
+  /** When the ID photo was stored. */
+  idSubmittedAt?: string;
+  /** When the profile should flip to verified. Set 15–20 minutes after submit. */
+  idVerifyAt?: string;
 }
 
 export type CryptoPayStatus =
