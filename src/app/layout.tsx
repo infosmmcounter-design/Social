@@ -9,6 +9,7 @@ import { StoreFooter } from "@/components/StoreFooter";
 import { BottomNav } from "@/components/BottomNav";
 import { ChatDock } from "@/components/ChatDock";
 import { hreflangAlternates, siteOrigin } from "@/lib/i18n/seo";
+import { keywordsAllLocales } from "@/lib/i18n/keywords";
 import "./globals.css";
 
 const jakarta = localFont({
@@ -40,6 +41,7 @@ export const metadata: Metadata = {
     "Buy monetized YouTube channel",
     "Hire freelancer",
     "SocialsFlip",
+    ...keywordsAllLocales(),
   ],
   alternates: {
     canonical: "/",

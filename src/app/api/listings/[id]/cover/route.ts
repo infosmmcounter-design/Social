@@ -56,6 +56,7 @@ export async function GET(
         "Content-Type": parsed.mime,
         "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
         "Content-Length": String(bytes.byteLength),
+        "X-Robots-Tag": "index, follow, max-image-preview:large",
       },
     });
   }
