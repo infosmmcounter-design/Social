@@ -63,6 +63,7 @@ export async function POST(req: Request) {
   const picture = String(info.picture || "");
   const passwordHash = await hashPassword(`google:${info.sub}`);
   let userId = 0;
+  let isNew = false;
 
   try {
     await updateStore((data) => {
@@ -73,6 +74,13 @@ export async function POST(req: Request) {
         existing.googleSub = info.sub;
         existing.emailVerified = true;
         if (!existing.email) existing.email = email;
+        if (!existing.name?.trim()) existing.name = name;
+        if (!existing.username) {
+          const taken = new Set(data.users.map((u) => (u.username || "").toLowerCase()));
+          let username = suggestUsername(name || email);
+          while (taken.has(username)) username = suggestUsername(name || email);
+          existing.username = username;
+        }
         if (picture.startsWith("https://") && !existing.avatarUrl.startsWith("data:")) {
           existing.avatarUrl = picture;
         }
@@ -80,9 +88,10 @@ export async function POST(req: Request) {
         return;
       }
       const taken = new Set(data.users.map((u) => (u.username || "").toLowerCase()));
-      let username = suggestUsername(name);
-      while (taken.has(username)) username = suggestUsername(name);
+      let username = suggestUsername(name || email);
+      while (taken.has(username)) username = suggestUsername(name || email);
       userId = nextId(data);
+      isNew = true;
       data.users.push({
         id: userId,
         email,
@@ -120,5 +129,6 @@ export async function POST(req: Request) {
   await createSession(user.id, user.role);
   return NextResponse.json({
     user: publicUser(user, false, { includeWallet: true }),
+    isNew,
   });
 }

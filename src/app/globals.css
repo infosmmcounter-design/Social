@@ -434,16 +434,106 @@ html[dir="rtl"] .chat-fab {
 .lc-stock {
   margin: 0 0 4px;
 }
+.auth-page .auth-card {
+  padding: 16px;
+}
+.auth-google-slot {
+  width: 100%;
+}
 .btn.google-btn {
   width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 48px;
   background: #fff;
-  color: #1a1a1a;
-  border: 1px solid #c9cdd4;
-  font-weight: 800;
+  color: #1f1f1f;
+  border: 1px solid #dadce0;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.98rem;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.12);
 }
 .btn.google-btn:hover {
-  background: #f4f6f8;
+  background: #f8f9fa;
   color: #111;
+  border-color: #c6c9ce;
+}
+.btn.google-btn:disabled {
+  opacity: 0.72;
+}
+.google-btn-ic {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+}
+.auth-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 0;
+  color: var(--mut);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: lowercase;
+}
+.auth-or::before,
+.auth-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, var(--line) 80%, transparent);
+}
+.auth-or span {
+  white-space: nowrap;
+}
+.email-providers {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 14px;
+}
+.email-provider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 64px;
+  padding: 8px 4px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--line) 90%, transparent);
+  background: color-mix(in srgb, var(--s) 92%, #fff);
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.email-provider:hover {
+  border-color: #e2b93d;
+  background: color-mix(in srgb, #fff8e4 55%, var(--s));
+}
+.email-provider-ic {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+.email-provider-ic.any {
+  font-weight: 900;
+  font-size: 0.95rem;
+  color: #2f6fed;
+}
+@media (max-width: 420px) {
+  .email-providers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .verify-card .btn {
   width: auto;

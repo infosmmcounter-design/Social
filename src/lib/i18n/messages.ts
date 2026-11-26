@@ -321,7 +321,7 @@ const en: Dict = {
   "account.days": "Days",
   "auth.username": "Username",
   "auth.generateUser": "Generate username",
-  "auth.emailOptional": "Email (optional, for your own record)",
+  "auth.emailOptional": "Email (Gmail, Yahoo, Outlook, or any inbox)",
   "auth.backupTitle": "Save your backup code",
   "auth.backupHint":
     "This is the only time we show this code. Keep it somewhere safe. If you lose the password, this code opens the account.",

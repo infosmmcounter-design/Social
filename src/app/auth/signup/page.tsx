@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth, type AuthUser } from "@/components/AuthProvider";
@@ -8,6 +8,7 @@ import { LocaleLink as Link } from "@/components/LocaleLink";
 import { useLang } from "@/components/LanguageProvider";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
 import { GoogleSignIn } from "@/components/GoogleSignIn";
+import { EmailProviders } from "@/components/EmailProviders";
 
 function suggestUsername(name: string) {
   const base =
@@ -29,9 +30,18 @@ export default function SignupPage() {
   const [backupCode, setBackupCode] = useState("");
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [googleOn, setGoogleOn] = useState(true);
   const { setUser } = useAuth();
   const { locale, t } = useLang();
   const router = useRouter();
+  const emailRef = useRef<HTMLInputElement>(null);
+  const usernameTouched = useRef(false);
+
+  useEffect(() => {
+    if (usernameTouched.current) return;
+    if (!name.trim()) return;
+    setUsername(suggestUsername(name));
+  }, [name]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -84,7 +94,7 @@ export default function SignupPage() {
             className="btn"
             type="button"
             disabled={!saved}
-            onClick={() => router.push(withLocalePrefix("/dashboard/seller", locale))}
+            onClick={() => router.push(withLocalePrefix("/account?welcome=1", locale))}
           >
             {t("auth.continue")}
           </button>
@@ -94,23 +104,49 @@ export default function SignupPage() {
   }
 
   return (
-    <section className="sec" style={{ maxWidth: 420 }}>
+    <section className="sec auth-page" style={{ maxWidth: 440 }}>
       <h1 style={{ fontSize: "2rem" }}>{t("nav.signup")}</h1>
       <p className="mut">
-        Continue with Google, or create an account with email. You can list and
-        sell right away. Escrow still holds every payment.
+        Use Google in one tap, or sign up with Gmail, Yahoo, Outlook, or any email.
+        Your name and username are filled for you — you can edit them later on your profile.
       </p>
-      <div className="card" style={{ marginBottom: 12 }}>
-        <GoogleSignIn />
-      </div>
-      <form className="card" onSubmit={submit}>
+
+      {googleOn ? (
+        <div className="card auth-card" style={{ marginBottom: 12 }}>
+          <GoogleSignIn
+            nextPath="/account?welcome=1"
+            onUnavailable={() => setGoogleOn(false)}
+          />
+          <div className="auth-or">
+            <span>or continue with email</span>
+          </div>
+        </div>
+      ) : null}
+
+      <form className="card auth-card" onSubmit={submit}>
+        <h2 style={{ marginTop: 0, fontSize: "1.1rem" }}>Continue with email</h2>
+        <p className="sm mut" style={{ marginTop: 0 }}>
+          Works with Gmail, Yahoo, Outlook, iCloud, Proton, or any other inbox.
+        </p>
+        <EmailProviders onPick={() => emailRef.current?.focus()} />
+
         <label>Full name</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} required />
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          placeholder="Your name"
+          autoComplete="name"
+        />
+
         <label>{t("auth.username")}</label>
         <div className="row">
           <input
             value={username}
-            onChange={(e) => setUsername(e.target.value.toLowerCase())}
+            onChange={(e) => {
+              usernameTouched.current = true;
+              setUsername(e.target.value.toLowerCase());
+            }}
             required
             minLength={3}
             maxLength={20}
@@ -122,17 +158,26 @@ export default function SignupPage() {
           <button
             className="btn o"
             type="button"
-            onClick={() => setUsername(suggestUsername(name))}
+            onClick={() => {
+              usernameTouched.current = true;
+              setUsername(suggestUsername(name || email || "user"));
+            }}
           >
             {t("auth.generateUser")}
           </button>
         </div>
-        <label>{t("auth.emailOptional")}</label>
+
+        <label>Email</label>
         <input
+          ref={emailRef}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@gmail.com, you@yahoo.com, …"
+          autoComplete="email"
         />
+        <p className="sm mut">Optional for now. Add any inbox so you can recover this account later.</p>
+
         <label>Password</label>
         <input
           type="password"
@@ -140,12 +185,20 @@ export default function SignupPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={6}
+          autoComplete="new-password"
         />
+
         <label>Country</label>
-        <input value={country} onChange={(e) => setCountry(e.target.value)} />
+        <input
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          placeholder="Optional"
+          autoComplete="country-name"
+        />
+
         {err ? <p className="err">{err}</p> : null}
         <div style={{ marginTop: 14 }}>
-          <button className="btn" type="submit">
+          <button className="btn buy-go" type="submit" style={{ width: "100%" }}>
             Create account
           </button>
         </div>

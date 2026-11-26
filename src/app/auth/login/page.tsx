@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth, type AuthUser } from "@/components/AuthProvider";
@@ -8,14 +8,17 @@ import { LocaleLink as Link } from "@/components/LocaleLink";
 import { useLang } from "@/components/LanguageProvider";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
 import { GoogleSignIn } from "@/components/GoogleSignIn";
+import { EmailProviders } from "@/components/EmailProviders";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
+  const [googleOn, setGoogleOn] = useState(true);
   const { setUser } = useAuth();
   const { locale, t } = useLang();
   const router = useRouter();
+  const emailRef = useRef<HTMLInputElement>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,21 +40,37 @@ export default function LoginPage() {
   }
 
   return (
-    <section className="sec" style={{ maxWidth: 420 }}>
+    <section className="sec auth-page" style={{ maxWidth: 440 }}>
       <h1 style={{ fontSize: "2rem" }}>{t("nav.login")}</h1>
-      <div className="card" style={{ marginBottom: 12 }}>
-        <GoogleSignIn />
-      </div>
-      <form className="card" onSubmit={submit}>
+      <p className="mut">
+        Continue with Google, or log in with your username or any email —
+        Gmail, Yahoo, Outlook, and more.
+      </p>
+
+      {googleOn ? (
+        <div className="card auth-card" style={{ marginBottom: 12 }}>
+          <GoogleSignIn onUnavailable={() => setGoogleOn(false)} />
+          <div className="auth-or">
+            <span>or use email</span>
+          </div>
+        </div>
+      ) : null}
+
+      <form className="card auth-card" onSubmit={submit}>
+        <h2 style={{ marginTop: 0, fontSize: "1.1rem" }}>Email or username</h2>
+        <EmailProviders onPick={() => emailRef.current?.focus()} />
         <label>{t("auth.loginId")}</label>
         <input
+          ref={emailRef}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
+          placeholder="username, you@gmail.com, you@yahoo.com…"
           aria-label={t("auth.loginId")}
+          autoComplete="username"
         />
         <label>Password</label>
         <input
@@ -59,10 +78,11 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          autoComplete="current-password"
         />
         {err ? <p className="err">{err}</p> : null}
         <div style={{ marginTop: 14 }}>
-          <button className="btn" type="submit">
+          <button className="btn buy-go" type="submit" style={{ width: "100%" }}>
             {t("nav.login")}
           </button>
         </div>

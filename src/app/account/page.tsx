@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { api } from "@/lib/api";
 import { money } from "@/lib/constants";
@@ -37,9 +38,11 @@ function exactAmount(d: Deposit) {
 
 type WalletAddr = { asset: string; network: string; address: string; label?: string };
 
-export default function AccountPage() {
+function AccountInner() {
   const { user, loading, refresh, setUser, logout } = useAuth();
   const { t } = useLang();
+  const search = useSearchParams();
+  const welcome = search.get("welcome") === "1";
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [bio, setBio] = useState("");
@@ -74,6 +77,14 @@ export default function AccountPage() {
     setName(user.name);
     setCountry(user.country || "");
     setBio(user.bio || "");
+    if (welcome) {
+      setEditing(true);
+      setMsg(
+        user.google
+          ? "Welcome. Your name and username were created from Google. Edit anything below, then save."
+          : "Welcome. Your profile is ready. Edit your name or details below anytime."
+      );
+    }
     api<{ balance: number; deposits: Deposit[]; wallets?: WalletAddr[] }>("/api/wallet")
       .then((d) => {
         setBalance(d.balance);
@@ -84,7 +95,7 @@ export default function AccountPage() {
     api<{ chats: typeof chats }>("/api/chats")
       .then((d) => setChats(d.chats || []))
       .catch(() => setChats([]));
-  }, [user]);
+  }, [user, welcome]);
 
   const openDep = deposits.find((d) => d.status === "pending" && d.expectedMicro && d.address);
   const depLeft = openDep?.expiresAt ? new Date(openDep.expiresAt).getTime() - clock : 0;
@@ -731,5 +742,14 @@ export default function AccountPage() {
         </div>
       ) : null}
     </section>
+  );
+}
+
+export default function AccountPage() {
+  const { t } = useLang();
+  return (
+    <Suspense fallback={<p className="sec mut">{t("common.loading")}</p>}>
+      <AccountInner />
+    </Suspense>
   );
 }
