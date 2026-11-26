@@ -21,7 +21,7 @@ Vercel par file-storage persist nahi hoti. Is liye free Neon DB:
 
 1. https://vercel.com → Login with GitHub
 2. **Add New… → Project**
-3. Repo choose: `socialsflip/Marketplace`
+3. Repo choose: `infosmmcounter-design/Social`
 4. Framework: **Next.js** (auto)
 5. **Environment Variables** add karein:
    - Name: `DATABASE_URL`
