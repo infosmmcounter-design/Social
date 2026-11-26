@@ -12,6 +12,7 @@ import { stars } from "@/lib/constants";
 import { CATEGORIES } from "@/lib/types";
 import { CategoryFilters, type MonetizedFilter } from "@/components/CategoryFilters";
 import { filtersForCategory } from "@/lib/category-filters";
+import { compareListings } from "@/lib/listing-rank";
 import type { MsgKey } from "@/lib/i18n/messages";
 
 type Listing = {
@@ -128,16 +129,9 @@ export default function HomePage() {
         return n >= minF;
       });
     }
-    const byRating = (a: Listing, b: Listing) => {
-      const ar = a.seller?.rating || 0;
-      const br = b.seller?.rating || 0;
-      if (br !== ar) return br - ar;
-      return (b.seller?.reviewCount || 0) - (a.seller?.reviewCount || 0);
-    };
-    if (sort === "price_asc") list = [...list].sort((a, b) => a.price - b.price);
-    else if (sort === "price_desc") list = [...list].sort((a, b) => b.price - a.price);
-    else if (sort === "recommended") list = [...list].sort(byRating);
-    else list = [...list].sort((a, b) => b.id - a.id);
+    const mode =
+      sort === "price_asc" || sort === "price_desc" ? sort : "market";
+    list = [...list].sort((a, b) => compareListings(a, b, mode));
     return list;
   }, [listings, cat, q, sort, monetized, minPrice, maxPrice, minFollowers]);
 

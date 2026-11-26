@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { CATEGORIES } from "@/lib/types";
 import { CategoryFilters, type MonetizedFilter } from "@/components/CategoryFilters";
 import { filtersForCategory } from "@/lib/category-filters";
+import { compareListings } from "@/lib/listing-rank";
 import type { MsgKey } from "@/lib/i18n/messages";
 
 type Listing = {
@@ -80,15 +81,9 @@ function ListingsInner() {
         return n >= minF;
       });
     }
-    if (sort === "recommended") {
-      list = [...list].sort((a, b) => {
-        const ar = a.seller?.rating || 0;
-        const br = b.seller?.rating || 0;
-        if (br !== ar) return br - ar;
-        return (b.seller?.reviewCount || 0) - (a.seller?.reviewCount || 0);
-      });
-    }
-    return list;
+    const mode =
+      sort === "price_asc" || sort === "price_desc" ? sort : "market";
+    return [...list].sort((a, b) => compareListings(a, b, mode));
   }, [listings, cat, monetized, minPrice, maxPrice, minAudience, sort]);
 
   const title = useMemo(() => {

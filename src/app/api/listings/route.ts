@@ -5,6 +5,7 @@ import { isFreelanceCategory, type Category } from "@/lib/types";
 import { listingCoverDataUrl } from "@/lib/placeholders";
 import { localeFromRequest } from "@/lib/i18n/api-locale";
 import { localizeListing, localizeSeller } from "@/lib/i18n/content";
+import { compareListings } from "@/lib/listing-rank";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -45,19 +46,20 @@ export async function GET(req: Request) {
     );
   }
 
-  if (sort === "price_asc") list = [...list].sort((a, b) => a.price - b.price);
-  else if (sort === "price_desc") list = [...list].sort((a, b) => b.price - a.price);
-  else list = [...list].sort((a, b) => b.id - a.id);
-
   const sellers = Object.fromEntries(
     store.users.map((u) => [u.id, localizeSeller(publicUser(u), locale)])
   );
-  return NextResponse.json({
-    locale,
-    listings: list.map((l) => ({
+  const mode =
+    sort === "price_asc" || sort === "price_desc" ? sort : "market";
+  const listings = list
+    .map((l) => ({
       ...localizeListing(publicListing(l, admin || mine), locale),
       seller: sellers[l.sellerId] || null,
-    })),
+    }))
+    .sort((a, b) => compareListings(a, b, mode));
+  return NextResponse.json({
+    locale,
+    listings,
   });
 }
 
