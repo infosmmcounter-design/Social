@@ -1,18 +1,18 @@
 :root {
   color-scheme: light;
-  /* Soft black + gold landing feel — stronger contrast for readable UI */
-  --bg: #f4f0e6;
+  /* Soft black + gold — ink and muted stay dark enough to read on cream */
+  --bg: #f3eee3;
   --s: #ffffff;
   --s2: #ebe3cf;
-  --line: #d4c7a4;
-  --ink: #121212;
-  --mut: #3f3a32;
-  --a: #1a1a1a;
-  --ah: #0d0d0d;
-  --ai: #ffe9a8;
-  --accent: #b8860b;
-  --yellow: #d4a017;
-  --yellow-light: #f0d78c;
+  --line: #cfc19e;
+  --ink: #101010;
+  --mut: #2e2a24;
+  --a: #121212;
+  --ah: #0a0a0a;
+  --ai: #ffe29a;
+  --accent: #a67c00;
+  --yellow: #c9970d;
+  --yellow-light: #f0d078;
   --warn: #9a3412;
   --bad: #991b1b;
   --ok: #14532d;
@@ -794,16 +794,35 @@ html[dir="rtl"] .account-hero-actions {
   word-break: break-all;
 }
 .deal-hero {
-  padding: 18px 18px 6px;
+  padding: 20px 18px 16px;
   border-radius: 18px;
-  background: linear-gradient(145deg, #1a1408, #3d3112);
-  color: #fff8d6;
+  background: linear-gradient(145deg, #14110a, #2a220f 55%, #3a2e12);
+  color: #fffdf2;
   margin-bottom: 14px;
 }
 .deal-hero h1,
 .deal-hero h2,
 .deal-hero p {
-  color: #fff8d6;
+  color: #fffdf2;
+}
+.deal-hero .mut,
+.deal-hero .sm.mut {
+  color: #f3e6b8 !important;
+}
+.deal-hero-kicker {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #f0d078;
+}
+.deal-hero-lead {
+  margin: 0;
+  color: #fff8dc !important;
+  font-size: 1rem;
+  line-height: 1.55;
+  font-weight: 500;
 }
 .deal-hero .clock {
   display: inline-block;
@@ -811,7 +830,7 @@ html[dir="rtl"] .account-hero-actions {
   font-size: 1.6rem;
   font-weight: 800;
   letter-spacing: 0.04em;
-  color: #f0d78c;
+  color: #ffe39a;
 }
 .deal-hero.expired {
   background: linear-gradient(145deg, #3a1212, #1a1408);
@@ -1109,6 +1128,17 @@ textarea:focus-visible {
 }
 .mut {
   color: var(--mut);
+  font-weight: 500;
+}
+.card .mut,
+.hl-card .mut,
+.sec .mut {
+  color: #2e2a24;
+}
+.fee-banner .mut,
+.fee-banner .sm,
+.deal-hero .mut {
+  color: #fff3c4;
 }
 .sm {
   font-size: 0.88rem;
@@ -2128,16 +2158,40 @@ footer.sf-footer {
 .create-deal-page .deal-hero h1 {
   font-size: clamp(1.55rem, 4vw, 2rem);
   margin: 0 0 8px;
+  color: #ffffff;
 }
 .deal-steps-mini {
-  margin: 14px 0 0;
-  padding-inline-start: 1.15rem;
-  color: var(--mut);
-  font-size: 0.9rem;
+  margin: 16px 0 0;
+  padding-inline-start: 1.2rem;
+  color: #fff8dc;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  font-weight: 600;
+}
+.deal-steps-mini li {
+  margin: 6px 0;
+  color: #fff8dc;
+}
+.deal-steps-mini li::marker {
+  color: #f0d078;
+}
+.create-deal-as {
+  color: #1f1a12;
+  font-weight: 600;
   line-height: 1.5;
+}
+.create-deal-as a {
+  color: #7a4f00;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 .create-deal-form .btn {
   max-width: 100%;
+}
+.create-deal-form label {
+  color: #1a1610;
+  font-weight: 700;
 }
 .seller-profile-hero {
   display: flex;
