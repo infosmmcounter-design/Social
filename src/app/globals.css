@@ -1940,51 +1940,80 @@ footer.sf-footer {
   background: rgba(255, 255, 255, 0.22);
 }
 
-/* Live icon rail — compact brand boxes with spinning marks */
+/* Live icon rail — spinning brand marks + fast prev/next control */
 .cat-live {
-  margin: 14px -18px 0;
+  margin: 14px 0 0;
   position: relative;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 4px;
+}
+.cat-nav {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid #ead9a8;
+  background: #fff;
+  color: #141414;
+  font-size: 1.45rem;
+  line-height: 1;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(20, 20, 20, 0.06);
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  z-index: 2;
+}
+.cat-nav:hover {
+  background: #141414;
+  border-color: #141414;
+  color: #f6e08a;
+}
+.cat-nav:active {
+  transform: scale(0.96);
 }
 .cat-live-viewport {
-  overflow: hidden;
-  padding: 8px 0 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 10px 4px 8px;
   perspective: 700px;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
   mask-image: linear-gradient(
     90deg,
     transparent 0,
-    #000 4%,
-    #000 96%,
+    #000 3%,
+    #000 97%,
     transparent 100%
   );
   -webkit-mask-image: linear-gradient(
     90deg,
     transparent 0,
-    #000 4%,
-    #000 96%,
+    #000 3%,
+    #000 97%,
     transparent 100%
   );
+}
+.cat-live-viewport::-webkit-scrollbar {
+  display: none;
 }
 .cat-live-track {
   display: flex;
   width: max-content;
   gap: 0;
-  animation: catMarquee 36s linear infinite;
-  will-change: transform;
-}
-.cat-live:hover .cat-live-track,
-.cat-live:focus-within .cat-live-track {
-  animation-play-state: paused;
-}
-.cat-live:hover .cat-pod-spin,
-.cat-live:focus-within .cat-pod-spin {
-  animation-play-state: paused;
 }
 .cat-live-set {
   display: flex;
   flex: none;
   align-items: flex-start;
-  gap: 14px;
-  padding-inline: 10px;
+  gap: 12px;
+  width: max-content;
+  padding-inline: 8px;
 }
 .cat-pod {
   position: relative;
@@ -1992,18 +2021,20 @@ footer.sf-footer {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  width: 76px;
+  width: 72px;
+  flex: none;
   padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
   font: inherit;
   color: var(--ink);
+  scroll-snap-align: start;
 }
 .cat-pod-box {
-  width: 62px;
-  height: 62px;
-  border-radius: 18px;
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
   display: grid;
   place-items: center;
   background: #fff;
@@ -2017,9 +2048,12 @@ footer.sf-footer {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  animation: iconSpin 5.5s linear infinite;
+  width: 32px;
+  height: 32px;
+  animation: iconSpin 3.8s linear infinite;
   transform-style: preserve-3d;
   will-change: transform;
+  backface-visibility: hidden;
 }
 .cat-pod-spin svg {
   border-radius: 12px;
@@ -2074,20 +2108,23 @@ footer.sf-footer {
   font-weight: 700;
 }
 
-@keyframes catMarquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-33.333%);
-  }
-}
 @keyframes iconSpin {
   0% {
     transform: rotateY(0deg);
   }
   100% {
     transform: rotateY(360deg);
+  }
+}
+@media (max-width: 520px) {
+  .cat-live {
+    grid-template-columns: 32px minmax(0, 1fr) 32px;
+    margin-inline: -6px;
+  }
+  .cat-nav {
+    width: 32px;
+    height: 32px;
+    font-size: 1.3rem;
   }
 }
 .usdt-coin-live {
@@ -2105,18 +2142,13 @@ footer.sf-footer {
 @media (prefers-reduced-motion: reduce) {
   .hero-orb,
   .hero::after,
-  .cat-live-track,
   .cat-pod-spin,
   .usdt-coin-live {
     animation: none !important;
   }
   .cat-live-viewport {
-    overflow-x: auto;
     mask-image: none;
     -webkit-mask-image: none;
-  }
-  .cat-live-set[aria-hidden="true"] {
-    display: none;
   }
 }
 .backup-code {
