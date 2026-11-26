@@ -13,7 +13,7 @@ export type CategoryFilterSpec = {
 
 /** What the seller listing form should ask for this board. */
 export type SellFormSpec = {
-  kind: "social" | "ai" | "freelance";
+  kind: "social" | "ai" | "freelance" | "subscription";
   stockMode: boolean;
   audience: AudienceKind | null;
   monetized: boolean;
@@ -95,6 +95,16 @@ const SELL_FORMS: Record<string, SellFormSpec> = {
     urlVisibility: false,
     gigMeta: true,
     gigIdeas: true,
+  },
+  other: {
+    kind: "subscription",
+    stockMode: true,
+    audience: null,
+    monetized: false,
+    urlField: "product",
+    urlVisibility: true,
+    gigMeta: false,
+    gigIdeas: false,
   },
 };
 

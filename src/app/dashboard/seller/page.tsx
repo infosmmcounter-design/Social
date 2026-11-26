@@ -25,6 +25,7 @@ const SELL_BOARDS: [Category, string][] = [
   ["facebook", "Facebook"],
   ["freelance", "Freelance service"],
   ["ai", "AI Tools"],
+  ["other", "Subscriptions & other"],
 ];
 import { LocaleLink as Link } from "@/components/LocaleLink";
 import { StartEscrowChat } from "@/components/StartEscrowChat";
@@ -110,6 +111,8 @@ export default function SellerDashboard() {
   const sellSpec = sellFormForCategory(form.cat);
   const isFreelanceForm = sellSpec?.kind === "freelance";
   const isAiForm = sellSpec?.kind === "ai";
+  const isSubForm = sellSpec?.kind === "subscription";
+  const canList = !!(user?.verified || user?.role === "admin");
   const [listMode, setListMode] = useState<"one" | "stock">("one");
   const [msg, setMsg] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -188,6 +191,10 @@ export default function SellerDashboard() {
   async function createListing(e: React.FormEvent) {
     e.preventDefault();
     setMsg("");
+    if (!canList) {
+      setMsg(t("listing.needVerifyBody"));
+      return;
+    }
     if (!SELL_BOARDS.some(([k]) => k === form.cat)) {
       setMsg("Choose what you are listing.");
       return;
@@ -207,7 +214,7 @@ export default function SellerDashboard() {
           img: form.img,
           listingType: freelance
             ? "service"
-            : form.cat === "ai"
+            : form.cat === "ai" || form.cat === "other"
               ? "tool"
               : "account",
           followers: spec?.audience ? form.followers : "",
@@ -289,6 +296,16 @@ export default function SellerDashboard() {
       {msg ? <p className="okmsg">{msg}</p> : null}
 
       <h2>New listing</h2>
+      {!canList ? (
+        <div className="card list-form" style={{ marginBottom: 18 }}>
+          <h3 style={{ marginTop: 0 }}>{t("listing.needVerifyTitle")}</h3>
+          <p className="sm mut">{t("listing.needVerifyBody")}</p>
+          <Link className="btn" href="/account">
+            {t("listing.needVerifyCta")}
+          </Link>
+        </div>
+      ) : (
+        <>
       <p className="sm mut">
         This goes live immediately. Buyers pay into escrow.
       </p>
@@ -308,7 +325,11 @@ export default function SellerDashboard() {
                 setForm({
                   ...emptyForm(),
                   cat: k,
-                  listingType: freelance ? "service" : k === "ai" ? "tool" : "account",
+                  listingType: freelance
+                    ? "service"
+                    : k === "ai" || k === "other"
+                      ? "tool"
+                      : "account",
                   stock: "1",
                   img: form.img,
                 });
@@ -333,6 +354,10 @@ export default function SellerDashboard() {
           <p className="sm mut">
             AI Tools board — tool name, optional product link, and stock. No freelance fields.
           </p>
+        ) : isSubForm ? (
+          <p className="sm mut">
+            Subscriptions & other — Netflix, Spotify, software seats, and similar. Stock and optional product link.
+          </p>
         ) : (
           <p className="sm mut">
             Social account listing — audience and URL for this platform only.
@@ -352,7 +377,11 @@ export default function SellerDashboard() {
                   setForm({ ...form, stock: "1" });
                 }}
               >
-                {isAiForm ? "One tool" : "One account"}
+                {isSubForm
+                  ? "One subscription"
+                  : isAiForm
+                    ? "One tool"
+                    : "One account"}
               </button>
               <button
                 type="button"
@@ -362,17 +391,25 @@ export default function SellerDashboard() {
                   setForm({ ...form, stock: form.stock === "1" ? "100" : form.stock });
                 }}
               >
-                {isAiForm ? "Stock of similar tools" : "Stock of similar accounts"}
+                {isSubForm
+                  ? "Stock of similar subscriptions"
+                  : isAiForm
+                    ? "Stock of similar tools"
+                    : "Stock of similar accounts"}
               </button>
             </div>
             <p className="sm mut">
               {listMode === "one"
-                ? isAiForm
-                  ? "One tool or subscription. Buyers see 1 available."
-                  : "One channel or page, with its audience count and link. Buyers see 1 available."
-                : isAiForm
-                  ? "Many similar tools, written once. Each sale takes one from stock."
-                  : "Many similar accounts, written once. Each sale takes one. Send that buyer’s link in the deal chat."}
+                ? isSubForm
+                  ? "One subscription or seat. Buyers see 1 available."
+                  : isAiForm
+                    ? "One tool or subscription. Buyers see 1 available."
+                    : "One channel or page, with its audience count and link. Buyers see 1 available."
+                : isSubForm
+                  ? "Many similar subscriptions, written once. Each sale takes one from stock."
+                  : isAiForm
+                    ? "Many similar tools, written once. Each sale takes one from stock."
+                    : "Many similar accounts, written once. Each sale takes one. Send that buyer’s link in the deal chat."}
             </p>
           </div>
         ) : null}
@@ -398,22 +435,28 @@ export default function SellerDashboard() {
           placeholder={
             isFreelanceForm
               ? "e.g. YouTube Thumbnail Pack (5 designs)"
-              : isAiForm
+              : isSubForm
                 ? listMode === "stock"
-                  ? "e.g. ChatGPT Plus accounts"
-                  : "e.g. Midjourney account"
-                : listMode === "stock"
-                  ? "e.g. Monetized YouTube channels"
-                  : "e.g. YouTube channel — 1,000 subscribers"
+                  ? "e.g. Netflix premium seats"
+                  : "e.g. Spotify Family plan"
+                : isAiForm
+                  ? listMode === "stock"
+                    ? "e.g. ChatGPT Plus accounts"
+                    : "e.g. Midjourney account"
+                  : listMode === "stock"
+                    ? "e.g. Monetized YouTube channels"
+                    : "e.g. YouTube channel — 1,000 subscribers"
           }
           required
         />
         <label>
           {isFreelanceForm
             ? "Gig niche / skill"
-            : isAiForm
-              ? "Tool type"
-              : "Niche"}
+            : isSubForm
+              ? "Subscription type"
+              : isAiForm
+                ? "Tool type"
+                : "Niche"}
         </label>
         <input
           value={form.niche}
@@ -421,11 +464,13 @@ export default function SellerDashboard() {
           placeholder={
             isFreelanceForm
               ? "e.g. Thumbnail design"
-              : isAiForm
-                ? "e.g. Image generation"
-                : form.cat === "youtube"
-                  ? "e.g. Gaming"
-                  : ""
+              : isSubForm
+                ? "e.g. Streaming / software"
+                : isAiForm
+                  ? "e.g. Image generation"
+                  : form.cat === "youtube"
+                    ? "e.g. Gaming"
+                    : ""
           }
         />
         {sellSpec.gigIdeas ? (
@@ -623,11 +668,12 @@ export default function SellerDashboard() {
           </>
         ) : null}
       </form>
-
       <p className="note sm">
         Payments are crypto-only (USDT TRC20 / BEP20) into SocialsFlip escrow.
         Buyers do not pay you via local methods.
       </p>
+        </>
+      )}
 
       <h2 style={{ marginTop: 24 }}>Your listings</h2>
       <div className="tbl">

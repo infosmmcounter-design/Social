@@ -166,6 +166,9 @@ export type MsgKey =
   | "listing.delete"
   | "listing.deleteConfirm"
   | "listing.deleted"
+  | "listing.needVerifyTitle"
+  | "listing.needVerifyBody"
+  | "listing.needVerifyCta"
   | "listing.loadingMore"
   | "deal.escrowPay"
   | "deal.iPaid"
@@ -408,6 +411,10 @@ const en: Dict = {
   "listing.delete": "Delete",
   "listing.deleteConfirm": "Delete this listing? Buyers will no longer see it.",
   "listing.deleted": "Listing deleted.",
+  "listing.needVerifyTitle": "Verify your profile to list",
+  "listing.needVerifyBody":
+    "Upload your ID on Account and wait for the verified mark. Until then you cannot publish social accounts, freelance gigs, AI tools, or subscriptions.",
+  "listing.needVerifyCta": "Go to Account",
   "listing.loadingMore": "Loading more listings…",
   "deal.escrowPay": "Escrow crypto payment",
   "deal.iPaid": "I have made the payment",

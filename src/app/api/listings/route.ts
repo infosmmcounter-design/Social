@@ -130,6 +130,7 @@ export async function POST(req: Request) {
     "facebook",
     "freelance",
     "ai",
+    "other",
   ]);
   const chosenCat = String(body.cat || "").toLowerCase();
   if (!isAdmin && !sellerBoards.has(chosenCat)) {
@@ -137,6 +138,19 @@ export async function POST(req: Request) {
       { error: "Choose what you are listing." },
       { status: 400 }
     );
+  }
+  if (!isAdmin) {
+    const storeCheck = await readStore();
+    const meCheck = storeCheck.users.find((u) => u.id === auth.user!.id);
+    if (!meCheck?.verified) {
+      return NextResponse.json(
+        {
+          error:
+            "Verify your profile in Account before you can publish a listing.",
+        },
+        { status: 403 }
+      );
+    }
   }
   let listingId = 0;
   await updateStore((data) => {
