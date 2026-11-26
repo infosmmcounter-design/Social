@@ -134,6 +134,7 @@ export default function ListingDetailPage() {
     revisions?: number;
     privateHandle: string | null;
     handleHidden: boolean;
+    handlePublic?: boolean;
     sellerId: number;
   };
   const s = data.seller as {
@@ -317,10 +318,16 @@ export default function ListingDetailPage() {
           <p style={{ whiteSpace: "pre-wrap" }}>{l.desc || l.teaser}</p>
           {!freelance && (l.handleHidden || l.privateHandle) ? (
             <div className="note sm">
-              <b>Private handle:</b>{" "}
-              {l.handleHidden
-                ? t("listing.privateHidden")
-                : l.privateHandle || "—"}
+              <b>{t("listing.channelUrl")}:</b>{" "}
+              {l.handleHidden ? (
+                t("listing.privateHidden")
+              ) : l.privateHandle?.startsWith("http") ? (
+                <a href={l.privateHandle} target="_blank" rel="noreferrer">
+                  {l.privateHandle}
+                </a>
+              ) : (
+                l.privateHandle || "—"
+              )}
             </div>
           ) : null}
           {!freelance && l.handleHidden ? (

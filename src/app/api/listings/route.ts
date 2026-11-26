@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
-import { readStore, updateStore, nextId, publicListing, publicUser } from "@/lib/db";
+import {
+  readStore,
+  updateStore,
+  nextId,
+  publicListing,
+  publicUser,
+  publicSellerCard,
+} from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { isFreelanceCategory, type Category } from "@/lib/types";
 import { listingCoverDataUrl } from "@/lib/placeholders";
@@ -19,6 +26,19 @@ export async function GET(req: Request) {
   let type = (searchParams.get("type") || "").toLowerCase();
   if (type === "freelance" || type === "gig") type = "service";
   const locale = localeFromRequest(req);
+  const lite =
+    searchParams.get("lite") === "1" ||
+    (!mine && !admin && searchParams.get("lite") !== "0");
+  const limitRaw = Number(searchParams.get("limit"));
+  const offsetRaw = Number(searchParams.get("offset"));
+  const limit =
+    Number.isFinite(limitRaw) && limitRaw > 0
+      ? Math.min(48, Math.floor(limitRaw))
+      : lite
+        ? 12
+        : 0;
+  const offset =
+    Number.isFinite(offsetRaw) && offsetRaw > 0 ? Math.floor(offsetRaw) : 0;
 
   const store = await readStore();
   let list = store.listings;
@@ -47,20 +67,42 @@ export async function GET(req: Request) {
   }
 
   const sellers = Object.fromEntries(
-    store.users.map((u) => [u.id, localizeSeller(publicUser(u), locale)])
+    store.users.map((u) => [
+      u.id,
+      localizeSeller(lite ? publicSellerCard(u) : publicUser(u), locale),
+    ])
   );
   const mode =
     sort === "price_asc" || sort === "price_desc" ? sort : "market";
-  const listings = list
+  const ranked = list
     .map((l) => ({
-      ...localizeListing(publicListing(l, admin || mine), locale),
+      ...localizeListing(publicListing(l, admin || mine, { lite }), locale),
       seller: sellers[l.sellerId] || null,
     }))
     .sort((a, b) => compareListings(a, b, mode));
-  return NextResponse.json({
-    locale,
-    listings,
-  });
+
+  const total = ranked.length;
+  const listings =
+    limit > 0 ? ranked.slice(offset, offset + limit) : ranked;
+  const hasMore = limit > 0 ? offset + listings.length < total : false;
+
+  return NextResponse.json(
+    {
+      locale,
+      listings,
+      total,
+      offset,
+      limit: limit || total,
+      hasMore,
+    },
+    {
+      headers: lite
+        ? {
+            "Cache-Control": "public, s-maxage=20, stale-while-revalidate=60",
+          }
+        : undefined,
+    }
+  );
 }
 
 export async function POST(req: Request) {
@@ -72,6 +114,7 @@ export async function POST(req: Request) {
   const title = String(body.title || "").trim();
   const price = Number(body.price);
   const privateHandle = String(body.privateHandle || "").trim();
+  const handlePublic = !!body.handlePublic;
   if (!title || !price) {
     return NextResponse.json(
       { error: "Title and price are required." },
@@ -135,6 +178,7 @@ export async function POST(req: Request) {
       monetized: isFreelance ? false : !!body.monetized,
       teaser: String(body.teaser || body.desc || "").slice(0, 180),
       privateHandle: isFreelance ? "" : privateHandle,
+      handlePublic: isFreelance ? false : handlePublic && !!privateHandle,
       price,
       desc: String(body.desc || ""),
       img,
@@ -193,6 +237,12 @@ export async function PATCH(req: Request) {
         listing.price = price;
       }
       if (typeof body.img === "string") listing.img = body.img;
+      if (typeof body.handlePublic === "boolean") {
+        listing.handlePublic = body.handlePublic;
+      }
+      if (typeof body.privateHandle === "string") {
+        listing.privateHandle = body.privateHandle.trim();
+      }
     });
   } catch (e) {
     return NextResponse.json(

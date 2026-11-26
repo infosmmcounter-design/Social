@@ -434,6 +434,43 @@ html[dir="rtl"] .chat-fab {
 .lc-stock {
   margin: 0 0 4px;
 }
+.handle-vis {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+.handle-vis-opt {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--s2) 70%, #fff);
+  cursor: pointer;
+}
+.handle-vis-opt.on {
+  border-color: #e2b93d;
+  background: color-mix(in srgb, #fff8e4 70%, var(--s));
+}
+.handle-vis-opt input {
+  width: auto;
+  margin-top: 3px;
+}
+.handle-vis-opt b {
+  display: block;
+  font-size: 0.95rem;
+}
+.handle-vis-opt small {
+  display: block;
+  margin-top: 2px;
+  color: var(--mut);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+.list-success-card h2 {
+  font-size: 1.45rem;
+}
 .auth-shell {
   max-width: 480px;
   margin: 0 auto;

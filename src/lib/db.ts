@@ -604,6 +604,7 @@ export function normalizeStore(data: StoreData): StoreData {
       l.revisions = l.listingType === "service" ? 1 : 0;
     }
     if (!l.img) l.img = listingCoverDataUrl(l.cat, l.title);
+    if (l.handlePublic === undefined) l.handlePublic = false;
   }
   // Migrate legacy service gigs that lived under platform cats → Freelance board
   for (const l of data.listings) {
@@ -831,8 +832,33 @@ export function matchWalletAsset(coin: string): "USDT_TRC20" | "USDT_BEP20" {
   return "USDT_TRC20";
 }
 
-export function publicListing(l: Listing, revealHandle = false) {
+function feedSafeImage(img: string | undefined, cat: string, title: string) {
+  const value = (img || "").trim();
+  if (!value) return listingCoverDataUrl(cat, title);
+  if (/^https?:\/\//i.test(value)) return value;
+  // Huge uploaded data URLs must not ride on marketplace feeds.
+  if (value.startsWith("data:")) return listingCoverDataUrl(cat, title);
+  return value;
+}
+
+function feedSafeAvatar(url: string | undefined, name: string, verified: boolean) {
+  const value = (url || "").trim();
+  if (!value) return avatarDataUrl(name, verified);
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith("data:image/svg")) return value;
+  if (value.startsWith("data:")) return avatarDataUrl(name, verified);
+  return value;
+}
+
+export function publicListing(
+  l: Listing,
+  revealHandle = false,
+  opts?: { lite?: boolean }
+) {
   const freelance = isFreelanceListing(l);
+  const handlePublic = !!l.handlePublic;
+  const showHandle = revealHandle || handlePublic;
+  const lite = !!opts?.lite;
   return {
     id: l.id,
     sellerId: l.sellerId,
@@ -843,9 +869,11 @@ export function publicListing(l: Listing, revealHandle = false) {
     monetized: l.monetized,
     teaser: l.teaser,
     price: l.price,
-    desc: l.desc,
-    img: l.img || listingCoverDataUrl(l.cat, l.title),
-    images: l.images || [],
+    desc: lite ? "" : l.desc,
+    img: lite
+      ? feedSafeImage(l.img, l.cat, l.title)
+      : l.img || listingCoverDataUrl(l.cat, l.title),
+    images: lite ? [] : l.images || [],
     stock: freelance ? undefined : l.stock ?? 1,
     soldCount: l.soldCount ?? 0,
     listingType: l.listingType || "account",
@@ -856,8 +884,18 @@ export function publicListing(l: Listing, revealHandle = false) {
     status: l.status,
     listed: l.listed,
     createdAt: l.createdAt,
-    privateHandle: revealHandle ? l.privateHandle : null,
-    handleHidden: !!l.privateHandle && !revealHandle,
+    privateHandle: showHandle ? l.privateHandle || null : null,
+    handleHidden: !!l.privateHandle && !showHandle,
+    handlePublic,
+  };
+}
+
+export function publicSellerCard(u: User) {
+  const base = publicUser(u);
+  return {
+    ...base,
+    avatarUrl: feedSafeAvatar(u.avatarUrl, u.name, u.verified),
+    bio: (u.bio || "").slice(0, 160),
   };
 }
 

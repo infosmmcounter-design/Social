@@ -234,6 +234,11 @@ export interface Listing {
   monetized: boolean;
   teaser: string;
   privateHandle: string;
+  /**
+   * When true, buyers can see the channel/page URL on the public listing.
+   * When false (default), the URL stays hidden until escrow reveals it.
+   */
+  handlePublic?: boolean;
   price: number;
   desc: string;
   img: string;

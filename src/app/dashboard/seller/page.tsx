@@ -29,7 +29,7 @@ import { withLocalePrefix } from "@/lib/i18n/locale-path";
 
 export default function SellerDashboard() {
   const { user, loading, refresh: refreshAuth, setUser } = useAuth();
-  const { locale } = useLang();
+  const { locale, t } = useLang();
   const router = useRouter();
   const [listings, setListings] = useState<
     {
@@ -90,6 +90,7 @@ export default function SellerDashboard() {
     monetized: false,
     teaser: "",
     privateHandle: "",
+    handlePublic: false,
     price: "",
     desc: "",
     stock: "1",
@@ -98,6 +99,8 @@ export default function SellerDashboard() {
     revisions: "1",
     img: "",
   });
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successGig, setSuccessGig] = useState(false);
   const isFreelanceForm = isFreelanceCategory(form.cat);
   const [listMode, setListMode] = useState<"one" | "stock">("one");
   const [msg, setMsg] = useState("");
@@ -167,6 +170,7 @@ export default function SellerDashboard() {
         json: {
           ...form,
           listingType: freelance ? "service" : form.listingType || "account",
+          handlePublic: freelance ? false : !!form.handlePublic,
           price: Number(form.price),
           stock: freelance
             ? 9999
@@ -177,7 +181,9 @@ export default function SellerDashboard() {
           revisions: Number(form.revisions) || 1,
         },
       });
-      setMsg(freelance ? "Your gig is live." : "Your listing is live.");
+      setSuccessGig(freelance);
+      setSuccessOpen(true);
+      setMsg("");
       refreshAuth().catch(() => undefined);
       setForm({
         title: "",
@@ -187,6 +193,7 @@ export default function SellerDashboard() {
         monetized: false,
         teaser: "",
         privateHandle: "",
+        handlePublic: false,
         price: "",
         desc: "",
         stock: "1",
@@ -205,6 +212,40 @@ export default function SellerDashboard() {
 
   return (
     <section className="sec">
+      {successOpen ? (
+        <div
+          className="dep-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="list-success-title"
+          onClick={() => setSuccessOpen(false)}
+        >
+          <div
+            className="dep-modal-card list-success-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="crypto-kicker">SocialsFlip</p>
+            <h2 id="list-success-title" style={{ marginTop: 4 }}>
+              {successGig ? t("listing.successGigTitle") : t("listing.successTitle")}
+            </h2>
+            <p className="sm" style={{ marginTop: 8 }}>
+              {successGig ? t("listing.successGigBody") : t("listing.successBody")}
+            </p>
+            <div className="row" style={{ marginTop: 16 }}>
+              <button
+                className="btn buy-go"
+                type="button"
+                onClick={() => setSuccessOpen(false)}
+              >
+                {t("listing.successOk")}
+              </button>
+              <Link className="btn o" href="/" onClick={() => setSuccessOpen(false)}>
+                {t("home.browse")}
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <h1 style={{ fontSize: "2rem" }}>List anything</h1>
       <p className="mut">
         Post one account or a batch in stock. Photo, name, and verification stay in{" "}
@@ -372,7 +413,7 @@ export default function SellerDashboard() {
             </label>
             <label>
               {listMode === "one"
-                ? "Channel or page link"
+                ? t("listing.channelUrl")
                 : "Sample link (optional)"}
             </label>
             <input
@@ -382,11 +423,39 @@ export default function SellerDashboard() {
               }
               placeholder="https://youtube.com/@channel"
             />
-            <p className="sm mut">
-              {listMode === "one"
-                ? "Buyers do not see this link until escrow starts. Then it is revealed in the deal."
-                : "Leave blank if each unit has its own link. After payment, send that buyer’s link in the deal chat."}
-            </p>
+            {listMode === "one" ? (
+              <div className="handle-vis" role="radiogroup" aria-label={t("listing.channelUrl")}>
+                <label className={`handle-vis-opt ${!form.handlePublic ? "on" : ""}`}>
+                  <input
+                    type="radio"
+                    name="handleVis"
+                    checked={!form.handlePublic}
+                    onChange={() => setForm({ ...form, handlePublic: false })}
+                  />
+                  <span>
+                    <b>{t("listing.hideUrl")}</b>
+                    <small>{t("listing.hideUrlHint")}</small>
+                  </span>
+                </label>
+                <label className={`handle-vis-opt ${form.handlePublic ? "on" : ""}`}>
+                  <input
+                    type="radio"
+                    name="handleVis"
+                    checked={!!form.handlePublic}
+                    onChange={() => setForm({ ...form, handlePublic: true })}
+                  />
+                  <span>
+                    <b>{t("listing.showUrl")}</b>
+                    <small>{t("listing.showUrlHint")}</small>
+                  </span>
+                </label>
+              </div>
+            ) : (
+              <p className="sm mut">
+                Leave blank if each unit has its own link. After payment, send that
+                buyer’s link in the deal chat.
+              </p>
+            )}
           </>
         ) : (
           <>

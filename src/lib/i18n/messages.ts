@@ -153,6 +153,17 @@ export type MsgKey =
   | "listing.payWith"
   | "listing.buyNow"
   | "listing.opening"
+  | "listing.channelUrl"
+  | "listing.hideUrl"
+  | "listing.showUrl"
+  | "listing.hideUrlHint"
+  | "listing.showUrlHint"
+  | "listing.successTitle"
+  | "listing.successBody"
+  | "listing.successGigTitle"
+  | "listing.successGigBody"
+  | "listing.successOk"
+  | "listing.loadingMore"
   | "deal.escrowPay"
   | "deal.iPaid"
   | "deal.comeAgain"
@@ -377,6 +388,21 @@ const en: Dict = {
   "listing.payWith": "Pay with (crypto only)",
   "listing.buyNow": "Buy Now / Start Escrow Deal",
   "listing.opening": "Opening deal…",
+  "listing.channelUrl": "Channel or page URL",
+  "listing.hideUrl": "Hide URL until escrow",
+  "listing.showUrl": "Show URL publicly",
+  "listing.hideUrlHint":
+    "Buyers cannot see this link until an escrow deal starts.",
+  "listing.showUrlHint":
+    "Buyers can see this channel or page link on the listing page.",
+  "listing.successTitle": "Your listing is live",
+  "listing.successBody":
+    "Your listing was posted successfully. Buyers can find it on the marketplace now.",
+  "listing.successGigTitle": "Your gig is live",
+  "listing.successGigBody":
+    "Your freelance gig was posted successfully. Buyers can order it with escrow now.",
+  "listing.successOk": "Done",
+  "listing.loadingMore": "Loading more listings…",
   "deal.escrowPay": "Escrow crypto payment",
   "deal.iPaid": "I have made the payment",
   "deal.comeAgain": "I'll come again",

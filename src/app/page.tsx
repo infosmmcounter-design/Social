@@ -70,6 +70,10 @@ export default function HomePage() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [minFollowers, setMinFollowers] = useState("");
+  const [loadingListings, setLoadingListings] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const PAGE = 12;
 
   useEffect(() => {
     try {
@@ -84,14 +88,66 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const lang = encodeURIComponent(locale);
-    api<{ listings: Listing[] }>(`/api/listings?lang=${lang}`)
-      .then((d) => setListings(d.listings))
-      .catch(() => setListings([]));
+    setLoadingListings(true);
+    setHasMore(false);
+    api<{ listings: Listing[]; hasMore?: boolean }>(
+      `/api/listings?lang=${lang}&lite=1&limit=${PAGE}&offset=0`
+    )
+      .then((d) => {
+        if (cancelled) return;
+        setListings(d.listings || []);
+        setHasMore(!!d.hasMore);
+        setLoadingListings(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setListings([]);
+        setHasMore(false);
+        setLoadingListings(false);
+      });
     api<{ sellers: Seller[] }>(`/api/sellers?lang=${lang}`)
-      .then((d) => setSellers(d.sellers))
-      .catch(() => setSellers([]));
+      .then((d) => {
+        if (!cancelled) setSellers(d.sellers);
+      })
+      .catch(() => {
+        if (!cancelled) setSellers([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [locale]);
+
+  useEffect(() => {
+    if (!hasMore || loadingListings || loadingMore) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      setLoadingMore(true);
+      const lang = encodeURIComponent(locale);
+      api<{ listings: Listing[]; hasMore?: boolean }>(
+        `/api/listings?lang=${lang}&lite=1&limit=${PAGE}&offset=${listings.length}`
+      )
+        .then((d) => {
+          if (cancelled) return;
+          setListings((prev) => {
+            const seen = new Set(prev.map((l) => l.id));
+            return [...prev, ...(d.listings || []).filter((l) => !seen.has(l.id))];
+          });
+          setHasMore(!!d.hasMore);
+        })
+        .catch(() => {
+          if (!cancelled) setHasMore(false);
+        })
+        .finally(() => {
+          if (!cancelled) setLoadingMore(false);
+        });
+    }, 120);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [hasMore, loadingListings, loadingMore, listings.length, locale]);
 
   const counts = Object.fromEntries(
     CATEGORIES.map(([k]) => [k, listings.filter((l) => l.cat === k).length])
@@ -250,12 +306,22 @@ export default function HomePage() {
               {filtered.map((l) => (
                 <ListingCard key={l.id} listing={l} />
               ))}
-              {!filtered.length ? (
+              {loadingListings && !filtered.length ? (
+                <p className="mut" style={{ gridColumn: "1 / -1" }}>
+                  {t("common.loading")}
+                </p>
+              ) : null}
+              {!loadingListings && !filtered.length ? (
                 <p className="mut" style={{ gridColumn: "1 / -1" }}>
                   {t("home.noListings")}
                 </p>
               ) : null}
             </div>
+            {loadingMore ? (
+              <p className="sm mut" style={{ marginTop: 12 }}>
+                {t("listing.loadingMore")}
+              </p>
+            ) : null}
           </>
         ) : (
           <div className="seller-grid" id="sellers" style={{ marginTop: 14 }}>
