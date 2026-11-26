@@ -1,25 +1,25 @@
 :root {
   color-scheme: light;
-  /* Soft black + gold — ink and muted stay dark enough to read on cream */
-  --bg: #f3eee3;
+  /* Premium slate + champagne gold (no cream) */
+  --bg: #eef0f4;
   --s: #ffffff;
-  --s2: #ebe3cf;
-  --line: #cfc19e;
-  --ink: #101010;
-  --mut: #2e2a24;
-  --a: #121212;
-  --ah: #0a0a0a;
-  --ai: #ffe29a;
-  --accent: #a67c00;
-  --yellow: #c9970d;
-  --yellow-light: #f0d078;
+  --s2: #e4e7ed;
+  --line: #c8ceda;
+  --ink: #0c0e14;
+  --mut: #3a4150;
+  --a: #0c0e14;
+  --ah: #05070b;
+  --ai: #f3e2a8;
+  --accent: #c2a04a;
+  --yellow: #d4b45a;
+  --yellow-light: #f0dfa0;
   --warn: #9a3412;
   --bad: #991b1b;
   --ok: #14532d;
-  --hero-a: #222222;
-  --hero-b: #121212;
+  --hero-a: #161922;
+  --hero-b: #0c0e14;
   --radius: 14px;
-  --shadow: 0 8px 28px rgba(20, 20, 20, 0.08);
+  --shadow: 0 10px 32px rgba(12, 14, 20, 0.08);
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -133,7 +133,7 @@ nav.sf-nav {
   box-shadow: 0 2px 8px rgba(20, 20, 20, 0.05);
 }
 .nav-box a:hover {
-  background: #fffdf8;
+  background: #f7f8fb;
   border-color: #d4c49a;
   color: #000;
   box-shadow: 0 4px 12px rgba(20, 20, 20, 0.08);
@@ -216,7 +216,7 @@ html[dir="rtl"] .chat-fab {
   height: min(640px, calc(100dvh - 188px));
   display: flex;
   flex-direction: column;
-  background: #fffdf8;
+  background: #f7f8fb;
   color: #1a1408;
   border: 2px solid #e2b93d;
   border-radius: 22px;
@@ -252,7 +252,7 @@ html[dir="rtl"] .chat-fab {
   gap: 6px;
   overflow: auto;
   padding: 8px 10px;
-  background: #fff4d4;
+  background: #f1e7c4;
 }
 .chat-live-switch button {
   border: 0;
@@ -293,7 +293,7 @@ html[dir="rtl"] .chat-fab {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: #fffdf8;
+  background: #f7f8fb;
 }
 .chat-find {
   padding: 10px 12px 0;
@@ -359,7 +359,7 @@ html[dir="rtl"] .chat-fab {
 }
 .chat-inbox-foot {
   border-top: 2px solid #e2b93d;
-  background: linear-gradient(180deg, #fff4cc, #f3d36a);
+  background: linear-gradient(180deg, #efe4bc, #f3d36a);
 }
 .chat-inbox-row.escrow {
   background: transparent;
@@ -389,7 +389,7 @@ html[dir="rtl"] .chat-fab {
   color: var(--ink);
 }
 .chat-page-row.escrow {
-  background: linear-gradient(180deg, #fff4cc, #f3d36a);
+  background: linear-gradient(180deg, #efe4bc, #f3d36a);
   border: 2px solid #e2b93d;
 }
 .chat-page-row .grow {
@@ -410,14 +410,14 @@ html[dir="rtl"] .chat-fab {
   padding: 12px;
   background:
     radial-gradient(420px 180px at 100% 0%, rgba(226, 185, 61, 0.18), transparent 60%),
-    #fffdf8;
+    #f7f8fb;
 }
 .chat-live-compose {
   display: flex;
   gap: 8px;
   padding: 10px;
   background: #fff;
-  border-top: 1px solid #ead9a4;
+  border-top: 1px solid #c8ceda;
 }
 .chat-live-compose input {
   flex: 1;
@@ -429,7 +429,7 @@ html[dir="rtl"] .chat-fab {
 }
 .receive-card {
   border: 2px solid #e2b93d;
-  background: linear-gradient(180deg, #fff8e4, #fff);
+  background: linear-gradient(180deg, #f4f5f8, #fff);
   padding: 16px;
   border-radius: 16px;
   margin: 0 0 14px;
@@ -465,7 +465,7 @@ html[dir="rtl"] .chat-fab {
 }
 .handle-vis-opt.on {
   border-color: #e2b93d;
-  background: color-mix(in srgb, #fff8e4 70%, var(--s));
+  background: color-mix(in srgb, #f4f5f8 70%, var(--s));
 }
 .handle-vis-opt input {
   width: auto;
@@ -500,7 +500,7 @@ html[dir="rtl"] .chat-fab {
   background:
     radial-gradient(720px 220px at 8% -10%, rgba(226, 185, 61, 0.28), transparent 55%),
     radial-gradient(520px 180px at 100% 0%, rgba(26, 26, 26, 0.08), transparent 50%),
-    linear-gradient(180deg, #fffdf6 0%, #ffffff 48%, #fbf7ea 100%);
+    linear-gradient(180deg, #f7f8fb 0%, #ffffff 48%, #eef0f4 100%);
   box-shadow: var(--shadow);
 }
 .auth-panel::before {
@@ -513,7 +513,7 @@ html[dir="rtl"] .chat-fab {
 }
 .auth-kicker {
   margin: 0 0 8px;
-  color: #8a7020;
+  color: #8a6d1e;
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -597,7 +597,7 @@ html[data-theme="dark"] .google-btn-frame {
   border-color: #8a7020;
 }
 html[data-theme="dark"] .google-btn-frame-loading {
-  color: #fff8e4;
+  color: #f4f5f8;
 }
 .auth-email-toggle {
   display: block;
@@ -618,7 +618,7 @@ html[data-theme="dark"] .google-btn-frame-loading {
 .auth-email-form {
   margin-top: 16px;
   padding-top: 14px;
-  border-top: 1px solid #eadfbf;
+  border-top: 1px solid #c8ceda;
 }
 .auth-foot {
   margin: 22px 0 0;
@@ -638,7 +638,7 @@ html[data-theme="dark"] .auth-panel {
   border-color: #8a7020;
 }
 html[data-theme="dark"] .auth-panel h1 {
-  color: #fff8e4;
+  color: #f4f5f8;
 }
 html[data-theme="dark"] .auth-foot a {
   color: #f7e7a8;
@@ -659,12 +659,12 @@ html[data-theme="dark"] .auth-foot a {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: #fffdf8;
+  background: #f7f8fb;
 }
 .chat-live-links {
   margin: 0;
   padding: 8px 14px 12px;
-  background: #fff8e8;
+  background: #f4f5f8;
   font-weight: 800;
 }
 .chat-live-links a {
@@ -752,14 +752,14 @@ html[dir="rtl"] .account-hero-actions {
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  border: 1px solid #e6d39a;
-  background: #fffdf6;
+  border: 1px solid #c8ceda;
+  background: #f7f8fb;
   font-size: 1.25rem;
   cursor: pointer;
 }
 .hl-card {
-  border: 1px solid #e6d39a;
-  background: linear-gradient(180deg, #fffdf6, #fff);
+  border: 1px solid #c8ceda;
+  background: linear-gradient(180deg, #f7f8fb, #fff);
   box-shadow: 0 10px 28px rgba(180, 140, 40, 0.1);
 }
 .hl-line {
@@ -770,8 +770,8 @@ html[dir="rtl"] .account-hero-actions {
   margin: 8px 0;
   padding: 10px;
   border-radius: 12px;
-  background: #fffdf6;
-  border: 1px solid #f0e2b8;
+  background: #f7f8fb;
+  border: 1px solid #d5dae4;
 }
 .hl-line code {
   word-break: break-all;
@@ -796,18 +796,18 @@ html[dir="rtl"] .account-hero-actions {
 .deal-hero {
   padding: 20px 18px 16px;
   border-radius: 18px;
-  background: linear-gradient(145deg, #14110a, #2a220f 55%, #3a2e12);
-  color: #fffdf2;
+  background: linear-gradient(145deg, #0c0e14, #1a1f2c 55%, #242b3a);
+  color: #f7efd2;
   margin-bottom: 14px;
 }
 .deal-hero h1,
 .deal-hero h2,
 .deal-hero p {
-  color: #fffdf2;
+  color: #f7efd2;
 }
 .deal-hero .mut,
 .deal-hero .sm.mut {
-  color: #f3e6b8 !important;
+  color: #e8d9a6 !important;
 }
 .deal-hero-kicker {
   margin: 0 0 8px;
@@ -815,11 +815,11 @@ html[dir="rtl"] .account-hero-actions {
   font-weight: 800;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: #f0d078;
+  color: #d4b45a;
 }
 .deal-hero-lead {
   margin: 0;
-  color: #fff8dc !important;
+  color: #f3e7c0 !important;
   font-size: 1rem;
   line-height: 1.55;
   font-weight: 500;
@@ -891,13 +891,13 @@ html[data-theme="dark"] .emoji-row button {
 }
 html[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0f0f0f;
-  --s: #1b1b1b;
-  --s2: #2a2418;
-  --line: #3c362a;
-  --ink: #f6f3ec;
-  --mut: #c2b9a8;
-  --shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  --bg: #0b0d12;
+  --s: #151922;
+  --s2: #1e2430;
+  --line: #2e3646;
+  --ink: #f2f4f8;
+  --mut: #a8b0c0;
+  --shadow: 0 10px 32px rgba(0, 0, 0, 0.5);
 }
 .nav-chip {
   display: inline-flex;
@@ -1133,12 +1133,12 @@ textarea:focus-visible {
 .card .mut,
 .hl-card .mut,
 .sec .mut {
-  color: #2e2a24;
+  color: #3a4150;
 }
 .fee-banner .mut,
 .fee-banner .sm,
 .deal-hero .mut {
-  color: #fff3c4;
+  color: #f3e7c0;
 }
 .sm {
   font-size: 0.88rem;
@@ -1278,7 +1278,7 @@ a.btn.buy-go:disabled {
 }
 .lang-menu button.on,
 .lang-menu button:hover {
-  background: #fff4cc;
+  background: #efe4bc;
 }
 .seller-apply {
   display: block;
@@ -1286,10 +1286,10 @@ a.btn.buy-go:disabled {
   padding: 18px 18px 16px;
   border-radius: 18px;
   text-decoration: none;
-  color: #1a1408;
-  background: linear-gradient(135deg, #fff6d4, #f3d36a 55%, #fff);
-  border: 1px solid #e2b93d;
-  box-shadow: 0 10px 24px rgba(201, 162, 39, 0.25);
+  color: #0c0e14;
+  background: linear-gradient(135deg, #f7efd2, #d4b45a 55%, #ffffff);
+  border: 1px solid #c2a04a;
+  box-shadow: 0 10px 24px rgba(194, 160, 74, 0.22);
 }
 .seller-apply span {
   display: block;
@@ -1380,12 +1380,12 @@ a.btn.buy-go:disabled {
   gap: 18px;
   padding: 22px;
   border-radius: 22px;
-  color: #fff8e4;
-  border: 1px solid #e2b93d;
+  color: #f3e7c0;
+  border: 1px solid #c2a04a;
   background:
-    radial-gradient(900px 160px at 8% 0%, rgba(226, 185, 61, 0.35), transparent 46%),
-    linear-gradient(135deg, #14110c 0%, #2c2314 58%, #1a1408 100%);
-  box-shadow: 0 18px 40px rgba(40, 28, 4, 0.16);
+    radial-gradient(900px 160px at 8% 0%, rgba(194, 160, 74, 0.28), transparent 46%),
+    linear-gradient(135deg, #0c0e14 0%, #1a1f2c 58%, #12151e 100%);
+  box-shadow: 0 18px 40px rgba(12, 14, 20, 0.22);
 }
 .escrow-shield {
   width: 72px;
@@ -1402,13 +1402,13 @@ a.btn.buy-go:disabled {
 }
 .escrow-band-copy h2 {
   margin: 0;
-  color: #fff6d4;
+  color: #f7efd2;
   font-size: 1.45rem;
   letter-spacing: -0.03em;
 }
 .escrow-band-copy p {
   margin: 6px 0 0;
-  color: #f3e2b0;
+  color: #e8d9a6;
   font-size: 1rem;
 }
 .usdt-coin {
@@ -1422,7 +1422,7 @@ a.btn.buy-go:disabled {
   align-items: center;
   justify-content: center;
   color: #fff;
-  background: radial-gradient(circle at 35% 30%, #fff4c8, #2fbf90 38%, #0c8f62 72%);
+  background: radial-gradient(circle at 35% 30%, #efe4bc, #2fbf90 38%, #0c8f62 72%);
   box-shadow:
     inset 0 0 0 3px rgba(255, 255, 255, 0.35),
     0 10px 18px rgba(0, 0, 0, 0.28);
@@ -1504,7 +1504,7 @@ a.card:hover {
 }
 .card.f {
   background: #ffffff;
-  border-color: #cfc3a3;
+  border-color: #c8ceda;
 }
 
 .pill {
@@ -1513,7 +1513,7 @@ a.card:hover {
   font-weight: 700;
   padding: 4px 10px;
   border-radius: 99px;
-  background: #ebe3cf;
+  background: #e4e7ed;
   color: #121212;
 }
 .pill.g {
@@ -1537,17 +1537,17 @@ a.card:hover {
   margin-bottom: 12px;
   padding: 12px 14px;
   border-radius: 14px;
-  background: linear-gradient(145deg, #1a1408, #3d3112);
-  color: #fff8d6;
+  background: linear-gradient(145deg, #0c0e14, #1e2430);
+  color: #f7efd2;
 }
 .fee-banner p {
-  color: #fff8d6;
+  color: #f7efd2;
 }
 .fee-note {
   margin: 2px 0 0;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #8a6a12;
+  color: #7a6418;
 }
 .price {
   font-weight: 700;
@@ -1711,7 +1711,7 @@ a.chat-fab {
 .m.escrow {
   border-left: 3px solid #c9a227;
   background: #241f16;
-  color: #fff4cc;
+  color: #efe4bc;
 }
 .m.admin small,
 .m.escrow small {
@@ -1747,7 +1747,7 @@ a.chat-fab {
 .admin-shell .tabs button {
   color: #121212;
   background: #ffffff;
-  border: 1.5px solid #cfc3a3;
+  border: 1.5px solid #c8ceda;
   border-radius: 12px;
   font-weight: 800;
   padding: 11px 16px;
@@ -1849,7 +1849,7 @@ a.chat-fab {
   gap: 10px;
   padding: 11px 16px;
   border-radius: 12px;
-  border: 1.5px solid #cfc3a3;
+  border: 1.5px solid #c8ceda;
   background: #ffffff;
   color: #121212;
   font: inherit;
@@ -1867,7 +1867,7 @@ a.chat-fab {
   justify-content: center;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #ebe3cf;
+  background: #e4e7ed;
   color: #121212;
   font-size: 0.85rem;
 }
@@ -1924,7 +1924,7 @@ a.chat-fab {
   content: "";
   flex: 1;
   height: 1px;
-  background: #d4c7a4;
+  background: #c8ceda;
 }
 html[data-theme="dark"] .admin-shell .mut,
 html[data-theme="dark"] .chat-dock-panel .mut,
@@ -1938,7 +1938,7 @@ html[data-theme="dark"] .admin-shell .tabs button {
 }
 html[data-theme="dark"] .admin-title,
 html[data-theme="dark"] .admin-queue-label {
-  color: #fff8e4;
+  color: #f4f5f8;
 }
 html[data-theme="dark"] .admin-order-bucket {
   background: #1b1b1b;
@@ -2085,7 +2085,7 @@ footer.sf-footer {
   padding-top: 8px;
 }
 .support-promise-inner {
-  border: 1.5px solid #d4c7a4;
+  border: 1.5px solid #c8ceda;
   border-radius: 16px;
   padding: 18px 16px;
   background: #ffffff;
@@ -2163,17 +2163,17 @@ footer.sf-footer {
 .deal-steps-mini {
   margin: 16px 0 0;
   padding-inline-start: 1.2rem;
-  color: #fff8dc;
+  color: #f3e7c0;
   font-size: 0.95rem;
   line-height: 1.65;
   font-weight: 600;
 }
 .deal-steps-mini li {
   margin: 6px 0;
-  color: #fff8dc;
+  color: #f3e7c0;
 }
 .deal-steps-mini li::marker {
-  color: #f0d078;
+  color: #d4b45a;
 }
 .create-deal-as {
   color: #1f1a12;
@@ -2279,7 +2279,7 @@ footer.sf-footer {
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid #e2b93b;
-  background: #fff8e0;
+  background: #f4f5f8;
   color: #1a1408;
   font-size: 0.88rem;
   line-height: 1.4;
@@ -2302,15 +2302,15 @@ footer.sf-footer {
 
 .hero {
   background:
-    linear-gradient(155deg, rgba(34, 34, 34, 0.96) 0%, rgba(18, 18, 18, 0.94) 50%, rgba(28, 24, 14, 0.95) 100%),
-    radial-gradient(720px 340px at 90% 8%, rgba(230, 195, 92, 0.28), transparent 58%);
+    linear-gradient(155deg, rgba(18, 22, 32, 0.98) 0%, rgba(12, 14, 20, 0.96) 52%, rgba(22, 26, 38, 0.96) 100%),
+    radial-gradient(720px 340px at 90% 8%, rgba(194, 160, 74, 0.26), transparent 58%);
   color: #fff;
   border-radius: 0 0 28px 28px;
   margin: 0 -18px;
   padding: 32px 18px 36px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 16px 40px rgba(12, 14, 20, 0.16);
 }
 .hero::after {
   content: "";
@@ -2491,7 +2491,7 @@ footer.sf-footer {
   height: 4px;
 }
 .cat-live-viewport::-webkit-scrollbar-thumb {
-  background: #d4c7a4;
+  background: #c8ceda;
   border-radius: 99px;
 }
 .cat-live-set {
@@ -2583,7 +2583,7 @@ footer.sf-footer {
   word-break: break-word;
 }
 .cat-circle:active .cat-circle-disc {
-  background: #f3f0e6;
+  background: #eef0f4;
   transform: scale(0.96);
 }
 .cat-circle.on .cat-circle-disc {
@@ -2663,7 +2663,7 @@ footer.sf-footer {
 }
 html[data-theme="dark"] .backup-code {
   background: #2a2416;
-  color: #fff4cc;
+  color: #efe4bc;
 }
 .deal-how h2 {
   margin: 0 0 14px;
@@ -2838,7 +2838,7 @@ html[data-theme="dark"] .backup-code {
 }
 .cat-pick-btn.on {
   border-color: #c9a227;
-  background: linear-gradient(180deg, #fffdf6 0%, #fff1c2 100%);
+  background: linear-gradient(180deg, #f7f8fb 0%, #fff1c2 100%);
   box-shadow: 0 8px 18px rgba(201, 162, 39, 0.2);
 }
 .list-form button[type="submit"] {
@@ -2881,7 +2881,7 @@ html[data-theme="dark"] .backup-code {
   border-color: #fca5a5;
 }
 .crypto-pay {
-  background: linear-gradient(180deg, #fffdf6, #fff);
+  background: linear-gradient(180deg, #f7f8fb, #fff);
   border: 2px solid #e2b93d;
   border-radius: 18px;
   padding: 16px;
@@ -2922,7 +2922,7 @@ html[data-theme="dark"] .backup-code {
 }
 .crypto-nets button {
   flex: 1;
-  border: 1px solid #ead9a4;
+  border: 1px solid #c8ceda;
   background: #fff;
   border-radius: 12px;
   padding: 10px;
@@ -2982,7 +2982,7 @@ html[data-theme="dark"] .backup-code {
   padding: 6px 10px;
   font-size: 0.78rem;
   font-weight: 800;
-  background: #fff4cc;
+  background: #efe4bc;
   color: #3a2e12;
 }
 .pay-pill.paid {
@@ -3112,8 +3112,9 @@ html[data-theme="dark"] .backup-code {
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--bg);
+  background: #ffffff;
   border-top: 1px solid var(--line);
+  box-shadow: 0 -8px 24px rgba(12, 14, 20, 0.06);
   display: flex;
   justify-content: space-around;
   align-items: flex-end;
