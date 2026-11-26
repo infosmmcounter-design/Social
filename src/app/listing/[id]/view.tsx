@@ -39,6 +39,7 @@ export default function ListingDetailPage() {
   const [coin, setCoin] = useState("USDT (TRC20)");
   const [qty, setQty] = useState(1);
   const [err, setErr] = useState("");
+  const [missing, setMissing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [balance, setBalance] = useState(0);
   const [feePct, setFeePct] = useState(5);
@@ -95,9 +96,22 @@ export default function ListingDetailPage() {
           meta.setAttribute("content", d.seo.description);
         }
       })
-      .catch(() => setData(null));
+      .catch(() => {
+        setData(null);
+        setMissing(true);
+      });
   }, [id, locale]);
 
+  if (missing) {
+    return (
+      <section className="sec">
+        <p>This listing could not be loaded.</p>
+        <Link className="btn" href="/listings">
+          Back to listings
+        </Link>
+      </section>
+    );
+  }
   if (!data) return <p className="sec mut">{t("common.loading")}</p>;
   const l = data.listing as {
     id: number;
@@ -203,6 +217,22 @@ export default function ListingDetailPage() {
       <Link className="mut sm" href={`/listings?cat=${l.cat}`}>
         {t("listing.back")} · {catName}
       </Link>
+      {!freelance ? (
+        <div className={`stock-banner ${soldOut ? "sold" : ""}`}>
+          <strong>
+            {soldOut
+              ? t("common.soldOut")
+              : `${l.stock ?? 1} ${t("common.available")}`}
+          </strong>
+          <span>
+            {(l.stock ?? 1) <= 1 && !soldOut
+              ? "One account in this listing."
+              : "Same details for every unit. Each purchase takes one from stock."}
+            {l.followers ? ` · ${l.followers}` : ""}
+            {l.monetized ? ` · ${t("card.monetized")}` : ""}
+          </span>
+        </div>
+      ) : null}
       <div
         className="grid"
         style={{
@@ -454,7 +484,7 @@ export default function ListingDetailPage() {
             </button>
           ) : null}
           <button
-            className="btn o"
+            className="btn buy-go"
             style={{ width: "100%", marginTop: 10 }}
             disabled={busy || soldOut || qtyOver}
             onClick={() => startDeal()}

@@ -7,6 +7,7 @@ import { useAuth, type AuthUser } from "@/components/AuthProvider";
 import { LocaleLink as Link } from "@/components/LocaleLink";
 import { useLang } from "@/components/LanguageProvider";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
+import { GoogleSignIn } from "@/components/GoogleSignIn";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -62,6 +63,7 @@ export default function LoginPage() {
             {t("nav.login")}
           </button>
         </div>
+        <GoogleSignIn />
       </form>
       <p className="sm mut" style={{ marginTop: 12 }}>
         <Link href="/auth/recover">{t("auth.recoverLink")}</Link>

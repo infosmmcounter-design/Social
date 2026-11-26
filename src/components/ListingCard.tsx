@@ -1,16 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { CatIcon } from "./Icons";
 import { VerifiedTick } from "./VerifiedTick";
 import { useLang } from "./LanguageProvider";
 import { LocaleLink as Link } from "./LocaleLink";
-import { useAuth } from "./AuthProvider";
-import { api } from "@/lib/api";
 import { ESCROW_FEE_PCT, money } from "@/lib/constants";
 import { isFreelanceCategory } from "@/lib/types";
-import { withLocalePrefix } from "@/lib/i18n/locale-path";
 import type { MsgKey } from "@/lib/i18n/messages";
 
 type Props = {
@@ -44,11 +39,7 @@ type Props = {
 };
 
 export function ListingCard({ listing }: Props) {
-  const { t, locale } = useLang();
-  const { user } = useAuth();
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState("");
+  const { t } = useLang();
   const catKey = `cat.${listing.cat}` as MsgKey;
   const catName = t(catKey) === catKey ? listing.cat : t(catKey);
   const s = listing.seller;
@@ -60,34 +51,11 @@ export function ListingCard({ listing }: Props) {
     !freelance &&
     (listing.soldOut || (listing.stock !== undefined && listing.stock <= 0));
 
-  async function buy() {
-    setErr("");
-    if (soldOut) return;
-    if (!user) {
-      router.push(withLocalePrefix(`/listing/${listing.id}`, locale));
-      return;
-    }
-    setBusy(true);
-    try {
-      const res = await api<{ order: { id: number } }>("/api/orders", {
-        method: "POST",
-        json: {
-          listingId: listing.id,
-          email: user.email,
-          name: user.name,
-          det: user.email || "Shared in the deal chat",
-          qty: 1,
-          coin: "USDT (TRC20)",
-          paymentMode: "escrow_crypto",
-        },
-      });
-      router.push(withLocalePrefix(`/deal/${res.order.id}`, locale));
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Could not place the order");
-    } finally {
-      setBusy(false);
-    }
-  }
+  const stockLabel = freelance
+    ? null
+    : soldOut
+      ? t("common.soldOut")
+      : `${listing.stock ?? 1} left`;
 
   return (
     <article className="card lc">
@@ -99,7 +67,13 @@ export function ListingCard({ listing }: Props) {
           ) : (
             <CatIcon cat={listing.cat} size={48} />
           )}
-          {soldOut ? <span className="stock-badge sold">{t("common.soldOut")}</span> : null}
+          {!freelance ? (
+            <span className={`stock-badge ${soldOut ? "sold" : ""}`}>
+              {soldOut
+                ? t("common.soldOut")
+                : `${listing.stock ?? 1} ${t("common.available")}`}
+            </span>
+          ) : null}
         </div>
         <div className="bd2">
           <span className="pill" style={{ display: "inline-flex", gap: 5, alignItems: "center" }}>
@@ -112,14 +86,20 @@ export function ListingCard({ listing }: Props) {
             {s?.verified ? <VerifiedTick size={14} /> : null}
           </p>
           <div className="price">{money(listing.price)}</div>
+          {stockLabel ? <p className="sm mut lc-stock">{stockLabel}</p> : null}
           <p className="fee-note">+ {ESCROW_FEE_PCT}% {t("common.escrowFee")}</p>
         </div>
       </Link>
       <div className="lc-foot">
-        <button className="btn buy-go" type="button" disabled={busy || soldOut} onClick={buy}>
-          {busy ? "…" : soldOut ? t("common.soldOut") : "Buy"}
-        </button>
-        {err ? <p className="err sm">{err}</p> : null}
+        {soldOut ? (
+          <span className="btn buy-go" aria-disabled>
+            {t("common.soldOut")}
+          </span>
+        ) : (
+          <Link className="btn buy-go" href={`/listing/${listing.id}`}>
+            Buy
+          </Link>
+        )}
       </div>
     </article>
   );

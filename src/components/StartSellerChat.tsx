@@ -4,8 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "./AuthProvider";
+import { saveGuestEmail } from "@/lib/guest-email";
+import { useLang } from "./LanguageProvider";
+import { withLocalePrefix } from "@/lib/i18n/locale-path";
 
-/** Start a pre-deal 3-way chat with a named seller (no order needed). */
+/** Start a pre-deal chat with a seller. Logged-in users open it in one click. */
 export function StartSellerChat({
   sellerId,
   sellerName,
@@ -18,6 +21,7 @@ export function StartSellerChat({
   compact?: boolean;
 }) {
   const { user } = useAuth();
+  const { locale } = useLang();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -33,28 +37,32 @@ export function StartSellerChat({
     }
   }, [user]);
 
-  async function start() {
+  async function start(nextName: string, nextEmail: string, nextMessage: string) {
     setErr("");
     setBusy(true);
     try {
+      const mail = nextEmail.trim().toLowerCase();
+      saveGuestEmail(mail);
       const res = await api<{ inquiry: { id: number } }>("/api/inquiries", {
         method: "POST",
         json: {
           sellerId,
           listingId: listingId ?? null,
-          name,
-          email,
+          name: nextName.trim(),
+          email: mail,
           message:
-            message.trim() ||
-            `Hi ${sellerName}, I’d like to ask about your listing before buying.`,
+            nextMessage.trim() ||
+            `Hi ${sellerName}, I would like to ask about this listing before buying.`,
         },
       });
       router.push(
-        `/chat/${res.inquiry.id}?email=${encodeURIComponent(email.trim())}`
+        withLocalePrefix(
+          `/chat/${res.inquiry.id}?email=${encodeURIComponent(mail)}`,
+          locale
+        )
       );
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Failed");
-    } finally {
+      setErr(e instanceof Error ? e.message : "Could not open the chat");
       setBusy(false);
     }
   }
@@ -64,18 +72,25 @@ export function StartSellerChat({
       <button
         type="button"
         className={compact ? "btn s" : "btn o"}
-        onClick={() => setOpen(true)}
+        disabled={busy}
+        onClick={() => {
+          if (user?.email) {
+            start(user.name, user.email, "");
+            return;
+          }
+          setOpen(true);
+        }}
       >
-        Chat with {sellerName}
+        {busy ? "Opening…" : "Chat with Seller"}
       </button>
     );
   }
 
   return (
     <div className="card f" style={{ marginTop: compact ? 0 : 10 }}>
-      <h3 style={{ marginTop: 0 }}>Chat with {sellerName}</h3>
+      <h3 style={{ marginTop: 0 }}>Chat with Seller</h3>
       <p className="sm mut">
-        Opens a 3-way room with {sellerName} and Escrow — no deal / payment yet.
+        Opens a room with {sellerName} and Escrow. You can ask questions without buying.
       </p>
       <label>Your name</label>
       <input value={name} onChange={(e) => setName(e.target.value)} />
@@ -95,8 +110,13 @@ export function StartSellerChat({
       />
       {err ? <p className="err">{err}</p> : null}
       <div className="row" style={{ marginTop: 10 }}>
-        <button className="btn" type="button" disabled={busy} onClick={start}>
-          {busy ? "Opening…" : `Start chat with ${sellerName}`}
+        <button
+          className="btn"
+          type="button"
+          disabled={busy || !email.trim() || !name.trim()}
+          onClick={() => start(name, email, message)}
+        >
+          {busy ? "Opening…" : "Open chat"}
         </button>
         <button className="btn o" type="button" onClick={() => setOpen(false)}>
           Cancel

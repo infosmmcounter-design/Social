@@ -173,6 +173,11 @@ export default function HomePage() {
               {t("home.searchBtn")}
             </button>
           </div>
+          <div className="row" style={{ marginTop: 14 }}>
+            <Link className="btn hero-sell" href="/apply">
+              Apply to sell
+            </Link>
+          </div>
           <EscrowBand />
         </div>
       </section>
@@ -336,7 +341,7 @@ function EscrowBand() {
         </div>
         <div className="escrow-band-copy">
           <h2>Protected by Escrow</h2>
-          <p>Your payment is protected by escrow until you approve.</p>
+          <p>Chat first, pay USDT into escrow, then confirm delivery. Funds stay held until you say you received it.</p>
         </div>
         <div className="usdt-coin" aria-hidden>
           <span>₮</span>

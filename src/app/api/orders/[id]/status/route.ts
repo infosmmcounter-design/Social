@@ -81,8 +81,16 @@ export async function POST(
         return;
       }
 
-      if (status === "credentials_shared" && !(order.status === "funds_held" && order.sellerAcceptedAt)) {
-        throw new Error("The deal starts after payment and the seller accepts. Mark it delivered after that.");
+      if (status === "credentials_shared") {
+        if (order.status !== "funds_held") {
+          throw new Error("Funds must be held in escrow before this is marked delivered to the buyer.");
+        }
+        if (!(isAdmin || isSeller || adminAsSeller)) {
+          throw new Error("Only the seller or escrow can mark this delivered.");
+        }
+        if (!order.sellerAcceptedAt) {
+          order.sellerAcceptedAt = new Date().toISOString();
+        }
       }
 
       let allowed = false;
@@ -90,8 +98,7 @@ export async function POST(
       if (
         (isSeller || adminAsSeller) &&
         SELLER_ACTIONS.includes(status) &&
-        order.status === "funds_held" &&
-        order.sellerAcceptedAt
+        order.status === "funds_held"
       ) {
         allowed = true;
       }
@@ -145,7 +152,7 @@ export async function POST(
           ? "Payment confirmed. Funds held in escrow. The seller already accepted, so the deal has started."
           : `Payment confirmed. Funds held in escrow. The seller has ${hours} hours from the order to accept. If there is no response, the buyer can cancel.`,
         credentials_shared:
-          "Seller marked this delivered successfully. The buyer is notified and can confirm receipt.",
+          "Delivered to the buyer. Buyer: open this deal and tap “I received it”. After you confirm, the review box opens. Escrow releases the seller payment after that.",
         release_requested:
           "Buyer confirmed: I have received the service. Escrow, please pay the seller.",
         completed:

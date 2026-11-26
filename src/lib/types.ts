@@ -125,6 +125,12 @@ export interface User {
   blockedUserIds?: number[];
   /** Emails this person blocked (guest buyers). */
   blockedEmails?: string[];
+  /** Google account subject. Set when the user continues with Google. */
+  googleSub?: string;
+  /** True after Google sign-in or after the signup code is entered. */
+  emailVerified?: boolean;
+  /** bcrypt hash of the one-time email code. Cleared after a successful check. */
+  verifyCodeHash?: string;
 }
 
 export type CryptoPayStatus =

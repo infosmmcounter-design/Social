@@ -8,6 +8,7 @@ import { useLang } from "./LanguageProvider";
 import { LocaleLink as Link } from "./LocaleLink";
 import { stripLocalePrefix } from "@/lib/i18n/locale-path";
 import { CHATS_REFRESH_EVENT, ChatCountBadge, useUnreadChats } from "./useUnreadChats";
+import { readGuestEmail, saveGuestEmail } from "@/lib/guest-email";
 
 type Msg = { id: number; from: string; text: string; createdAt: string };
 type Row = {
@@ -62,7 +63,10 @@ export function ChatDock() {
     if (user) {
       setName(user.name || "");
       setEmail(user.email || "");
+      return;
     }
+    const saved = readGuestEmail();
+    if (saved) setEmail(saved);
   }, [user]);
 
   const loadList = useCallback(async (): Promise<Row[]> => {
@@ -372,7 +376,10 @@ export function ChatDock() {
                     <input
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        saveGuestEmail(e.target.value);
+                      }}
                       placeholder="Email used on your orders"
                       aria-label="Email"
                     />
@@ -402,7 +409,10 @@ export function ChatDock() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    saveGuestEmail(e.target.value);
+                  }}
                   placeholder={t("listing.yourEmail")}
                   aria-label={t("listing.yourEmail")}
                   required

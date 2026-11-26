@@ -407,6 +407,35 @@ html[dir="rtl"] .chat-fab {
 }
 .chat-live-compose input {
   flex: 1;
+  min-width: 0;
+}
+.chat-sections h2 {
+  font-size: 1.05rem;
+  margin: 22px 0 0;
+}
+.receive-card {
+  border: 2px solid #e2b93d;
+  background: linear-gradient(180deg, #fff8e4, #fff);
+  padding: 16px;
+  border-radius: 16px;
+  margin: 0 0 14px;
+}
+.receive-card .buy-go {
+  width: auto;
+  margin-top: 8px;
+}
+.deal-compose {
+  flex-wrap: wrap;
+}
+.deal-compose input {
+  flex: 1;
+  min-width: 180px;
+}
+.lc-stock {
+  margin: 0 0 4px;
+}
+.google-btn {
+  width: 100%;
 }
 .chat-live-gate {
   flex: 1;
@@ -881,20 +910,31 @@ textarea:focus-visible {
 .lc-foot {
   padding: 0 12px 12px;
 }
-.buy-go {
+.btn.buy-go,
+a.btn.buy-go {
   width: 100%;
-  background: linear-gradient(180deg, #23a85c, #0d7a3c);
+  background: linear-gradient(180deg, #34d27a 0%, #14914a 55%, #0b6b34 100%);
   color: #fff;
-  border: 1px solid #e2b93d;
-  box-shadow: 0 8px 18px rgba(13, 122, 60, 0.28);
+  border: 1px solid #f0d36a;
+  box-shadow:
+    0 10px 22px rgba(13, 122, 60, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
   font-weight: 800;
+  letter-spacing: 0.01em;
+  padding: 12px 18px;
 }
-.buy-go:hover {
-  filter: brightness(1.06);
+.btn.buy-go:hover,
+a.btn.buy-go:hover {
+  background: linear-gradient(180deg, #46e08a 0%, #18a454 55%, #0c7a3c 100%);
+  color: #fff;
+  filter: none;
+  transform: translateY(-1px);
 }
-.buy-go:disabled {
+.btn.buy-go:disabled,
+a.btn.buy-go:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+  transform: none;
 }
 @media (max-width: 700px) {
   .listing-grid .lc .bd2 {
@@ -909,6 +949,13 @@ textarea:focus-visible {
 }
 .hero .escrow-band {
   margin: 16px 0 0;
+}
+.hero-sell {
+  width: auto;
+  background: linear-gradient(180deg, #ffe9a0, #e2b93d 55%, #b8860b);
+  color: #1a1408;
+  border: 0;
+  font-weight: 800;
 }
 .lang-switch {
   position: relative;
@@ -983,15 +1030,29 @@ textarea:focus-visible {
   width: 100%;
   margin-top: 16px;
   display: flex;
-  justify-content: space-between;
+  gap: 10px;
   align-items: center;
-  text-align: start;
-  padding: 16px 18px;
+  padding: 12px;
   border-radius: 18px;
   border: 1px solid var(--line);
   background: var(--s);
   color: var(--ink);
+}
+.wallet-open {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: start;
+  border: 0;
+  background: transparent;
+  color: inherit;
   cursor: pointer;
+  padding: 4px;
+}
+.wallet-entry .buy-go {
+  width: auto;
+  min-width: 120px;
 }
 .wallet-entry strong,
 .wallet-entry small {
@@ -1706,16 +1767,42 @@ html[data-theme="dark"] .backup-code {
 .stock-badge {
   position: absolute;
   left: 10px;
-  bottom: 10px;
-  background: rgba(12, 31, 28, 0.78);
+  top: 10px;
+  background: #1f8a4c;
   color: #fff;
   font-size: 0.72rem;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 4px 8px;
   border-radius: 6px;
 }
 .stock-badge.sold {
   background: rgba(180, 35, 24, 0.9);
+}
+.stock-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: baseline;
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #e8f6ee;
+  border: 1px solid #1f8a4c;
+  color: #0f3d24;
+}
+.stock-banner strong {
+  font-size: 1.25rem;
+}
+.stock-banner.sold {
+  background: #fdecea;
+  border-color: #b42318;
+  color: #7a1d16;
+}
+.list-mode {
+  margin: 8px 0 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--s2, #f4f7f6);
 }
 .pay-timer {
   display: flex;

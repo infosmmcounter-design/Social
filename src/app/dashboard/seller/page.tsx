@@ -88,6 +88,7 @@ export default function SellerDashboard() {
     img: "",
   });
   const isFreelanceForm = isFreelanceCategory(form.cat);
+  const [listMode, setListMode] = useState<"one" | "stock">("one");
   const [profile, setProfile] = useState({
     name: "",
     bio: "",
@@ -168,7 +169,9 @@ export default function SellerDashboard() {
           price: Number(form.price),
           stock: freelance
             ? 9999
-            : Math.max(0, Math.floor(Number(form.stock)) || 0),
+            : listMode === "one"
+              ? 1
+              : Math.max(1, Math.floor(Number(form.stock)) || 1),
           deliveryDays: Number(form.deliveryDays) || 3,
           revisions: Number(form.revisions) || 1,
         },
@@ -311,6 +314,55 @@ export default function SellerDashboard() {
             Facebook, TikTok…). Buyer pays escrow; you deliver in chat.
           </p>
         ) : null}
+        {!isFreelanceForm ? (
+          <div className="list-mode">
+            <p className="sm" style={{ marginTop: 0 }}>
+              <b>What are you listing?</b>
+            </p>
+            <div className="row">
+              <button
+                type="button"
+                className={`btn s ${listMode === "one" ? "" : "o"}`}
+                onClick={() => {
+                  setListMode("one");
+                  setForm({ ...form, stock: "1" });
+                }}
+              >
+                One account
+              </button>
+              <button
+                type="button"
+                className={`btn s ${listMode === "stock" ? "" : "o"}`}
+                onClick={() => {
+                  setListMode("stock");
+                  setForm({ ...form, stock: form.stock === "1" ? "100" : form.stock });
+                }}
+              >
+                Stock of similar accounts
+              </button>
+            </div>
+            <p className="sm mut">
+              {listMode === "one"
+                ? "One channel or page, with its subscriber count and link. Buyers see 1 available. The link stays hidden until the deal."
+                : "Many similar accounts, written once. Example: 100 monetized YouTube channels. The available count sits at the top of the listing. Each sale takes one. Send that buyer’s link in the deal chat."}
+            </p>
+          </div>
+        ) : null}
+        {listMode === "stock" && !isFreelanceForm ? (
+          <>
+            <label>Available stock</label>
+            <input
+              type="number"
+              min={1}
+              value={form.stock}
+              onChange={(e) => setForm({ ...form, stock: e.target.value })}
+              placeholder="100"
+            />
+            <p className="sm mut">
+              Buyers see this count at the top of the listing, for example “{form.stock || "100"} available”.
+            </p>
+          </>
+        ) : null}
         <label>Title</label>
         <input
           value={form.title}
@@ -318,7 +370,9 @@ export default function SellerDashboard() {
           placeholder={
             isFreelanceForm
               ? "e.g. YouTube Thumbnail Pack (5 designs)"
-              : "e.g. YouTube Gaming Channel — 85K"
+              : listMode === "stock"
+                ? "e.g. Monetized YouTube channels"
+                : "e.g. YouTube channel — 1,000 subscribers"
           }
           required
         />
@@ -354,6 +408,7 @@ export default function SellerDashboard() {
             <input
               value={form.followers}
               onChange={(e) => setForm({ ...form, followers: e.target.value })}
+              placeholder={listMode === "stock" ? "e.g. 1,000 each" : "1,000"}
             />
             <label>
               <input
@@ -367,15 +422,22 @@ export default function SellerDashboard() {
               Monetized
             </label>
             <label>
-              Private handle / URL (optional — can share later in chat)
+              {listMode === "one"
+                ? "Channel or page link"
+                : "Sample link (optional)"}
             </label>
             <input
               value={form.privateHandle}
               onChange={(e) =>
                 setForm({ ...form, privateHandle: e.target.value })
               }
-              placeholder="Optional"
+              placeholder="https://youtube.com/@channel"
             />
+            <p className="sm mut">
+              {listMode === "one"
+                ? "Buyers do not see this link until escrow starts. Then it is revealed in the deal."
+                : "Leave blank if each unit has its own link. After payment, send that buyer’s link in the deal chat."}
+            </p>
           </>
         ) : (
           <>
@@ -406,18 +468,9 @@ export default function SellerDashboard() {
           onChange={(e) => setForm({ ...form, teaser: e.target.value })}
         />
         {!isFreelanceForm ? (
-          <>
-            <label>Available stock (identical units)</label>
-            <input
-              type="number"
-              min={0}
-              value={form.stock}
-              onChange={(e) => setForm({ ...form, stock: e.target.value })}
-            />
-            <p className="sm mut">
-              Example: five similar channels ready — set stock to 5.
-            </p>
-          </>
+          listMode === "one" ? (
+            <p className="sm mut">Stock for this listing is 1. It is one account.</p>
+          ) : null
         ) : (
           <p className="sm mut">
             No stock limit — buyers see how many times this gig was purchased

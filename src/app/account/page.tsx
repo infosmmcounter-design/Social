@@ -243,6 +243,8 @@ export default function AccountPage() {
           <p className="sm" style={{ margin: "2px 0 0", opacity: 0.75 }}>
             {user.role === "seller" ? t("account.seller") : t("account.buyer")}
             {user.country ? ` · ${user.country}` : ""}
+            {user.google ? " · Google" : ""}
+            {user.emailVerified ? " · Email verified" : ""}
           </p>
         </div>
         <div className="account-hero-actions">
@@ -301,13 +303,18 @@ export default function AccountPage() {
         </form>
       ) : null}
 
-      <button type="button" className="wallet-entry" onClick={() => setWalletOpen((v) => !v)}>
-        <span>
-          <strong>Wallet</strong>
-          <small>Deposit in Wallet</small>
-        </span>
-        <em>{walletOpen ? "Close" : "Open"}</em>
-      </button>
+      <div className="wallet-entry">
+        <button type="button" className="wallet-open" onClick={() => setWalletOpen((v) => !v)}>
+          <span>
+            <strong>Wallet</strong>
+            <small>Open to see your balance</small>
+          </span>
+          <em>{walletOpen ? "Close" : "Open"}</em>
+        </button>
+        <button className="btn buy-go" type="button" onClick={() => setDepositOpen(true)}>
+          Deposit
+        </button>
+      </div>
 
       {walletOpen ? (
       <div className="card wallet-card crypto-pay">

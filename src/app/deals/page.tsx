@@ -7,6 +7,7 @@ import { money } from "@/lib/constants";
 import { DEAL_STATUS_LABEL, type DealStatus } from "@/lib/types";
 import { LocaleLink as Link } from "@/components/LocaleLink";
 import { useLang } from "@/components/LanguageProvider";
+import { readGuestEmail, saveGuestEmail } from "@/lib/guest-email";
 
 type Order = {
   id: number;
@@ -32,13 +33,23 @@ export default function DealsPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [onlyOpen, setOnlyOpen] = useState(true);
+  const [email, setEmail] = useState("");
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
-    api<{ orders: Order[] }>("/api/orders")
+    if (loading) return;
+    const saved = readGuestEmail();
+    if (saved) setEmail(saved);
+    if (!user && !saved) {
+      setLoaded(true);
+      return;
+    }
+    const q = !user && saved ? `?email=${encodeURIComponent(saved)}` : "";
+    api<{ orders: Order[] }>(`/api/orders${q}`)
       .then((d) => setOrders(d.orders || []))
-      .catch(() => setOrders([]));
-  }, [user]);
+      .catch(() => setOrders([]))
+      .finally(() => setLoaded(true));
+  }, [user, loading]);
 
   const rows = useMemo(() => {
     let list = orders;
@@ -56,24 +67,54 @@ export default function DealsPage() {
     return list;
   }, [orders, side, onlyOpen, user]);
 
-  if (loading) return <p className="sec mut">{t("common.loading")}</p>;
+  if (loading || !loaded) return <p className="sec mut">{t("common.loading")}</p>;
+
+  function nextStep(status: DealStatus) {
+    if (status === "awaiting_payment") return "Pay in the deal room";
+    if (status === "funds_held") return "Waiting for delivery";
+    if (status === "credentials_shared") return "Tap I received it";
+    if (status === "release_requested") return "Leave a review";
+    return "";
+  }
 
   return (
     <section className="sec deals-page">
       <h1 style={{ fontSize: "2rem" }}>{t("deals.title")}</h1>
       {!user ? (
-        <div className="card" style={{ marginTop: 12 }}>
+        <form
+          className="card"
+          style={{ marginTop: 12 }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            const mail = email.trim().toLowerCase();
+            saveGuestEmail(mail);
+            setLoaded(false);
+            api<{ orders: Order[] }>(`/api/orders?email=${encodeURIComponent(mail)}`)
+              .then((d) => setOrders(d.orders || []))
+              .catch(() => setOrders([]))
+              .finally(() => setLoaded(true));
+          }}
+        >
           <p>{t("deals.login")}</p>
-          <div className="row">
-            <Link className="btn" href="/auth/login">
+          <label>Or find deals with your checkout email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            required
+          />
+          <div className="row" style={{ marginTop: 10 }}>
+            <button className="btn" type="submit">
+              Find my deals
+            </button>
+            <Link className="btn o" href="/auth/login">
               {t("nav.login")}
             </Link>
-            <Link className="btn o" href="/auth/signup">
-              {t("nav.signup")}
-            </Link>
           </div>
-        </div>
-      ) : (
+        </form>
+      ) : null}
+      {user || orders.length ? (
         <>
           <div className="row" style={{ marginTop: 8 }}>
             <button
@@ -128,9 +169,10 @@ export default function DealsPage() {
                       <td>
                         <span className="pill w">{DEAL_STATUS_LABEL[o.status]}</span>
                       </td>
+                      <td className="sm">{nextStep(o.status)}</td>
                       <td>
-                        <Link className="btn s o" href={`/deal/${o.id}`}>
-                          {t("deal.chat")}
+                        <Link className="btn s o" href={`/deal/${o.id}?email=${encodeURIComponent(email || user?.email || o.buyerEmail)}`}>
+                          {o.status === "credentials_shared" ? "I received it" : t("deal.chat")}
                         </Link>
                       </td>
                     </tr>
@@ -140,7 +182,7 @@ export default function DealsPage() {
             </div>
           )}
         </>
-      )}
+      ) : null}
     </section>
   );
 }

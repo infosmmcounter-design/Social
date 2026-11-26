@@ -22,6 +22,8 @@ export type AuthUser = {
   avatarUrl?: string;
   walletBalance?: number;
   verified: boolean;
+  emailVerified?: boolean;
+  google?: boolean;
   rating: number;
   reviewCount: number;
   dummy: boolean;

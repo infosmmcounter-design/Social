@@ -5,8 +5,8 @@ import { LOCALES } from "@/lib/i18n/locales";
 import { useLang } from "./LanguageProvider";
 
 const SHORT: Record<string, string> = {
-  en: "E",
-  ko: "KR",
+  en: "EN",
+  ko: "KO",
   ar: "AR",
   zh: "ZH",
   ja: "JA",
