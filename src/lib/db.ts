@@ -385,6 +385,7 @@ async function createSeed(): Promise<StoreData> {
       autoHoldOnProof: false,
       deliveryWindowHours: 24,
       escrowHoldDays: 7,
+      googleClientId: "",
       cryptoWallets: DEFAULT_CRYPTO_WALLETS.map((w) => ({ ...w })),
     },
     nid,
@@ -521,6 +522,7 @@ export function normalizeStore(data: StoreData): StoreData {
   if (!data.settings.deliveryWindowHours)
     data.settings.deliveryWindowHours = 24;
   if (!data.settings.escrowHoldDays) data.settings.escrowHoldDays = 7;
+  if (data.settings.googleClientId === undefined) data.settings.googleClientId = "";
   if (!data.offers) data.offers = [];
   data.settings.allowDirectPayToSeller = false;
   // Keep only TRC20 + BEP20 USDT. Prefer saved address; else platform defaults.
@@ -602,6 +604,7 @@ export function normalizeStore(data: StoreData): StoreData {
       l.revisions = l.listingType === "service" ? 1 : 0;
     }
     if (!l.img) l.img = listingCoverDataUrl(l.cat, l.title);
+    if (l.handlePublic === undefined) l.handlePublic = false;
   }
   // Migrate legacy service gigs that lived under platform cats → Freelance board
   for (const l of data.listings) {
@@ -829,8 +832,34 @@ export function matchWalletAsset(coin: string): "USDT_TRC20" | "USDT_BEP20" {
   return "USDT_TRC20";
 }
 
-export function publicListing(l: Listing, revealHandle = false) {
+/** Feed/card image: keep JSON small — real uploads go through /cover. */
+function feedSafeImage(l: Pick<Listing, "id" | "img" | "cat" | "title">) {
+  const value = (l.img || "").trim();
+  if (!value) return listingCoverDataUrl(l.cat, l.title);
+  if (/^https?:\/\//i.test(value)) return value;
+  // data: URLs (uploads or SVG placeholders) → dedicated cover route
+  if (value.startsWith("data:")) return `/api/listings/${l.id}/cover`;
+  return value;
+}
+
+function feedSafeAvatar(url: string | undefined, name: string, verified: boolean) {
+  const value = (url || "").trim();
+  if (!value) return avatarDataUrl(name, verified);
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith("data:image/svg")) return value;
+  if (value.startsWith("data:")) return avatarDataUrl(name, verified);
+  return value;
+}
+
+export function publicListing(
+  l: Listing,
+  revealHandle = false,
+  opts?: { lite?: boolean }
+) {
   const freelance = isFreelanceListing(l);
+  const handlePublic = !!l.handlePublic;
+  const showHandle = revealHandle || handlePublic;
+  const lite = !!opts?.lite;
   return {
     id: l.id,
     sellerId: l.sellerId,
@@ -841,9 +870,11 @@ export function publicListing(l: Listing, revealHandle = false) {
     monetized: l.monetized,
     teaser: l.teaser,
     price: l.price,
-    desc: l.desc,
-    img: l.img || listingCoverDataUrl(l.cat, l.title),
-    images: l.images || [],
+    desc: lite ? "" : l.desc,
+    img: lite
+      ? feedSafeImage(l)
+      : l.img || listingCoverDataUrl(l.cat, l.title),
+    images: lite ? [] : l.images || [],
     stock: freelance ? undefined : l.stock ?? 1,
     soldCount: l.soldCount ?? 0,
     listingType: l.listingType || "account",
@@ -854,8 +885,18 @@ export function publicListing(l: Listing, revealHandle = false) {
     status: l.status,
     listed: l.listed,
     createdAt: l.createdAt,
-    privateHandle: revealHandle ? l.privateHandle : null,
-    handleHidden: !!l.privateHandle && !revealHandle,
+    privateHandle: showHandle ? l.privateHandle || null : null,
+    handleHidden: !!l.privateHandle && !showHandle,
+    handlePublic,
+  };
+}
+
+export function publicSellerCard(u: User) {
+  const base = publicUser(u);
+  return {
+    ...base,
+    avatarUrl: feedSafeAvatar(u.avatarUrl, u.name, u.verified),
+    bio: (u.bio || "").slice(0, 160),
   };
 }
 

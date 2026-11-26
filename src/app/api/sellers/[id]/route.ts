@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { readStore, publicUser, publicListing } from "@/lib/db";
 import { localeFromRequest } from "@/lib/i18n/api-locale";
 import { localizeListing, localizeSeller } from "@/lib/i18n/content";
+import { compareListings } from "@/lib/listing-rank";
 
 export async function GET(
   req: Request,
@@ -16,9 +17,21 @@ export async function GET(
   if (!seller || !seller.active)
     return NextResponse.json({ error: "Seller not found" }, { status: 404 });
 
-  const listings = store.listings.filter(
-    (l) => l.sellerId === seller.id && l.listed && l.status === "approved"
-  );
+  const sellerCard = {
+    rating: seller.rating,
+    reviewCount: seller.reviewCount,
+  };
+  const listings = store.listings
+    .filter(
+      (l) => l.sellerId === seller.id && l.listed && l.status === "approved"
+    )
+    .map((l) => localizeListing(publicListing(l, false), locale))
+    .sort((a, b) =>
+      compareListings(
+        { ...a, seller: sellerCard },
+        { ...b, seller: sellerCard }
+      )
+    );
   const reviews = store.reviews.filter(
     (r) => r.sellerId === seller.id && (r.about || "seller") === "seller"
   );
@@ -26,9 +39,7 @@ export async function GET(
   return NextResponse.json({
     locale,
     seller: localizeSeller(publicUser(seller), locale),
-    listings: listings.map((l) =>
-      localizeListing(publicListing(l, false), locale)
-    ),
+    listings,
     reviews,
   });
 }

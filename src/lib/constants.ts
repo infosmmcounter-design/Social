@@ -1,20 +1,21 @@
 import type { Category } from "./types";
 
+/** Official-style brand marks for each marketplace board (24×24). */
 export const CAT_ICONS: Record<Category, string> = {
   youtube:
-    '<rect x="1" y="4.5" width="22" height="15" rx="4.5" fill="#FF0000"/><path d="M10 9l5.5 3-5.5 3z" fill="#fff"/>',
+    '<rect x="0" y="0" width="24" height="24" rx="6" fill="#FF0000"/><path d="M9.6 7.8v8.4l7.2-4.2z" fill="#fff"/>',
   facebook:
-    '<circle cx="12" cy="12" r="11" fill="#1877F2"/><path d="M13.2 20v-6.6h2.2l.4-2.6h-2.6V9.2c0-.8.3-1.3 1.4-1.3h1.3V5.6c-.2 0-1-.1-1.9-.1-2 0-3.3 1.2-3.3 3.4v1.9H8.5v2.6h2.2V20z" fill="#fff"/>',
+    '<rect width="24" height="24" rx="6" fill="#1877F2"/><path d="M13.35 20.2v-6.85h2.3l.34-2.7h-2.64V9.05c0-.78.22-1.31 1.36-1.31H16V5.35A18 18 0 0 0 14.05 5c-2.05 0-3.45 1.22-3.45 3.47v1.93H8.4v2.7h2.2V20.2z" fill="#fff"/>',
   tiktok:
-    '<rect width="24" height="24" rx="6" fill="#000"/><g fill="none" stroke-width="2" stroke-linecap="round"><path d="M13 5v9.2a2.6 2.6 0 1 1-2.6-2.6M13 5c.3 2 1.7 3.3 3.6 3.4" stroke="#25F4EE" transform="translate(-.8 .6)"/><path d="M13 5v9.2a2.6 2.6 0 1 1-2.6-2.6M13 5c.3 2 1.7 3.3 3.6 3.4" stroke="#FE2C55" transform="translate(.8 -.6)"/><path d="M13 5v9.2a2.6 2.6 0 1 1-2.6-2.6M13 5c.3 2 1.7 3.3 3.6 3.4" stroke="#fff"/></g>',
+    '<rect width="24" height="24" rx="6" fill="#010101"/><path d="M15.05 5.2c.35 1.85 1.55 3.15 3.35 3.45v2.35c-1.15-.05-2.2-.4-3.15-1.05v4.85a4.55 4.55 0 1 1-4.55-4.55c.25 0 .5.02.75.07v2.45a2.15 2.15 0 1 0 1.5 2.05V5.2z" fill="#25F4EE"/><path d="M14.35 4.5c.35 1.85 1.55 3.15 3.35 3.45v2.35c-1.15-.05-2.2-.4-3.15-1.05v4.85a4.55 4.55 0 1 1-4.55-4.55c.25 0 .5.02.75.07v2.45a2.15 2.15 0 1 0 1.5 2.05V4.5z" fill="#FE2C55"/><path d="M14.7 4.85c.35 1.85 1.55 3.15 3.35 3.45v2.35c-1.15-.05-2.2-.4-3.15-1.05v4.85a4.55 4.55 0 1 1-4.55-4.55c.25 0 .5.02.75.07v2.45a2.15 2.15 0 1 0 1.5 2.05V4.85z" fill="#fff"/>',
   instagram:
-    '<defs><linearGradient id="sfIg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FEDA75"/><stop offset=".4" stop-color="#FA7E1E"/><stop offset=".7" stop-color="#D62976"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><rect width="24" height="24" rx="6.5" fill="url(#sfIg)"/><rect x="5.5" y="5.5" width="13" height="13" rx="4" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="16.3" cy="7.7" r="1" fill="#fff"/>',
-  x: '<rect width="24" height="24" rx="6" fill="#000"/><path d="M6.2 6.5h3.1l3.2 4.3 3.7-4.3H18l-4.6 5.3L18.2 17.5h-3.1l-3.4-4.5-3.9 4.5H6l4.9-5.6z" fill="#fff"/>',
-  ai: '<rect width="24" height="24" rx="6" fill="#4338ca"/><path d="M11 5l1.7 4.6 4.6 1.7-4.6 1.7L11 17.6l-1.7-4.6-4.6-1.7 4.6-1.7z" fill="#fff"/><path d="M18 14l.8 2.2 2.2.8-2.2.8L18 20l-.8-2.2-2.2-.8 2.2-.8z" fill="#fff"/>',
+    '<defs><linearGradient id="sfIg" x1="2" y1="22" x2="22" y2="2" gradientUnits="userSpaceOnUse"><stop stop-color="#FEDA75"/><stop offset=".35" stop-color="#FA7E1E"/><stop offset=".65" stop-color="#D62976"/><stop offset="1" stop-color="#962FBF"/></linearGradient></defs><rect width="24" height="24" rx="6.5" fill="url(#sfIg)"/><rect x="5.2" y="5.2" width="13.6" height="13.6" rx="4.2" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="12" cy="12" r="3.35" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="16.55" cy="7.55" r="1.15" fill="#fff"/>',
+  x: '<rect width="24" height="24" rx="6" fill="#000"/><path d="M5.8 5.8h3.35l2.95 3.95L15.4 5.8H18.3l-4.55 5.2L18.5 18.2h-3.35l-3.2-4.3-3.7 4.3H5.35l4.85-5.55z" fill="#fff"/>',
+  ai: '<rect width="24" height="24" rx="6" fill="#4F46E5"/><path d="M11.2 4.6l1.55 4.2 4.2 1.55-4.2 1.55-1.55 4.2-1.55-4.2-4.2-1.55 4.2-1.55z" fill="#fff"/><path d="M17.8 13.6l.75 2 2 .75-2 .75-.75 2-.75-2-2-.75 2-.75z" fill="#C7D2FE"/>',
   other:
-    '<rect width="24" height="24" rx="6" fill="#0f766e"/><g fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 12a5.5 5.5 0 0 1 9.4-3.9"/><path d="M16 5v3.4h-3.4"/><path d="M17.5 12a5.5 5.5 0 0 1-9.4 3.9"/><path d="M8 19v-3.4h3.4"/></g>',
+    '<rect width="24" height="24" rx="6" fill="#0F766E"/><path d="M7.2 12a4.8 4.8 0 0 1 8.1-3.5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><path d="M15.6 5.4v3.1h-3.1" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.8 12a4.8 4.8 0 0 1-8.1 3.5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><path d="M8.4 18.6v-3.1h3.1" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
   freelance:
-    '<rect width="24" height="24" rx="6" fill="#B45309"/><path d="M7 16.5V8.2c0-.7.6-1.2 1.2-1.2h.8c.4 0 .8.2 1 .5L12 11l1.9-3.5c.3-.3.6-.5 1-.5h.8c.7 0 1.2.5 1.2 1.2v8.3h-1.8V11l-1.5 2.7c-.2.4-.7.4-.9 0L10.2 11v5.5H7.4z" fill="#fff"/><circle cx="17.2" cy="16.2" r="1.3" fill="#FDE68A"/>',
+    '<rect width="24" height="24" rx="6" fill="#B45309"/><path d="M7.2 16.8V8.4c0-.7.55-1.25 1.25-1.25h.7c.4 0 .75.2 1 .55L12 11.2l1.85-3.5c.25-.35.6-.55 1-.55h.7c.7 0 1.25.55 1.25 1.25v8.4h-1.9v-5.4l-1.35 2.45c-.25.45-.85.45-1.1 0L9.1 11.4v5.4H7.2z" fill="#fff"/><circle cx="17.4" cy="16.5" r="1.35" fill="#FDE68A"/>',
 };
 
 /** Escrow fee on every deal, including the official store. */

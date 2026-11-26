@@ -153,6 +153,23 @@ export type MsgKey =
   | "listing.payWith"
   | "listing.buyNow"
   | "listing.opening"
+  | "listing.channelUrl"
+  | "listing.hideUrl"
+  | "listing.showUrl"
+  | "listing.hideUrlHint"
+  | "listing.showUrlHint"
+  | "listing.successTitle"
+  | "listing.successBody"
+  | "listing.successGigTitle"
+  | "listing.successGigBody"
+  | "listing.successOk"
+  | "listing.delete"
+  | "listing.deleteConfirm"
+  | "listing.deleted"
+  | "listing.needVerifyTitle"
+  | "listing.needVerifyBody"
+  | "listing.needVerifyCta"
+  | "listing.loadingMore"
   | "deal.escrowPay"
   | "deal.iPaid"
   | "deal.comeAgain"
@@ -321,7 +338,7 @@ const en: Dict = {
   "account.days": "Days",
   "auth.username": "Username",
   "auth.generateUser": "Generate username",
-  "auth.emailOptional": "Email (optional, for your own record)",
+  "auth.emailOptional": "Email (Gmail, Yahoo, Outlook, or any inbox)",
   "auth.backupTitle": "Save your backup code",
   "auth.backupHint":
     "This is the only time we show this code. Keep it somewhere safe. If you lose the password, this code opens the account.",
@@ -377,6 +394,28 @@ const en: Dict = {
   "listing.payWith": "Pay with (crypto only)",
   "listing.buyNow": "Buy Now / Start Escrow Deal",
   "listing.opening": "Opening deal…",
+  "listing.channelUrl": "Channel or page URL",
+  "listing.hideUrl": "Hide URL until escrow",
+  "listing.showUrl": "Show URL publicly",
+  "listing.hideUrlHint":
+    "Buyers cannot see this link until an escrow deal starts.",
+  "listing.showUrlHint":
+    "Buyers can see this channel or page link on the listing page.",
+  "listing.successTitle": "Your listing is live",
+  "listing.successBody":
+    "Your listing was posted successfully. Buyers can find it on the marketplace now.",
+  "listing.successGigTitle": "Your gig is live",
+  "listing.successGigBody":
+    "Your freelance gig was posted successfully. Buyers can order it with escrow now.",
+  "listing.successOk": "Done",
+  "listing.delete": "Delete",
+  "listing.deleteConfirm": "Delete this listing? Buyers will no longer see it.",
+  "listing.deleted": "Listing deleted.",
+  "listing.needVerifyTitle": "Verify your profile to list",
+  "listing.needVerifyBody":
+    "Upload your ID on Account and wait for the verified mark. Until then you cannot publish social accounts, freelance gigs, AI tools, or subscriptions.",
+  "listing.needVerifyCta": "Go to Account",
+  "listing.loadingMore": "Loading more listings…",
   "deal.escrowPay": "Escrow crypto payment",
   "deal.iPaid": "I have made the payment",
   "deal.comeAgain": "I'll come again",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ListingCard } from "@/components/ListingCard";
 import { BrandLogo } from "@/components/BrandLogo";
 import { CatIcon } from "@/components/Icons";
@@ -12,6 +12,7 @@ import { stars } from "@/lib/constants";
 import { CATEGORIES } from "@/lib/types";
 import { CategoryFilters, type MonetizedFilter } from "@/components/CategoryFilters";
 import { filtersForCategory } from "@/lib/category-filters";
+import { compareListings } from "@/lib/listing-rank";
 import type { MsgKey } from "@/lib/i18n/messages";
 
 type Listing = {
@@ -69,6 +70,10 @@ export default function HomePage() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [minFollowers, setMinFollowers] = useState("");
+  const [loadingListings, setLoadingListings] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const PAGE = 12;
 
   useEffect(() => {
     try {
@@ -83,14 +88,66 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const lang = encodeURIComponent(locale);
-    api<{ listings: Listing[] }>(`/api/listings?lang=${lang}`)
-      .then((d) => setListings(d.listings))
-      .catch(() => setListings([]));
+    setLoadingListings(true);
+    setHasMore(false);
+    api<{ listings: Listing[]; hasMore?: boolean }>(
+      `/api/listings?lang=${lang}&lite=1&limit=${PAGE}&offset=0`
+    )
+      .then((d) => {
+        if (cancelled) return;
+        setListings(d.listings || []);
+        setHasMore(!!d.hasMore);
+        setLoadingListings(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setListings([]);
+        setHasMore(false);
+        setLoadingListings(false);
+      });
     api<{ sellers: Seller[] }>(`/api/sellers?lang=${lang}`)
-      .then((d) => setSellers(d.sellers))
-      .catch(() => setSellers([]));
+      .then((d) => {
+        if (!cancelled) setSellers(d.sellers);
+      })
+      .catch(() => {
+        if (!cancelled) setSellers([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [locale]);
+
+  useEffect(() => {
+    if (!hasMore || loadingListings || loadingMore) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      setLoadingMore(true);
+      const lang = encodeURIComponent(locale);
+      api<{ listings: Listing[]; hasMore?: boolean }>(
+        `/api/listings?lang=${lang}&lite=1&limit=${PAGE}&offset=${listings.length}`
+      )
+        .then((d) => {
+          if (cancelled) return;
+          setListings((prev) => {
+            const seen = new Set(prev.map((l) => l.id));
+            return [...prev, ...(d.listings || []).filter((l) => !seen.has(l.id))];
+          });
+          setHasMore(!!d.hasMore);
+        })
+        .catch(() => {
+          if (!cancelled) setHasMore(false);
+        })
+        .finally(() => {
+          if (!cancelled) setLoadingMore(false);
+        });
+    }, 120);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [hasMore, loadingListings, loadingMore, listings.length, locale]);
 
   const counts = Object.fromEntries(
     CATEGORIES.map(([k]) => [k, listings.filter((l) => l.cat === k).length])
@@ -128,22 +185,18 @@ export default function HomePage() {
         return n >= minF;
       });
     }
-    const byRating = (a: Listing, b: Listing) => {
-      const ar = a.seller?.rating || 0;
-      const br = b.seller?.rating || 0;
-      if (br !== ar) return br - ar;
-      return (b.seller?.reviewCount || 0) - (a.seller?.reviewCount || 0);
-    };
-    if (sort === "price_asc") list = [...list].sort((a, b) => a.price - b.price);
-    else if (sort === "price_desc") list = [...list].sort((a, b) => b.price - a.price);
-    else if (sort === "recommended") list = [...list].sort(byRating);
-    else list = [...list].sort((a, b) => b.id - a.id);
+    const mode =
+      sort === "price_asc" || sort === "price_desc" ? sort : "market";
+    list = [...list].sort((a, b) => compareListings(a, b, mode));
     return list;
   }, [listings, cat, q, sort, monetized, minPrice, maxPrice, minFollowers]);
 
   return (
     <>
       <section className="hero hero-home">
+        <span className="hero-orb hero-orb-a" aria-hidden />
+        <span className="hero-orb hero-orb-b" aria-hidden />
+        <span className="hero-orb hero-orb-c" aria-hidden />
         <div className="hero-inner">
           <BrandLogo size={48} />
           <p className="hero-kicker">{t("home.kicker")}</p>
@@ -195,39 +248,18 @@ export default function HomePage() {
 
         {view === "listings" ? (
           <>
-            <div className="filter-bar">
-              <button
-                type="button"
-                className={`chip ${!cat ? "on" : ""}`}
-                onClick={() => {
-                  setCat("");
-                  setMonetized("all");
-                  setMinPrice("");
-                  setMaxPrice("");
-                  setMinFollowers("");
-                }}
-              >
-                {t("home.all")}
-              </button>
-              {CATEGORIES.map(([k]) => (
-                <button
-                  key={k}
-                  type="button"
-                  className={`chip ${cat === k ? "on" : ""}`}
-                  onClick={() => {
-                    const next = cat === k ? "" : k;
-                    setCat(next);
-                    setMonetized("all");
-                    setMinPrice("");
-                    setMaxPrice("");
-                    setMinFollowers("");
-                  }}
-                >
-                  <CatIcon cat={k} size={16} />
-                  {t(`cat.${k}` as MsgKey)}
-                  {counts[k] ? <span className="chip-n">{counts[k]}</span> : null}
-                </button>
-              ))}
+            <LiveCategoryRail
+              cat={cat}
+              counts={counts}
+              onPick={(next) => {
+                setCat(next);
+                setMonetized("all");
+                setMinPrice("");
+                setMaxPrice("");
+                setMinFollowers("");
+              }}
+            />
+            <div className="filter-bar filter-bar-sort">
               <select
                 className="sort-select"
                 value={sort}
@@ -256,12 +288,22 @@ export default function HomePage() {
               {filtered.map((l) => (
                 <ListingCard key={l.id} listing={l} />
               ))}
-              {!filtered.length ? (
+              {loadingListings && !filtered.length ? (
+                <p className="mut" style={{ gridColumn: "1 / -1" }}>
+                  {t("common.loading")}
+                </p>
+              ) : null}
+              {!loadingListings && !filtered.length ? (
                 <p className="mut" style={{ gridColumn: "1 / -1" }}>
                   {t("home.noListings")}
                 </p>
               ) : null}
             </div>
+            {loadingMore ? (
+              <p className="sm mut" style={{ marginTop: 12 }}>
+                {t("listing.loadingMore")}
+              </p>
+            ) : null}
           </>
         ) : (
           <div className="seller-grid" id="sellers" style={{ marginTop: 14 }}>
@@ -320,6 +362,123 @@ export default function HomePage() {
   );
 }
 
+function LiveCategoryRail({
+  cat,
+  counts,
+  onPick,
+}: {
+  cat: string;
+  counts: Record<string, number>;
+  onPick: (next: string) => void;
+}) {
+  const { t } = useLang();
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const resumeTimer = useRef<number | null>(null);
+  const dirRef = useRef<1 | -1>(1);
+  const [autoPause, setAutoPause] = useState(false);
+
+  const boards = useMemo(
+    () => [
+      { key: "", label: t("home.all"), icon: "" as string },
+      ...CATEGORIES.map(([k]) => ({
+        key: k,
+        label: t(`cat.${k}` as MsgKey),
+        icon: k,
+      })),
+    ],
+    [t]
+  );
+
+  function pauseAutoBriefly(ms = 5000) {
+    setAutoPause(true);
+    if (resumeTimer.current) window.clearTimeout(resumeTimer.current);
+    resumeTimer.current = window.setTimeout(() => {
+      setAutoPause(false);
+      resumeTimer.current = null;
+    }, ms);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (resumeTimer.current) window.clearTimeout(resumeTimer.current);
+    };
+  }, []);
+
+  // Idle auto-scroll like the reference: free horizontal list, bounce at ends.
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el || autoPause) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (reduce.matches) return;
+    let raf = 0;
+    let last = performance.now();
+    const speed = 36;
+    const tick = (now: number) => {
+      const dt = Math.min(40, now - last);
+      last = now;
+      if (!document.hidden) {
+        const max = el.scrollWidth - el.clientWidth;
+        if (max > 8) {
+          el.scrollLeft += (dirRef.current * speed * dt) / 1000;
+          if (el.scrollLeft >= max - 0.5) {
+            el.scrollLeft = max;
+            dirRef.current = -1;
+          } else if (el.scrollLeft <= 0.5) {
+            el.scrollLeft = 0;
+            dirRef.current = 1;
+          }
+        }
+      }
+      raf = window.requestAnimationFrame(tick);
+    };
+    raf = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(raf);
+  }, [autoPause]);
+
+  return (
+    <div className="cat-live" aria-label={t("home.browse")}>
+      <div
+        className="cat-live-viewport"
+        ref={scrollerRef}
+        onPointerDown={() => pauseAutoBriefly()}
+        onTouchStart={() => pauseAutoBriefly()}
+        onWheel={() => pauseAutoBriefly(2800)}
+        onFocusCapture={() => pauseAutoBriefly()}
+      >
+        <div className="cat-live-set">
+          {boards.map((b) => {
+            const on = cat === b.key;
+            const count = b.key ? counts[b.key] || 0 : 0;
+            return (
+              <button
+                key={b.key || "all"}
+                type="button"
+                className={`cat-circle cat-circle-${b.key || "all"} ${on ? "on" : ""}`}
+                aria-pressed={on}
+                aria-label={b.label}
+                onClick={() => {
+                  pauseAutoBriefly();
+                  onPick(on && b.key ? "" : b.key);
+                }}
+              >
+                <span className="cat-circle-disc" aria-hidden>
+                  {b.icon ? (
+                    <CatIcon cat={b.icon} size={36} />
+                  ) : (
+                    <span className="cat-circle-all">✦</span>
+                  )}
+                </span>
+                {count > 0 ? <span className="cat-circle-n">{count}</span> : null}
+                <span className="cat-circle-label">{b.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EscrowBand() {
   return (
     <section className="escrow-band" aria-label="Protected by USDT Escrow">
@@ -343,7 +502,7 @@ function EscrowBand() {
           <h2>Protected by Escrow</h2>
           <p>Chat first, pay USDT into escrow, then confirm delivery. Funds stay held until you say you received it.</p>
         </div>
-        <div className="usdt-coin" aria-hidden>
+        <div className="usdt-coin usdt-coin-live" aria-hidden>
           <span>₮</span>
           <small>USDT</small>
         </div>

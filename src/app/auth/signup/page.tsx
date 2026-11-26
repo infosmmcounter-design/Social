@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth, type AuthUser } from "@/components/AuthProvider";
@@ -27,27 +27,29 @@ export default function SignupPage() {
   const [country, setCountry] = useState("");
   const [err, setErr] = useState("");
   const [backupCode, setBackupCode] = useState("");
-  const [verifyCode, setVerifyCode] = useState("");
-  const [enteredCode, setEnteredCode] = useState("");
-  const [verified, setVerified] = useState(false);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showEmail, setShowEmail] = useState(false);
   const { setUser } = useAuth();
   const { locale, t } = useLang();
   const router = useRouter();
+  const usernameTouched = useRef(false);
+
+  useEffect(() => {
+    if (usernameTouched.current || !name.trim()) return;
+    setUsername(suggestUsername(name));
+  }, [name]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr("");
     try {
-      const d = await api<{ user: AuthUser; backupCode: string; verifyCode?: string }>("/api/auth/signup", {
+      const d = await api<{ user: AuthUser; backupCode: string }>("/api/auth/signup", {
         method: "POST",
         json: { name, username, email, password, country },
       });
       setUser(d.user);
       setBackupCode(d.backupCode);
-      setVerifyCode(d.verifyCode || "");
-      setVerified(!d.verifyCode);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Signup failed");
     }
@@ -55,150 +57,145 @@ export default function SignupPage() {
 
   if (backupCode) {
     return (
-      <section className="sec" style={{ maxWidth: 480 }}>
-        <h1 style={{ fontSize: "2rem" }}>{t("auth.backupTitle")}</h1>
-        <p className="mut">{t("auth.backupHint")}</p>
-        <p className="backup-code" aria-label="Backup code">
-          {backupCode}
-        </p>
-        <button
-          className="btn o"
-          type="button"
-          onClick={async () => {
-            try {
-              await navigator.clipboard.writeText(backupCode);
-              setCopied(true);
-            } catch {
-              setCopied(false);
-            }
-          }}
-        >
-          {copied ? "Copied" : "Copy code"}
-        </button>
-        {verifyCode && !verified ? (
-          <div className="card" style={{ marginTop: 16 }}>
-            <h2 style={{ marginTop: 0, fontSize: "1.2rem" }}>Verify your email</h2>
-            <p className="sm mut">
-              Email delivery is not connected on this server, so the code is shown here and nothing waits on an inbox. Enter it, or skip and keep using the account.
-            </p>
-            <p className="backup-code">{verifyCode}</p>
-            <label>6-digit code</label>
-            <input
-              inputMode="numeric"
-              value={enteredCode}
-              onChange={(e) => setEnteredCode(e.target.value)}
-              maxLength={6}
-            />
-            <div className="row" style={{ marginTop: 10 }}>
-              <button
-                className="btn"
-                type="button"
-                onClick={async () => {
-                  setErr("");
-                  try {
-                    const d = await api<{ user: AuthUser }>("/api/auth/verify", {
-                      method: "POST",
-                      json: { code: enteredCode.trim() },
-                    });
-                    setUser(d.user);
-                    setVerified(true);
-                  } catch (e) {
-                    setErr(e instanceof Error ? e.message : "Could not verify");
-                  }
-                }}
-              >
-                Verify email
-              </button>
-              <button className="btn o" type="button" onClick={() => setVerified(true)}>
-                Skip for now
-              </button>
-            </div>
-            {err ? <p className="err">{err}</p> : null}
-          </div>
-        ) : verified && verifyCode ? (
-          <p className="okmsg">Email verified.</p>
-        ) : null}
-        <label className="row" style={{ marginTop: 16 }}>
-          <input
-            type="checkbox"
-            checked={saved}
-            onChange={(e) => setSaved(e.target.checked)}
-            style={{ width: "auto" }}
-          />
-          {t("auth.savedCode")}
-        </label>
-        <div style={{ marginTop: 14 }}>
+      <section className="sec auth-shell">
+        <div className="auth-panel">
+          <p className="auth-kicker">SocialsFlip</p>
+          <h1>{t("auth.backupTitle")}</h1>
+          <p className="mut">{t("auth.backupHint")}</p>
+          <p className="backup-code" aria-label="Backup code">
+            {backupCode}
+          </p>
           <button
-            className="btn"
+            className="btn o"
             type="button"
-            disabled={!saved}
-            onClick={() => router.push(withLocalePrefix("/dashboard/seller", locale))}
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(backupCode);
+                setCopied(true);
+              } catch {
+                setCopied(false);
+              }
+            }}
           >
-            {t("auth.continue")}
+            {copied ? "Copied" : "Copy code"}
           </button>
+          <label className="row" style={{ marginTop: 16 }}>
+            <input
+              type="checkbox"
+              checked={saved}
+              onChange={(e) => setSaved(e.target.checked)}
+              style={{ width: "auto" }}
+            />
+            {t("auth.savedCode")}
+          </label>
+          <div style={{ marginTop: 14 }}>
+            <button
+              className="btn buy-go"
+              type="button"
+              disabled={!saved}
+              style={{ width: "100%" }}
+              onClick={() => router.push(withLocalePrefix("/account?welcome=1", locale))}
+            >
+              {t("auth.continue")}
+            </button>
+          </div>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="sec" style={{ maxWidth: 420 }}>
-      <h1 style={{ fontSize: "2rem" }}>{t("nav.signup")}</h1>
-      <p className="mut">
-        Create your account with email or Google. You can buy, list, and sell
-        right away. Escrow still holds every payment.
-      </p>
-      <form className="card" onSubmit={submit}>
-        <label>Full name</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} required />
-        <label>{t("auth.username")}</label>
-        <div className="row">
-          <input
-            value={username}
-            onChange={(e) => setUsername(e.target.value.toLowerCase())}
-            required
-            minLength={3}
-            maxLength={20}
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            aria-label={t("auth.username")}
-          />
-          <button
-            className="btn o"
-            type="button"
-            onClick={() => setUsername(suggestUsername(name))}
-          >
-            {t("auth.generateUser")}
-          </button>
+    <section className="sec auth-shell">
+      <div className="auth-panel">
+        <p className="auth-kicker">SocialsFlip · Escrow marketplace</p>
+        <h1>{t("nav.signup")}</h1>
+        <p className="auth-lead">
+          One tap with Google. We create your name and username — you can edit
+          them later on your profile.
+        </p>
+
+        <div className="auth-google-hero">
+          <GoogleSignIn nextPath="/account?welcome=1" />
         </div>
-        <label>{t("auth.emailOptional")}</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <label>Password</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          minLength={6}
-        />
-        <label>Country</label>
-        <input value={country} onChange={(e) => setCountry(e.target.value)} />
-        {err ? <p className="err">{err}</p> : null}
-        <div style={{ marginTop: 14 }}>
-          <button className="btn" type="submit">
-            Create account
-          </button>
-        </div>
-        <GoogleSignIn />
-      </form>
-      <p className="sm mut" style={{ marginTop: 12 }}>
-        Already have an account? <Link href="/auth/login">Log in</Link>
-      </p>
+
+        <button
+          type="button"
+          className="auth-email-toggle"
+          onClick={() => setShowEmail((v) => !v)}
+        >
+          {showEmail ? "Hide email signup" : "Or create with email"}
+        </button>
+
+        {showEmail ? (
+          <form className="auth-email-form" onSubmit={submit}>
+            <label>Full name</label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder="Your name"
+              autoComplete="name"
+            />
+            <label>{t("auth.username")}</label>
+            <div className="row">
+              <input
+                value={username}
+                onChange={(e) => {
+                  usernameTouched.current = true;
+                  setUsername(e.target.value.toLowerCase());
+                }}
+                required
+                minLength={3}
+                maxLength={20}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+              <button
+                className="btn o"
+                type="button"
+                onClick={() => {
+                  usernameTouched.current = true;
+                  setUsername(suggestUsername(name || "user"));
+                }}
+              >
+                {t("auth.generateUser")}
+              </button>
+            </div>
+            <label>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@email.com"
+              autoComplete="email"
+            />
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              autoComplete="new-password"
+            />
+            <label>Country</label>
+            <input
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              placeholder="Optional"
+            />
+            {err ? <p className="err">{err}</p> : null}
+            <button className="btn" type="submit" style={{ width: "100%", marginTop: 12 }}>
+              Create account
+            </button>
+          </form>
+        ) : null}
+
+        <p className="auth-foot">
+          Already have an account? <Link href="/auth/login">Log in</Link>
+        </p>
+      </div>
     </section>
   );
 }

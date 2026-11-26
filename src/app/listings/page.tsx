@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { CATEGORIES } from "@/lib/types";
 import { CategoryFilters, type MonetizedFilter } from "@/components/CategoryFilters";
 import { filtersForCategory } from "@/lib/category-filters";
+import { compareListings } from "@/lib/listing-rank";
 import type { MsgKey } from "@/lib/i18n/messages";
 
 type Listing = {
@@ -35,6 +36,8 @@ type Listing = {
   } | null;
 };
 
+const PAGE = 12;
+
 function ListingsInner() {
   const sp = useSearchParams();
   const { t, locale } = useLang();
@@ -46,17 +49,74 @@ function ListingsInner() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [minAudience, setMinAudience] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (cat) params.set("cat", cat);
     if (sort) params.set("sort", sort);
     params.set("lang", locale);
-    api<{ listings: Listing[] }>(`/api/listings?${params}`)
-      .then((d) => setListings(d.listings))
-      .catch(() => setListings([]));
+    params.set("lite", "1");
+    params.set("limit", String(PAGE));
+    params.set("offset", "0");
+    setLoading(true);
+    setHasMore(false);
+    api<{ listings: Listing[]; hasMore?: boolean }>(`/api/listings?${params}`)
+      .then((d) => {
+        if (cancelled) return;
+        setListings(d.listings || []);
+        setHasMore(!!d.hasMore);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setListings([]);
+        setHasMore(false);
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [q, cat, sort, locale]);
+
+  useEffect(() => {
+    if (!hasMore || loading || loadingMore) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams();
+      if (q) params.set("q", q);
+      if (cat) params.set("cat", cat);
+      if (sort) params.set("sort", sort);
+      params.set("lang", locale);
+      params.set("lite", "1");
+      params.set("limit", String(PAGE));
+      params.set("offset", String(listings.length));
+      setLoadingMore(true);
+      api<{ listings: Listing[]; hasMore?: boolean }>(`/api/listings?${params}`)
+        .then((d) => {
+          if (cancelled) return;
+          setListings((prev) => {
+            const seen = new Set(prev.map((l) => l.id));
+            return [...prev, ...(d.listings || []).filter((l) => !seen.has(l.id))];
+          });
+          setHasMore(!!d.hasMore);
+        })
+        .catch(() => {
+          if (!cancelled) setHasMore(false);
+        })
+        .finally(() => {
+          if (!cancelled) setLoadingMore(false);
+        });
+    }, 120);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [hasMore, loading, loadingMore, listings.length, q, cat, sort, locale]);
 
   const shown = useMemo(() => {
     const spec = filtersForCategory(cat);
@@ -80,15 +140,9 @@ function ListingsInner() {
         return n >= minF;
       });
     }
-    if (sort === "recommended") {
-      list = [...list].sort((a, b) => {
-        const ar = a.seller?.rating || 0;
-        const br = b.seller?.rating || 0;
-        if (br !== ar) return br - ar;
-        return (b.seller?.reviewCount || 0) - (a.seller?.reviewCount || 0);
-      });
-    }
-    return list;
+    const mode =
+      sort === "price_asc" || sort === "price_desc" ? sort : "market";
+    return [...list].sort((a, b) => compareListings(a, b, mode));
   }, [listings, cat, monetized, minPrice, maxPrice, minAudience, sort]);
 
   const title = useMemo(() => {
@@ -107,20 +161,9 @@ function ListingsInner() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={t("home.search")}
-          aria-label={t("home.search")}
+          style={{ flex: 1, minWidth: 180 }}
         />
-        <select
-          value={cat}
-          onChange={(e) => {
-            setCat(e.target.value);
-            setMonetized("all");
-            setMinPrice("");
-            setMaxPrice("");
-            setMinAudience("");
-          }}
-          aria-label="Category"
-          style={{ width: "auto" }}
-        >
+        <select value={cat} onChange={(e) => setCat(e.target.value)}>
           <option value="">{t("home.all")}</option>
           {CATEGORIES.map(([k]) => (
             <option key={k} value={k}>
@@ -128,14 +171,9 @@ function ListingsInner() {
             </option>
           ))}
         </select>
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value)}
-          aria-label="Sort"
-          style={{ width: "auto" }}
-        >
-          <option value="recommended">{t("home.sortRecommended")}</option>
+        <select value={sort} onChange={(e) => setSort(e.target.value)}>
           <option value="newest">{t("home.newest")}</option>
+          <option value="recommended">{t("home.sortRecommended")}</option>
           <option value="price_asc">{t("home.priceAsc")}</option>
           <option value="price_desc">{t("home.priceDesc")}</option>
         </select>
@@ -151,23 +189,34 @@ function ListingsInner() {
         onMaxPrice={setMaxPrice}
         onMinAudience={setMinAudience}
       />
-      <div className="listing-grid" style={{ marginTop: 14 }}>
+      <div className="listing-grid" style={{ marginTop: 16 }}>
         {shown.map((l) => (
           <ListingCard key={l.id} listing={l} />
         ))}
-        {!shown.length ? (
+        {loading && !shown.length ? (
+          <p className="mut" style={{ gridColumn: "1 / -1" }}>
+            {t("common.loading")}
+          </p>
+        ) : null}
+        {!loading && !shown.length ? (
           <p className="mut" style={{ gridColumn: "1 / -1" }}>
             {t("home.noListings")}
           </p>
         ) : null}
       </div>
+      {loadingMore ? (
+        <p className="sm mut" style={{ marginTop: 12 }}>
+          {t("listing.loadingMore")}
+        </p>
+      ) : null}
     </section>
   );
 }
 
 export default function ListingsPage() {
+  const { t } = useLang();
   return (
-    <Suspense fallback={<p className="sec mut">…</p>}>
+    <Suspense fallback={<p className="sec mut">{t("common.loading")}</p>}>
       <ListingsInner />
     </Suspense>
   );

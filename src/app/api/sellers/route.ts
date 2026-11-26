@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readStore, publicUser } from "@/lib/db";
+import { readStore, publicSellerCard } from "@/lib/db";
 import { localeFromRequest } from "@/lib/i18n/api-locale";
 import { localizeSeller } from "@/lib/i18n/content";
 
@@ -19,12 +19,19 @@ export async function GET(req: Request) {
         (l) => l.sellerId === u.id && l.listed && l.status === "approved"
       ).length;
       return {
-        ...localizeSeller(publicUser(u), locale),
+        ...localizeSeller(publicSellerCard(u), locale),
         listingCount: live,
       };
     })
     .filter((s) => s.listingCount > 0 || s.official)
     .sort((a, b) => b.rating - a.rating || b.reviewCount - a.reviewCount);
 
-  return NextResponse.json({ sellers, locale });
+  return NextResponse.json(
+    { sellers, locale },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=20, stale-while-revalidate=60",
+      },
+    }
+  );
 }

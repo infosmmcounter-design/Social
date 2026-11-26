@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
 import { LanguageProvider } from "@/components/LanguageProvider";
@@ -38,6 +38,26 @@ export const metadata: Metadata = {
     canonical: "/",
     languages: hreflangAlternates("/").languages,
   },
+  applicationName: "SocialsFlip",
+  authors: [{ name: "SocialsFlip", url: siteOrigin() }],
+  creator: "SocialsFlip",
+  manifest: "/site.webmanifest",
+  icons: {
+    icon: [
+      { url: "/brand/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/brand/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/brand/favicon-48x48.png", sizes: "48x48", type: "image/png" },
+      { url: "/favicon.ico", sizes: "48x48" },
+    ],
+    apple: [
+      { url: "/brand/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+    other: [{ rel: "mask-icon", url: "/brand/safari-pinned-tab.svg", color: "#17140F" }],
+  },
+  other: {
+    "msapplication-TileColor": "#17140F",
+    "msapplication-TileImage": "/brand/mstile-150x150.png",
+  },
   openGraph: {
     title: "Buy YouTube Channel, Facebook Page, Instagram Account | SocialsFlip",
     description:
@@ -46,7 +66,26 @@ export const metadata: Metadata = {
     siteName: "SocialsFlip",
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: "/brand/og.png",
+        width: 1200,
+        height: 630,
+        alt: "SocialsFlip",
+      },
+    ],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "SocialsFlip",
+    description:
+      "Buy a YouTube channel, Facebook page, Instagram account, or freelance service with USDT escrow.",
+    images: ["/brand/og.png"],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#17140F",
 };
 
 export default function RootLayout({
@@ -66,16 +105,33 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "WebSite",
-              name: "SocialsFlip",
-              url: siteOrigin(),
-              description:
-                "Buy a YouTube channel, Facebook page, Instagram account, TikTok account, or freelance service with USDT escrow.",
-              potentialAction: {
-                "@type": "SearchAction",
-                target: `${siteOrigin()}/listings?q={search_term_string}`,
-                "query-input": "required name=search_term_string",
-              },
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  name: "SocialsFlip",
+                  url: siteOrigin(),
+                  logo: {
+                    "@type": "ImageObject",
+                    url: `${siteOrigin()}/brand/logo.png`,
+                    width: 512,
+                    height: 512,
+                  },
+                  image: `${siteOrigin()}/brand/og.png`,
+                },
+                {
+                  "@type": "WebSite",
+                  name: "SocialsFlip",
+                  url: siteOrigin(),
+                  description:
+                    "Buy a YouTube channel, Facebook page, Instagram account, TikTok account, or freelance service with USDT escrow.",
+                  publisher: { "@type": "Organization", name: "SocialsFlip" },
+                  potentialAction: {
+                    "@type": "SearchAction",
+                    target: `${siteOrigin()}/listings?q={search_term_string}`,
+                    "query-input": "required name=search_term_string",
+                  },
+                },
+              ],
             }),
           }}
         />

@@ -141,10 +141,14 @@ export async function POST(req: Request) {
   const kind = body.kind === "escrow" ? "escrow" : "seller";
   const sellerId = Number(body.sellerId);
   const listingId = body.listingId != null ? Number(body.listingId) : null;
-  const buyerEmail = String(body.email || "")
+  const user = await getCurrentUser();
+  let buyerEmail = String(body.email || user?.email || "")
     .trim()
     .toLowerCase();
-  const buyerName = String(body.name || "Guest").trim();
+  if (!buyerEmail && kind === "escrow" && user) {
+    buyerEmail = `member-${user.id}@members.socialsflip`;
+  }
+  const buyerName = String(body.name || user?.name || "Guest").trim();
   const firstMessage = String(body.message || body.text || "").trim();
   const subject = String(body.subject || "").trim();
 
@@ -161,7 +165,6 @@ export async function POST(req: Request) {
     );
   }
 
-  const user = await getCurrentUser();
   let inquiryId = 0;
 
   try {
@@ -176,6 +179,7 @@ export async function POST(req: Request) {
         );
         if (existing) {
           inquiryId = existing.id;
+          if (user && !existing.buyerId) existing.buyerId = user.id;
           if (firstMessage) pushMsg(existing, firstMessage, "buyer");
           return;
         }

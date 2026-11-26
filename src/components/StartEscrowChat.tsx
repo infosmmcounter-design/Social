@@ -16,19 +16,19 @@ export function StartEscrowChat() {
   const [busy, setBusy] = useState(false);
 
   async function open() {
-    if (!user?.email) {
+    if (!user) {
       router.push(withLocalePrefix("/chats?start=escrow", locale));
       return;
     }
     setBusy(true);
     try {
-      saveGuestEmail(user.email);
+      if (user.email) saveGuestEmail(user.email);
       const res = await api<{ inquiry: { id: number } }>("/api/inquiries", {
         method: "POST",
         json: {
           kind: "escrow",
-          name: user.name || "Guest",
-          email: user.email,
+          name: user.name || "Member",
+          email: user.email || "",
           message: "",
           subject: "Chat with Escrow",
         },

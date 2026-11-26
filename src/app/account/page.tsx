@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { api } from "@/lib/api";
 import { money } from "@/lib/constants";
 import { LocaleLink as Link } from "@/components/LocaleLink";
 import { useLang } from "@/components/LanguageProvider";
+import { StartEscrowChat } from "@/components/StartEscrowChat";
 import { VerifiedTick } from "@/components/VerifiedTick";
 
 type Deposit = {
@@ -36,9 +38,11 @@ function exactAmount(d: Deposit) {
 
 type WalletAddr = { asset: string; network: string; address: string; label?: string };
 
-export default function AccountPage() {
+function AccountInner() {
   const { user, loading, refresh, setUser, logout } = useAuth();
   const { t } = useLang();
+  const search = useSearchParams();
+  const welcome = search.get("welcome") === "1";
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [bio, setBio] = useState("");
@@ -55,6 +59,8 @@ export default function AccountPage() {
   const [clock, setClock] = useState(Date.now());
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  const [now, setNow] = useState(Date.now());
+  const askedVerify = useRef(false);
   const [wallets, setWallets] = useState<WalletAddr[]>([]);
   const [panel, setPanel] = useState<
     "notes" | "help" | "settings" | "how" | "escrow" | "fees" | "rules" | "chats" | ""
@@ -71,6 +77,14 @@ export default function AccountPage() {
     setName(user.name);
     setCountry(user.country || "");
     setBio(user.bio || "");
+    if (welcome) {
+      setEditing(true);
+      setMsg(
+        user.google
+          ? "Welcome. Your name and username were created from Google. Edit anything below, then save."
+          : "Welcome. Your profile is ready. Edit your name or details below anytime."
+      );
+    }
     api<{ balance: number; deposits: Deposit[]; wallets?: WalletAddr[] }>("/api/wallet")
       .then((d) => {
         setBalance(d.balance);
@@ -81,7 +95,7 @@ export default function AccountPage() {
     api<{ chats: typeof chats }>("/api/chats")
       .then((d) => setChats(d.chats || []))
       .catch(() => setChats([]));
-  }, [user]);
+  }, [user, welcome]);
 
   const openDep = deposits.find((d) => d.status === "pending" && d.expectedMicro && d.address);
   const depLeft = openDep?.expiresAt ? new Date(openDep.expiresAt).getTime() - clock : 0;
@@ -109,6 +123,27 @@ export default function AccountPage() {
     }, 8000);
     return () => window.clearInterval(id);
   }, [user, openDepId]);
+
+  useEffect(() => {
+    if (user?.idStatus !== "pending") return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [user?.idStatus]);
+
+  const verifyRemain =
+    user?.idStatus === "pending" && user.idVerifyAt
+      ? Math.max(0, Date.parse(user.idVerifyAt) - now)
+      : 0;
+
+  useEffect(() => {
+    if (user?.idStatus !== "pending" || verifyRemain > 0) {
+      askedVerify.current = false;
+      return;
+    }
+    if (askedVerify.current) return;
+    askedVerify.current = true;
+    refresh();
+  }, [user?.idStatus, verifyRemain, refresh]);
 
   useEffect(() => {
     if (!openDep?.address) {
@@ -250,7 +285,6 @@ export default function AccountPage() {
             {user.verified ? " · Verified" : ""}
             {user.country ? ` · ${user.country}` : ""}
             {user.google ? " · Google" : ""}
-            {user.emailVerified ? " · Email verified" : ""}
             {user.verified ? <VerifiedTick size={16} /> : null}
           </p>
         </div>
@@ -272,27 +306,29 @@ export default function AccountPage() {
       </div>
 
       {user.role !== "admin" ? (
-        <div className="card" style={{ marginTop: 14 }}>
-          <h2 style={{ marginTop: 0 }}>Profile verification</h2>
+        <div className="card verify-card" style={{ marginTop: 14 }}>
+          <h2 style={{ marginTop: 0 }}>Verify your profile</h2>
           {user.verified ? (
             <p className="sm">
-              Your profile is verified. Buyers see the verified mark on your name.
+              Verified. Buyers see the mark next to your name.
             </p>
           ) : user.idStatus === "pending" ? (
-            <p className="sm">
-              ID received. The check finishes on its own
-              {user.idVerifyAt
-                ? ` at ${new Date(user.idVerifyAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-                : " in 15–20 minutes"}
-              . Then this profile shows verified.
-            </p>
+            <>
+              <p className="sm">
+                ID received. Your profile verifies when this timer ends.
+              </p>
+              <p className="verify-clock" aria-live="polite">
+                {String(Math.floor(Math.ceil(verifyRemain / 1000) / 60)).padStart(2, "0")}:
+                {String(Math.ceil(verifyRemain / 1000) % 60).padStart(2, "0")}
+              </p>
+            </>
           ) : (
             <>
               <p className="sm mut">
-                Submit a photo of your ID card. The check runs by itself and your profile shows verified 15–20 minutes later. You can list and sell before that.
+                Upload your ID card or a photo. A 20 minute timer starts, then this profile shows verified.
               </p>
-              <label className="btn" style={{ display: "inline-block" }}>
-                Submit ID card
+              <label className="btn">
+                Verify your profile
                 <input
                   type="file"
                   accept="image/*"
@@ -322,7 +358,8 @@ export default function AccountPage() {
                         { method: "POST", json: { image } }
                       );
                       setUser(d.user);
-                      setMsg(d.message || "ID received.");
+                      setNow(Date.now());
+                      setMsg(d.message || "ID received. 20 minutes started.");
                     } catch (ex) {
                       setErr(ex instanceof Error ? ex.message : "Upload failed");
                     }
@@ -331,9 +368,6 @@ export default function AccountPage() {
               </label>
             </>
           )}
-          <p className="sm" style={{ marginBottom: 0 }}>
-            <Link href="/dashboard/seller">Post a listing</Link>
-          </p>
         </div>
       ) : null}
 
@@ -531,7 +565,7 @@ export default function AccountPage() {
           <span>{t("account.days")}</span>
         </div>
       </div>
-      <div className="row" style={{ marginTop: 16 }}>
+      <div className="account-actions">
         {(
           [
             ["notes", "Notifications"],
@@ -547,13 +581,13 @@ export default function AccountPage() {
           <button
             key={id}
             type="button"
-            className={`btn s ${panel === id ? "" : "o"}`}
+            className={`btn ${panel === id ? "" : "o"}`}
             onClick={() => setPanel(panel === id ? "" : id)}
           >
             {label}
           </button>
         ))}
-        <button className="btn s d" type="button" onClick={() => logout()}>
+        <button className="btn d account-logout" type="button" onClick={() => logout()}>
           {t("nav.logout")}
         </button>
       </div>
@@ -693,7 +727,9 @@ export default function AccountPage() {
       {panel === "chats" ? (
         <div className="card hl-card" style={{ marginTop: 12 }}>
           <h3>Chat previews</h3>
-          {[...chats.filter((c) => c.kind !== "escrow").slice(0, 6), ...chats.filter((c) => c.kind === "escrow")].map((c) => (
+          <p className="sm mut">Escrow stays open for buyers and sellers.</p>
+          <StartEscrowChat />
+          {[...chats.filter((c) => c.kind !== "escrow").slice(0, 6), ...chats.filter((c) => c.kind === "escrow" && c.id > 0)].map((c) => (
             <p key={`${c.source}-${c.id}`} className="sm">
               <Link href={c.source === "deal" ? `/deal/${c.id}` : c.id ? `/chat/${c.id}` : "/chats"}>
                 <b>{c.kind === "escrow" ? "⚖ Chat with Escrow" : c.title}</b>
@@ -706,5 +742,14 @@ export default function AccountPage() {
         </div>
       ) : null}
     </section>
+  );
+}
+
+export default function AccountPage() {
+  const { t } = useLang();
+  return (
+    <Suspense fallback={<p className="sec mut">{t("common.loading")}</p>}>
+      <AccountInner />
+    </Suspense>
   );
 }

@@ -54,6 +54,11 @@ export interface PlatformSettings {
   deliveryWindowHours: number;
   /** Escrow hold guidance for buyers (days until complete — funds not released early). */
   escrowHoldDays: number;
+  /**
+   * Google Identity Services OAuth Web Client ID.
+   * Ends with `.apps.googleusercontent.com`. Env `GOOGLE_CLIENT_ID` still wins when set.
+   */
+  googleClientId?: string;
 }
 
 export const DEFAULT_CRYPTO_WALLETS: CryptoWallet[] = [
@@ -229,6 +234,11 @@ export interface Listing {
   monetized: boolean;
   teaser: string;
   privateHandle: string;
+  /**
+   * When true, buyers can see the channel/page URL on the public listing.
+   * When false (default), the URL stays hidden until escrow reveals it.
+   */
+  handlePublic?: boolean;
   price: number;
   desc: string;
   img: string;
