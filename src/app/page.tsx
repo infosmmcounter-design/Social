@@ -419,6 +419,9 @@ function LiveCategoryRail({
           <div className="cat-live-set" aria-hidden="true">
             {renderSet(true)}
           </div>
+          <div className="cat-live-set" aria-hidden="true">
+            {renderSet(true)}
+          </div>
         </div>
       </div>
     </div>
