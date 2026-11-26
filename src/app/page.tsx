@@ -374,6 +374,7 @@ function LiveCategoryRail({
   const { t } = useLang();
   const scrollerRef = useRef<HTMLDivElement>(null);
   const resumeTimer = useRef<number | null>(null);
+  const dirRef = useRef<1 | -1>(1);
   const [autoPause, setAutoPause] = useState(false);
 
   const boards = useMemo(
@@ -388,7 +389,7 @@ function LiveCategoryRail({
     [t]
   );
 
-  function pauseAutoBriefly(ms = 4500) {
+  function pauseAutoBriefly(ms = 5000) {
     setAutoPause(true);
     if (resumeTimer.current) window.clearTimeout(resumeTimer.current);
     resumeTimer.current = window.setTimeout(() => {
@@ -397,41 +398,33 @@ function LiveCategoryRail({
     }, ms);
   }
 
-  function scrollByDir(dir: -1 | 1) {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const step = Math.max(240, Math.round(el.clientWidth * 0.75));
-    el.scrollBy({ left: dir * step, behavior: "smooth" });
-    pauseAutoBriefly();
-    window.setTimeout(() => {
-      const loopAt = el.scrollWidth / 2;
-      if (loopAt <= 8) return;
-      if (el.scrollLeft >= loopAt) el.scrollLeft -= loopAt;
-      if (el.scrollLeft < 0) el.scrollLeft += loopAt;
-    }, 380);
-  }
-
   useEffect(() => {
     return () => {
       if (resumeTimer.current) window.clearTimeout(resumeTimer.current);
     };
   }, []);
 
-  // Auto-scroll across a duplicated set so every screen size can move.
+  // Idle auto-scroll like the reference: free horizontal list, bounce at ends.
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el || autoPause) return;
     let raf = 0;
     let last = performance.now();
-    const speed = 58; // px/sec — snappy enough for buyers
+    const speed = 36;
     const tick = (now: number) => {
       const dt = Math.min(40, now - last);
       last = now;
       if (!document.hidden) {
-        const loopAt = el.scrollWidth / 2;
-        if (loopAt > 8) {
-          el.scrollLeft += (speed * dt) / 1000;
-          if (el.scrollLeft >= loopAt) el.scrollLeft -= loopAt;
+        const max = el.scrollWidth - el.clientWidth;
+        if (max > 8) {
+          el.scrollLeft += (dirRef.current * speed * dt) / 1000;
+          if (el.scrollLeft >= max - 0.5) {
+            el.scrollLeft = max;
+            dirRef.current = -1;
+          } else if (el.scrollLeft <= 0.5) {
+            el.scrollLeft = 0;
+            dirRef.current = 1;
+          }
         }
       }
       raf = window.requestAnimationFrame(tick);
@@ -440,75 +433,46 @@ function LiveCategoryRail({
     return () => window.cancelAnimationFrame(raf);
   }, [autoPause]);
 
-  function renderPods(dup: boolean) {
-    return boards.map((b, i) => {
-      const on = cat === b.key;
-      return (
-        <button
-          key={`${dup ? "d" : "m"}-${b.key || "all"}`}
-          type="button"
-          className={`cat-pod cat-pod-${b.key || "all"} ${on ? "on" : ""}`}
-          tabIndex={dup ? -1 : undefined}
-          aria-pressed={dup ? undefined : on}
-          aria-label={b.label}
-          onClick={() => {
-            pauseAutoBriefly();
-            onPick(on && b.key ? "" : b.key);
-          }}
-        >
-          <span className="cat-pod-box" aria-hidden>
-            <span
-              className="cat-pod-spin"
-              style={{ animationDelay: `${(i % 6) * -0.55}s` }}
-            >
-              {b.icon ? (
-                <CatIcon cat={b.icon} size={32} />
-              ) : (
-                <span className="cat-pod-all">✦</span>
-              )}
-            </span>
-          </span>
-          <span className="cat-pod-label">{b.label}</span>
-          {b.key && counts[b.key] ? (
-            <span className="cat-pod-n">{counts[b.key]}</span>
-          ) : null}
-        </button>
-      );
-    });
-  }
-
   return (
     <div className="cat-live" aria-label={t("home.browse")}>
-      <button
-        type="button"
-        className="cat-nav cat-nav-prev"
-        aria-label="Previous categories"
-        onClick={() => scrollByDir(-1)}
-      >
-        ‹
-      </button>
       <div
         className="cat-live-viewport"
         ref={scrollerRef}
         onPointerDown={() => pauseAutoBriefly()}
-        onWheel={() => pauseAutoBriefly(2500)}
+        onTouchStart={() => pauseAutoBriefly()}
+        onWheel={() => pauseAutoBriefly(2800)}
         onFocusCapture={() => pauseAutoBriefly()}
       >
-        <div className="cat-live-track">
-          <div className="cat-live-set">{renderPods(false)}</div>
-          <div className="cat-live-set" aria-hidden="true">
-            {renderPods(true)}
-          </div>
+        <div className="cat-live-set">
+          {boards.map((b) => {
+            const on = cat === b.key;
+            const count = b.key ? counts[b.key] || 0 : 0;
+            return (
+              <button
+                key={b.key || "all"}
+                type="button"
+                className={`cat-circle cat-circle-${b.key || "all"} ${on ? "on" : ""}`}
+                aria-pressed={on}
+                aria-label={b.label}
+                onClick={() => {
+                  pauseAutoBriefly();
+                  onPick(on && b.key ? "" : b.key);
+                }}
+              >
+                <span className="cat-circle-disc" aria-hidden>
+                  {b.icon ? (
+                    <CatIcon cat={b.icon} size={36} />
+                  ) : (
+                    <span className="cat-circle-all">✦</span>
+                  )}
+                </span>
+                {count > 0 ? <span className="cat-circle-n">{count}</span> : null}
+                <span className="cat-circle-label">{b.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
-      <button
-        type="button"
-        className="cat-nav cat-nav-next"
-        aria-label="Next categories"
-        onClick={() => scrollByDir(1)}
-      >
-        ›
-      </button>
     </div>
   );
 }
