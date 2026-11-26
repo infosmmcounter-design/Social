@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth, type AuthUser } from "./AuthProvider";
@@ -18,10 +18,6 @@ type GoogleAccounts = {
         auto_select?: boolean;
       }) => void;
       prompt: (cb?: (n: { isNotDisplayed?: boolean; isSkippedMoment?: boolean }) => void) => void;
-      renderButton?: (
-        parent: HTMLElement,
-        options: Record<string, string | number>
-      ) => void;
     };
   };
 };
@@ -56,15 +52,7 @@ function loadScript() {
   });
 }
 
-export function GoogleSignIn({
-  nextPath,
-  onUnavailable,
-}: {
-  /** Where to send the user after a successful Google sign-in. */
-  nextPath?: string;
-  /** Called when Google is not connected on the server. */
-  onUnavailable?: () => void;
-}) {
+export function GoogleSignIn({ nextPath }: { nextPath?: string }) {
   const { setUser } = useAuth();
   const { locale } = useLang();
   const router = useRouter();
@@ -72,8 +60,6 @@ export function GoogleSignIn({
   const [checked, setChecked] = useState(false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
-  const unavailable = useRef(onUnavailable);
-  unavailable.current = onUnavailable;
 
   useEffect(() => {
     let alive = true;
@@ -81,11 +67,8 @@ export function GoogleSignIn({
       .then((d) => {
         if (!alive) return;
         if (d.enabled && d.clientId) setClientId(d.clientId);
-        else unavailable.current?.();
       })
-      .catch(() => {
-        if (alive) unavailable.current?.();
-      })
+      .catch(() => undefined)
       .finally(() => {
         if (alive) setChecked(true);
       });
@@ -110,7 +93,9 @@ export function GoogleSignIn({
   async function start() {
     setErr("");
     if (!clientId) {
-      setErr("Google is not connected on this site yet. Use any email below instead.");
+      setErr(
+        "Continue with Google is almost ready. Admin must paste the Google Client ID in Admin → Settings."
+      );
       return;
     }
     setBusy(true);
@@ -139,7 +124,7 @@ export function GoogleSignIn({
       window.google.accounts.id.prompt((notification) => {
         if (notification?.isNotDisplayed || notification?.isSkippedMoment) {
           setBusy(false);
-          setErr("Google popup was blocked or closed. Try again, or use any email below.");
+          setErr("Google popup was blocked or closed. Tap Continue with Google again.");
         }
       });
     } catch (e) {
@@ -148,36 +133,23 @@ export function GoogleSignIn({
     }
   }
 
-  if (!checked) {
-    return (
-      <div className="auth-google-slot">
-        <button className="btn google-btn" type="button" disabled>
-          <span className="google-btn-ic" aria-hidden>
-            <GoogleIcon />
-          </span>
-          Checking Google…
-        </button>
-      </div>
-    );
-  }
-
-  if (!clientId) return null;
-
   return (
     <div className="auth-google-slot">
       <button
         className="btn google-btn"
         type="button"
         onClick={start}
-        disabled={busy}
+        disabled={busy || !checked}
         aria-label="Continue with Google"
       >
         <span className="google-btn-ic" aria-hidden>
-          <GoogleIcon />
+          <GoogleIcon size={22} />
         </span>
-        {busy ? "Opening Google…" : "Continue with Google"}
+        <span className="google-btn-label">
+          {busy ? "Opening Google…" : !checked ? "Loading…" : "Continue with Google"}
+        </span>
       </button>
-      {err ? <p className="err">{err}</p> : null}
+      {err ? <p className="err auth-google-err">{err}</p> : null}
     </div>
   );
 }

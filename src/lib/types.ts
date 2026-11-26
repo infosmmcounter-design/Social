@@ -54,6 +54,11 @@ export interface PlatformSettings {
   deliveryWindowHours: number;
   /** Escrow hold guidance for buyers (days until complete — funds not released early). */
   escrowHoldDays: number;
+  /**
+   * Google Identity Services OAuth Web Client ID.
+   * Ends with `.apps.googleusercontent.com`. Env `GOOGLE_CLIENT_ID` still wins when set.
+   */
+  googleClientId?: string;
 }
 
 export const DEFAULT_CRYPTO_WALLETS: CryptoWallet[] = [

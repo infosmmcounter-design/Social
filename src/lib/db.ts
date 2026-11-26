@@ -385,6 +385,7 @@ async function createSeed(): Promise<StoreData> {
       autoHoldOnProof: false,
       deliveryWindowHours: 24,
       escrowHoldDays: 7,
+      googleClientId: "",
       cryptoWallets: DEFAULT_CRYPTO_WALLETS.map((w) => ({ ...w })),
     },
     nid,
@@ -521,6 +522,7 @@ export function normalizeStore(data: StoreData): StoreData {
   if (!data.settings.deliveryWindowHours)
     data.settings.deliveryWindowHours = 24;
   if (!data.settings.escrowHoldDays) data.settings.escrowHoldDays = 7;
+  if (data.settings.googleClientId === undefined) data.settings.googleClientId = "";
   if (!data.offers) data.offers = [];
   data.settings.allowDirectPayToSeller = false;
   // Keep only TRC20 + BEP20 USDT. Prefer saved address; else platform defaults.

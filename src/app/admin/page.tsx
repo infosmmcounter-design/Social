@@ -106,6 +106,7 @@ export default function AdminPage() {
     autoHoldOnProof?: boolean;
     deliveryWindowHours?: number;
     escrowHoldDays?: number;
+    googleClientId?: string;
     cryptoWallets: (CryptoWallet & { network?: string })[];
   } | null>(null);
   const [offers, setOffers] = useState<
@@ -1867,7 +1868,43 @@ export default function AdminPage() {
       ) : null}
       {tab === "set" && settings && (
         <div className="card" style={{ maxWidth: 560 }}>
-          <h3>Escrow & crypto settings</h3>
+          <h3>Continue with Google</h3>
+          <p className="sm mut">
+            Paste the Google OAuth Web Client ID here so signup and login show a
+            working Continue with Google button. Create it in Google Cloud →
+            Credentials → OAuth client ID → Web application. Authorized
+            JavaScript origins must include{" "}
+            <code>https://socialsflip.com</code> and{" "}
+            <code>https://www.socialsflip.com</code>.
+          </p>
+          <label>Google Client ID</label>
+          <input
+            value={settings.googleClientId || ""}
+            onChange={(e) =>
+              setSettings({ ...settings, googleClientId: e.target.value.trim() })
+            }
+            placeholder="123456789-abc.apps.googleusercontent.com"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+          />
+          <button
+            className="btn"
+            type="button"
+            style={{ marginTop: 10 }}
+            onClick={() =>
+              run("Google Client ID saved", async () => {
+                await api("/api/admin/settings", {
+                  method: "POST",
+                  json: { googleClientId: settings.googleClientId || "" },
+                });
+              })
+            }
+          >
+            Save Google Client ID
+          </button>
+
+          <h3 style={{ marginTop: 28 }}>Escrow & crypto settings</h3>
           <p className="sm mut">
             Payments are crypto-only: USDT TRC20 (Tron) and USDT BEP20 (BNB Smart
             Chain). No JazzCash / bank / local methods.

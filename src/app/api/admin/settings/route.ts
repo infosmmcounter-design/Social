@@ -49,6 +49,11 @@ export async function POST(req: Request) {
     if (Array.isArray(body.cryptoWallets)) {
       data.settings.cryptoWallets = body.cryptoWallets as CryptoWallet[];
     }
+    if (body.googleClientId !== undefined) {
+      data.settings.googleClientId = String(body.googleClientId || "")
+        .trim()
+        .replace(/^["']|["']$/g, "");
+    }
   });
 
   const store = await readStore();

@@ -4,12 +4,19 @@ import { createSession, hashPassword } from "@/lib/auth";
 import { avatarDataUrl } from "@/lib/placeholders";
 import { suggestUsername } from "@/lib/username";
 
-function clientId() {
-  return (process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "").trim();
+async function resolveClientId() {
+  const fromEnv = (
+    process.env.GOOGLE_CLIENT_ID ||
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+    ""
+  ).trim();
+  if (fromEnv) return fromEnv;
+  const store = await readStore();
+  return String(store.settings.googleClientId || "").trim();
 }
 
 export async function GET() {
-  const id = clientId();
+  const id = await resolveClientId();
   return NextResponse.json({ enabled: !!id, clientId: id });
 }
 
@@ -24,10 +31,13 @@ type GoogleInfo = {
 };
 
 export async function POST(req: Request) {
-  const id = clientId();
+  const id = await resolveClientId();
   if (!id) {
     return NextResponse.json(
-      { error: "Google sign-in is not connected. Add GOOGLE_CLIENT_ID on the server, or use email." },
+      {
+        error:
+          "Continue with Google is not connected yet. Ask admin to paste the Google Client ID in Admin → Settings.",
+      },
       { status: 503 }
     );
   }
@@ -53,7 +63,10 @@ export async function POST(req: Request) {
   const verified = info.email_verified === true || info.email_verified === "true";
   if (!verified) {
     return NextResponse.json(
-      { error: "Google has not verified this email yet. Finish that in your Google account, then try again." },
+      {
+        error:
+          "Google has not verified this email yet. Finish that in your Google account, then try again.",
+      },
       { status: 400 }
     );
   }
