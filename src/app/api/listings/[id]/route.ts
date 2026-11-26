@@ -3,6 +3,8 @@ import { readStore, updateStore, publicListing, publicUser } from "@/lib/db";
 import { getCurrentUser, requireUser } from "@/lib/auth";
 import { localeFromRequest } from "@/lib/i18n/api-locale";
 import { localizeListing, localizeSeller } from "@/lib/i18n/content";
+import { keywordsAllLocales, keywordsFor } from "@/lib/i18n/keywords";
+import { listingCoverUrl, listingImageAlt } from "@/lib/seo/listing-product";
 
 export async function GET(
   req: Request,
@@ -46,10 +48,16 @@ export async function GET(
   }
 
   const pub = localizeListing(publicListing(listing, reveal), locale);
+  const keywords = keywordsFor(locale, pub.cat);
+  const cover = listingCoverUrl(listing.id);
 
   return NextResponse.json({
     locale,
-    listing: pub,
+    listing: {
+      ...pub,
+      coverUrl: cover,
+      imageAlt: listingImageAlt(locale, listing),
+    },
     seller: seller ? localizeSeller(publicUser(seller), locale) : null,
     reviews,
     canReveal: reveal,
@@ -57,6 +65,10 @@ export async function GET(
     seo: {
       title: `${pub.title} | SocialsFlip`,
       description: pub.teaser || pub.desc?.slice(0, 160) || pub.title,
+      keywords,
+      keywordsAll: keywordsAllLocales(pub.cat),
+      image: cover,
+      imageAlt: listingImageAlt(locale, listing),
     },
   });
 }

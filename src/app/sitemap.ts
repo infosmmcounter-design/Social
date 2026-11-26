@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { LOCALES } from "@/lib/i18n/locales";
 import { localizedUrl, siteOrigin } from "@/lib/i18n/seo";
+import { listingCoverUrl } from "@/lib/seo/listing-product";
 import { readStore } from "@/lib/db";
 
 const PATHS = [
@@ -64,13 +65,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       (x) => x.listed && x.status === "approved"
     )) {
       const path = `/listing/${l.id}`;
+      const cover = listingCoverUrl(l.id);
       for (const locale of LOCALES) {
         entries.push({
           url: localizedUrl(path, locale.code),
           lastModified: now,
           changeFrequency: "daily",
-          priority: 0.8,
+          priority: 0.9,
           alternates: { languages: alts(path) },
+          images: [cover],
         });
       }
     }

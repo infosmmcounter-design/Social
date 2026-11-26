@@ -32,6 +32,14 @@ export default function ListingDetailPage() {
       text: string;
       locale?: string;
     }[];
+    seo?: {
+      title?: string;
+      description?: string;
+      keywords?: string[];
+      keywordsAll?: string[];
+      image?: string;
+      imageAlt?: string;
+    };
   } | null>(null);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -69,7 +77,14 @@ export default function ListingDetailPage() {
         text: string;
         locale?: string;
       }[];
-      seo?: { title: string; description: string };
+      seo?: {
+        title: string;
+        description: string;
+        keywords?: string[];
+        keywordsAll?: string[];
+        image?: string;
+        imageAlt?: string;
+      };
       feePct?: number;
     }>(`/api/listings/${id}?lang=${encodeURIComponent(locale)}`)
       .then((d) => {
@@ -77,14 +92,22 @@ export default function ListingDetailPage() {
         if (typeof d.feePct === "number") setFeePct(d.feePct);
         if (d.seo?.title) document.title = d.seo.title;
         const cat = String((d.listing as { cat?: string }).cat || "");
-        if (cat) {
+        const keywordList =
+          d.seo?.keywordsAll?.length
+            ? d.seo.keywordsAll
+            : d.seo?.keywords?.length
+              ? d.seo.keywords
+              : cat
+                ? keywordsFor(locale, cat)
+                : [];
+        if (keywordList.length) {
           let keys = document.querySelector('meta[name="keywords"]');
           if (!keys) {
             keys = document.createElement("meta");
             keys.setAttribute("name", "keywords");
             document.head.appendChild(keys);
           }
-          keys.setAttribute("content", keywordsFor(locale, cat).join(", "));
+          keys.setAttribute("content", keywordList.join(", "));
         }
         if (d.seo?.description) {
           let meta = document.querySelector('meta[name="description"]');
@@ -122,6 +145,8 @@ export default function ListingDetailPage() {
     teaser: string;
     niche: string;
     followers: string;
+    coverUrl?: string;
+    imageAlt?: string;
     monetized: boolean;
     img?: string;
     images?: string[];
@@ -148,7 +173,14 @@ export default function ListingDetailPage() {
     reviewCount?: number;
     avatarUrl?: string;
   } | null;
-  const gallery = [l.img, ...(l.images || [])].filter(Boolean) as string[];
+  const imageAlt =
+    data.seo?.imageAlt ||
+    l.imageAlt ||
+    `${l.title} — ${keywordsFor(locale, l.cat)[0] || "SocialsFlip"}`;
+  const primarySrc = l.coverUrl || l.img || data.seo?.image;
+  const gallery = [primarySrc, ...(l.images || [])].filter(
+    (src, i, arr) => !!src && arr.indexOf(src) === i
+  ) as string[];
 
   const catName = CATEGORIES.find((c) => c[0] === l.cat)?.[1] || l.cat;
   const freelance = !!(
@@ -247,7 +279,8 @@ export default function ListingDetailPage() {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={gallery[0]}
-              alt=""
+              alt={imageAlt}
+              title={imageAlt}
               style={{ width: "100%", borderRadius: 12, marginBottom: 12 }}
             />
           ) : null}
@@ -258,7 +291,8 @@ export default function ListingDetailPage() {
                 <img
                   key={i}
                   src={src}
-                  alt=""
+                  alt={`${imageAlt} (${i + 2})`}
+                  title={imageAlt}
                   style={{
                     width: 72,
                     height: 54,

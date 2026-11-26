@@ -63,7 +63,15 @@ export function ListingCard({ listing }: Props) {
         <div className="im">
           {listing.img ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={listing.img} alt="" />
+            <img
+              src={
+                listing.img.startsWith("data:")
+                  ? `/api/listings/${listing.id}/cover`
+                  : listing.img
+              }
+              alt={`${listing.title} — ${catName} for sale on SocialsFlip`}
+              title={listing.title}
+            />
           ) : (
             <CatIcon cat={listing.cat} size={48} />
           )}
