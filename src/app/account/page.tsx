@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { api } from "@/lib/api";
 import { money } from "@/lib/constants";
@@ -55,6 +55,8 @@ export default function AccountPage() {
   const [clock, setClock] = useState(Date.now());
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  const [now, setNow] = useState(Date.now());
+  const askedVerify = useRef(false);
   const [wallets, setWallets] = useState<WalletAddr[]>([]);
   const [panel, setPanel] = useState<
     "notes" | "help" | "settings" | "how" | "escrow" | "fees" | "rules" | "chats" | ""
@@ -109,6 +111,27 @@ export default function AccountPage() {
     }, 8000);
     return () => window.clearInterval(id);
   }, [user, openDepId]);
+
+  useEffect(() => {
+    if (user?.idStatus !== "pending") return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [user?.idStatus]);
+
+  const verifyRemain =
+    user?.idStatus === "pending" && user.idVerifyAt
+      ? Math.max(0, Date.parse(user.idVerifyAt) - now)
+      : 0;
+
+  useEffect(() => {
+    if (user?.idStatus !== "pending" || verifyRemain > 0) {
+      askedVerify.current = false;
+      return;
+    }
+    if (askedVerify.current) return;
+    askedVerify.current = true;
+    refresh();
+  }, [user?.idStatus, verifyRemain, refresh]);
 
   useEffect(() => {
     if (!openDep?.address) {
@@ -250,7 +273,6 @@ export default function AccountPage() {
             {user.verified ? " · Verified" : ""}
             {user.country ? ` · ${user.country}` : ""}
             {user.google ? " · Google" : ""}
-            {user.emailVerified ? " · Email verified" : ""}
             {user.verified ? <VerifiedTick size={16} /> : null}
           </p>
         </div>
@@ -272,27 +294,29 @@ export default function AccountPage() {
       </div>
 
       {user.role !== "admin" ? (
-        <div className="card" style={{ marginTop: 14 }}>
-          <h2 style={{ marginTop: 0 }}>Profile verification</h2>
+        <div className="card verify-card" style={{ marginTop: 14 }}>
+          <h2 style={{ marginTop: 0 }}>Verify your profile</h2>
           {user.verified ? (
             <p className="sm">
-              Your profile is verified. Buyers see the verified mark on your name.
+              Verified. Buyers see the mark next to your name.
             </p>
           ) : user.idStatus === "pending" ? (
-            <p className="sm">
-              ID received. The check finishes on its own
-              {user.idVerifyAt
-                ? ` at ${new Date(user.idVerifyAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-                : " in 15–20 minutes"}
-              . Then this profile shows verified.
-            </p>
+            <>
+              <p className="sm">
+                ID received. Your profile verifies when this timer ends.
+              </p>
+              <p className="verify-clock" aria-live="polite">
+                {String(Math.floor(Math.ceil(verifyRemain / 1000) / 60)).padStart(2, "0")}:
+                {String(Math.ceil(verifyRemain / 1000) % 60).padStart(2, "0")}
+              </p>
+            </>
           ) : (
             <>
               <p className="sm mut">
-                Submit a photo of your ID card. The check runs by itself and your profile shows verified 15–20 minutes later. You can list and sell before that.
+                Upload your ID card or a photo. A 20 minute timer starts, then this profile shows verified.
               </p>
-              <label className="btn" style={{ display: "inline-block" }}>
-                Submit ID card
+              <label className="btn">
+                Verify your profile
                 <input
                   type="file"
                   accept="image/*"
@@ -322,7 +346,8 @@ export default function AccountPage() {
                         { method: "POST", json: { image } }
                       );
                       setUser(d.user);
-                      setMsg(d.message || "ID received.");
+                      setNow(Date.now());
+                      setMsg(d.message || "ID received. 20 minutes started.");
                     } catch (ex) {
                       setErr(ex instanceof Error ? ex.message : "Upload failed");
                     }
@@ -331,9 +356,6 @@ export default function AccountPage() {
               </label>
             </>
           )}
-          <p className="sm" style={{ marginBottom: 0 }}>
-            <Link href="/dashboard/seller">Post a listing</Link>
-          </p>
         </div>
       ) : null}
 

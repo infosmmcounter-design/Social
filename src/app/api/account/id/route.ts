@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/auth";
 
 const MAX_CHARS = 2_800_000;
 
-/** Store an ID photo and schedule the verified badge 15–20 minutes later. */
+/** Store an ID photo and schedule the verified badge exactly 20 minutes later. */
 export async function POST(req: Request) {
   const auth = await requireUser(["buyer", "seller", "admin"]);
   if (auth.error || !auth.user)
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const waitMin = 15 + Math.floor(Math.random() * 6);
+  const waitMin = 20;
   const verifyAt = new Date(Date.now() + waitMin * 60 * 1000).toISOString();
 
   await updateStore((data) => {
@@ -43,6 +43,6 @@ export async function POST(req: Request) {
   if (!me) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json({
     user: publicUser(me, false, { includeWallet: true }),
-    message: `ID received. Your profile shows verified in about ${waitMin} minutes.`,
+    message: "ID received. Your profile is verified when the 20 minute timer ends.",
   });
 }

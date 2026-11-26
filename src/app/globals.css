@@ -434,8 +434,26 @@ html[dir="rtl"] .chat-fab {
 .lc-stock {
   margin: 0 0 4px;
 }
-.google-btn {
+.btn.google-btn {
   width: 100%;
+  background: #fff;
+  color: #1a1a1a;
+  border: 1px solid #c9cdd4;
+  font-weight: 800;
+}
+.btn.google-btn:hover {
+  background: #f4f6f8;
+  color: #111;
+}
+.verify-card .btn {
+  width: auto;
+}
+.verify-clock {
+  margin: 8px 0 0;
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #0d7a3c;
 }
 .chat-live-gate {
   flex: 1;

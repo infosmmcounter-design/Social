@@ -89,13 +89,6 @@ export default function SellerDashboard() {
   });
   const isFreelanceForm = isFreelanceCategory(form.cat);
   const [listMode, setListMode] = useState<"one" | "stock">("one");
-  const [profile, setProfile] = useState({
-    name: "",
-    bio: "",
-    country: "",
-    phone: "",
-    avatarUrl: "",
-  });
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
@@ -114,20 +107,11 @@ export default function SellerDashboard() {
   }, [user, loading, router, locale, setUser]);
 
   async function refresh() {
-    const [l, o, of, r, me, ch] = await Promise.all([
+    const [l, o, of, r, ch] = await Promise.all([
       api<{ listings: typeof listings }>("/api/listings?mine=1"),
       api<{ orders: typeof orders }>("/api/orders?scope=seller"),
       api<{ offers: typeof offers }>("/api/offers"),
       api<{ requests: typeof requests }>("/api/private-requests"),
-      api<{
-        seller: {
-          name: string;
-          bio: string;
-          country: string;
-          phone?: string;
-          avatarUrl?: string;
-        };
-      }>("/api/sellers/me"),
       api<{ chats: typeof chats }>("/api/chats"),
     ]);
     setListings(l.listings);
@@ -135,13 +119,6 @@ export default function SellerDashboard() {
     setOffers(of.offers || []);
     setRequests(r.requests);
     setChats((ch.chats || []).filter((c) => c.kind !== "escrow"));
-    setProfile({
-      name: me.seller.name || "",
-      bio: me.seller.bio || "",
-      country: me.seller.country || "",
-      phone: me.seller.phone || "",
-      avatarUrl: me.seller.avatarUrl || "",
-    });
   }
 
   useEffect(() => {
@@ -209,92 +186,23 @@ export default function SellerDashboard() {
     }
   }
 
-  async function saveProfile(e: React.FormEvent) {
-    e.preventDefault();
-    setMsg("");
-    try {
-      await api("/api/sellers/me", { method: "PATCH", json: profile });
-      await refreshAuth();
-      setMsg("Profile updated — public page refreshed.");
-    } catch (err) {
-      setMsg(err instanceof Error ? err.message : "Failed");
-    }
-  }
-
   if (loading || !user) return <p className="sec mut">Loading…</p>;
 
   return (
     <section className="sec">
-      <h1 style={{ fontSize: "2rem" }}>Seller dashboard</h1>
+      <h1 style={{ fontSize: "2rem" }}>List anything</h1>
       <p className="mut">
-        Manage profile, listings, private requests, and deals.{" "}
-        {user.id ? (
-          <Link href={`/seller/${user.id}`} style={{ color: "var(--a)", fontWeight: 600 }}>
-            View public profile
-          </Link>
-        ) : null}
+        Post one account or a batch in stock. Photo, name, and verification stay in{" "}
+        <Link href="/account" style={{ color: "var(--a)", fontWeight: 700 }}>
+          Account
+        </Link>
+        .
       </p>
       {msg ? <p className="okmsg">{msg}</p> : null}
 
-      <h2>Your public profile</h2>
-      <form className="card" onSubmit={saveProfile}>
-        <div className="row" style={{ gap: 14, alignItems: "center" }}>
-          {profile.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={profile.avatarUrl}
-              alt=""
-              style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover" }}
-            />
-          ) : null}
-          <div style={{ flex: 1 }}>
-            <label>Profile photo</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={async (e) => {
-                const f = e.target.files?.[0];
-                if (!f) return;
-                try {
-                  const dataUrl = await readImageFile(f);
-                  setProfile({ ...profile, avatarUrl: dataUrl });
-                } catch (err) {
-                  setMsg(err instanceof Error ? err.message : "Upload failed");
-                }
-              }}
-            />
-          </div>
-        </div>
-        <label>Display name</label>
-        <input
-          value={profile.name}
-          onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-          required
-        />
-        <label>Country</label>
-        <input
-          value={profile.country}
-          onChange={(e) => setProfile({ ...profile, country: e.target.value })}
-        />
-        <label>Phone (private)</label>
-        <input
-          value={profile.phone}
-          onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-        />
-        <label>Bio</label>
-        <textarea
-          rows={3}
-          value={profile.bio}
-          onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-        />
-        <button className="btn" type="submit">
-          Save profile
-        </button>
-      </form>
-
-      <h2 style={{ marginTop: 24 }}>Post a listing</h2>
+      <h2>New listing</h2>
       <p className="sm mut">
-        This goes live immediately. Buyers pay into escrow. To show a verified mark, submit your ID card on Account. It turns verified on its own after 15–20 minutes.
+        This goes live immediately. Buyers pay into escrow.
       </p>
       <form className="card" onSubmit={createListing}>
         <label>Category board</label>
@@ -741,7 +649,7 @@ export default function SellerDashboard() {
                 <td>{c.subject}</td>
                 <td>
                   <Link className="btn s" href={c.source === "deal" ? `/deal/${c.id}` : `/chat/${c.id}`}>
-                    Reply as {c.sellerName || profile.name || "you"}
+                    Reply as {c.sellerName || user.name || "you"}
                   </Link>
                 </td>
               </tr>

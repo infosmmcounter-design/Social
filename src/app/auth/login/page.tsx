@@ -39,6 +39,9 @@ export default function LoginPage() {
   return (
     <section className="sec" style={{ maxWidth: 420 }}>
       <h1 style={{ fontSize: "2rem" }}>{t("nav.login")}</h1>
+      <div className="card" style={{ marginBottom: 12 }}>
+        <GoogleSignIn />
+      </div>
       <form className="card" onSubmit={submit}>
         <label>{t("auth.loginId")}</label>
         <input
@@ -63,14 +66,13 @@ export default function LoginPage() {
             {t("nav.login")}
           </button>
         </div>
-        <GoogleSignIn />
       </form>
       <p className="sm mut" style={{ marginTop: 12 }}>
         <Link href="/auth/recover">{t("auth.recoverLink")}</Link>
       </p>
       <p className="sm mut" style={{ marginTop: 12 }}>
-        New here? <Link href="/auth/signup">Create a buyer account</Link>. Guests
-        can also checkout without signing up.
+        New here? <Link href="/auth/signup">Create an account</Link>. Guests can
+        also checkout without signing up.
       </p>
     </section>
   );
