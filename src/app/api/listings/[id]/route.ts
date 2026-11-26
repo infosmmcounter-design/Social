@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { readStore, publicListing, publicUser } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
+import { readStore, updateStore, publicListing, publicUser } from "@/lib/db";
+import { getCurrentUser, requireUser } from "@/lib/auth";
 import { localeFromRequest } from "@/lib/i18n/api-locale";
 import { localizeListing, localizeSeller } from "@/lib/i18n/content";
 
@@ -59,4 +59,51 @@ export async function GET(
       description: pub.teaser || pub.desc?.slice(0, 160) || pub.title,
     },
   });
+}
+
+/** Seller (or admin) permanently removes their own listing/gig. */
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireUser(["seller", "admin"]);
+  if (auth.error || !auth.user)
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+  const { id } = await params;
+  const listingId = Number(id);
+  if (!Number.isFinite(listingId)) {
+    return NextResponse.json({ error: "Listing id required" }, { status: 400 });
+  }
+
+  try {
+    await updateStore((data) => {
+      const listing = data.listings.find((l) => l.id === listingId);
+      if (!listing) throw new Error("Listing not found");
+      const isAdmin = auth.user!.role === "admin";
+      if (!isAdmin && listing.sellerId !== auth.user!.id)
+        throw new Error("Forbidden");
+
+      const openDeal = data.orders.some(
+        (o) =>
+          o.listingId === listingId &&
+          !["completed", "cancelled", "refunded"].includes(o.status)
+      );
+      if (openDeal) {
+        // Keep history for open escrow; pull it off the marketplace.
+        listing.listed = false;
+        listing.stock = 0;
+        return;
+      }
+
+      data.listings = data.listings.filter((l) => l.id !== listingId);
+    });
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Failed" },
+      { status: 400 }
+    );
+  }
+
+  return NextResponse.json({ ok: true });
 }

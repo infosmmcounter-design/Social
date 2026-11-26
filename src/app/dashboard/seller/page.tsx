@@ -13,6 +13,10 @@ import {
   type Category,
   type DealStatus,
 } from "@/lib/types";
+import {
+  sellFormForCategory,
+  showsMonetized,
+} from "@/lib/category-filters";
 
 const SELL_BOARDS: [Category, string][] = [
   ["youtube", "YouTube"],
@@ -26,6 +30,24 @@ import { LocaleLink as Link } from "@/components/LocaleLink";
 import { StartEscrowChat } from "@/components/StartEscrowChat";
 import { useLang } from "@/components/LanguageProvider";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
+
+const emptyForm = () => ({
+  title: "",
+  cat: "",
+  niche: "",
+  followers: "",
+  monetized: false,
+  teaser: "",
+  privateHandle: "",
+  handlePublic: false,
+  price: "",
+  desc: "",
+  stock: "1",
+  listingType: "account",
+  deliveryDays: "3",
+  revisions: "1",
+  img: "",
+});
 
 export default function SellerDashboard() {
   const { user, loading, refresh: refreshAuth, setUser } = useAuth();
@@ -82,28 +104,15 @@ export default function SellerDashboard() {
       updatedAt: string;
     }[]
   >([]);
-  const [form, setForm] = useState({
-    title: "",
-    cat: "",
-    niche: "",
-    followers: "",
-    monetized: false,
-    teaser: "",
-    privateHandle: "",
-    handlePublic: false,
-    price: "",
-    desc: "",
-    stock: "1",
-    listingType: "account",
-    deliveryDays: "3",
-    revisions: "1",
-    img: "",
-  });
+  const [form, setForm] = useState(emptyForm);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successGig, setSuccessGig] = useState(false);
-  const isFreelanceForm = isFreelanceCategory(form.cat);
+  const sellSpec = sellFormForCategory(form.cat);
+  const isFreelanceForm = sellSpec?.kind === "freelance";
+  const isAiForm = sellSpec?.kind === "ai";
   const [listMode, setListMode] = useState<"one" | "stock">("one");
   const [msg, setMsg] = useState("");
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -139,21 +148,41 @@ export default function SellerDashboard() {
     if (user && user.role !== "buyer") refresh().catch(() => {});
   }, [user]);
 
-  function readImageFile(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      if (!file.type.startsWith("image/")) {
-        reject(new Error("Please choose an image file."));
-        return;
-      }
-      if (file.size > 1_200_000) {
-        reject(new Error("Image must be under ~1.2MB."));
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ""));
-      reader.onerror = () => reject(new Error("Could not read image."));
-      reader.readAsDataURL(file);
-    });
+  async function readImageFile(file: File): Promise<string> {
+    if (!file.type.startsWith("image/")) {
+      throw new Error("Please choose an image file.");
+    }
+    if (file.size > 4_000_000) {
+      throw new Error("Image must be under 4MB.");
+    }
+    const bitmap = await createImageBitmap(file);
+    const max = 800;
+    const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not process image.");
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close();
+    return canvas.toDataURL("image/jpeg", 0.78);
+  }
+
+  async function deleteListing(id: number, title: string) {
+    if (!window.confirm(t("listing.deleteConfirm"))) return;
+    setDeletingId(id);
+    setMsg("");
+    try {
+      await api(`/api/listings/${id}`, { method: "DELETE" });
+      setMsg(`${t("listing.deleted")} ${title}`);
+      await refresh();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Delete failed");
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   async function createListing(e: React.FormEvent) {
@@ -165,43 +194,42 @@ export default function SellerDashboard() {
     }
     try {
       const freelance = isFreelanceCategory(form.cat);
+      const spec = sellFormForCategory(form.cat);
       await api("/api/listings", {
         method: "POST",
         json: {
-          ...form,
-          listingType: freelance ? "service" : form.listingType || "account",
-          handlePublic: freelance ? false : !!form.handlePublic,
+          title: form.title,
+          cat: form.cat,
+          niche: form.niche,
+          teaser: form.teaser,
+          desc: form.desc,
           price: Number(form.price),
+          img: form.img,
+          listingType: freelance
+            ? "service"
+            : form.cat === "ai"
+              ? "tool"
+              : "account",
+          followers: spec?.audience ? form.followers : "",
+          monetized: spec?.monetized ? form.monetized : false,
+          privateHandle: spec?.urlField ? form.privateHandle : "",
+          handlePublic:
+            freelance || !spec?.urlVisibility ? false : !!form.handlePublic,
           stock: freelance
             ? 9999
             : listMode === "one"
               ? 1
               : Math.max(1, Math.floor(Number(form.stock)) || 1),
-          deliveryDays: Number(form.deliveryDays) || 3,
-          revisions: Number(form.revisions) || 1,
+          deliveryDays: freelance ? Number(form.deliveryDays) || 3 : 0,
+          revisions: freelance ? Number(form.revisions) || 1 : 0,
         },
       });
       setSuccessGig(freelance);
       setSuccessOpen(true);
       setMsg("");
       refreshAuth().catch(() => undefined);
-      setForm({
-        title: "",
-        cat: "",
-        niche: "",
-        followers: "",
-        monetized: false,
-        teaser: "",
-        privateHandle: "",
-        handlePublic: false,
-        price: "",
-        desc: "",
-        stock: "1",
-        listingType: "account",
-        deliveryDays: "3",
-        revisions: "1",
-        img: "",
-      });
+      setForm(emptyForm());
+      setListMode("one");
       await refresh();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Failed");
@@ -276,11 +304,13 @@ export default function SellerDashboard() {
               className={`cat-pick-btn ${form.cat === k ? "on" : ""}`}
               onClick={() => {
                 const freelance = isFreelanceCategory(k);
+                setListMode("one");
                 setForm({
-                  ...form,
+                  ...emptyForm(),
                   cat: k,
                   listingType: freelance ? "service" : k === "ai" ? "tool" : "account",
-                  stock: freelance ? "25" : form.stock || "1",
+                  stock: "1",
+                  img: form.img,
                 });
               }}
             >
@@ -292,19 +322,23 @@ export default function SellerDashboard() {
         {!form.cat ? (
           <p className="sm mut">Pick a board, then fill in the listing.</p>
         ) : null}
-        {form.cat ? (
+        {form.cat && sellSpec ? (
           <>
         <p className="list-step">2 · Complete the listing</p>
         {isFreelanceForm ? (
           <p className="sm mut">
-            This posts on the Freelance Services board. Buyer pays escrow; you deliver in chat.
+            Freelance gig only — delivery time and revisions. No channel or stock fields.
           </p>
-        ) : form.cat === "ai" ? (
+        ) : isAiForm ? (
           <p className="sm mut">
-            This posts on the AI Tools board. Buyers pay into escrow.
+            AI Tools board — tool name, optional product link, and stock. No freelance fields.
           </p>
-        ) : null}
-        {!isFreelanceForm ? (
+        ) : (
+          <p className="sm mut">
+            Social account listing — audience and URL for this platform only.
+          </p>
+        )}
+        {sellSpec.stockMode ? (
           <div className="list-mode">
             <p className="sm" style={{ marginTop: 0 }}>
               <b>What are you listing?</b>
@@ -318,7 +352,7 @@ export default function SellerDashboard() {
                   setForm({ ...form, stock: "1" });
                 }}
               >
-                {form.cat === "ai" ? "One tool" : "One account"}
+                {isAiForm ? "One tool" : "One account"}
               </button>
               <button
                 type="button"
@@ -328,17 +362,21 @@ export default function SellerDashboard() {
                   setForm({ ...form, stock: form.stock === "1" ? "100" : form.stock });
                 }}
               >
-                {form.cat === "ai" ? "Stock of similar tools" : "Stock of similar accounts"}
+                {isAiForm ? "Stock of similar tools" : "Stock of similar accounts"}
               </button>
             </div>
             <p className="sm mut">
               {listMode === "one"
-                ? "One channel or page, with its subscriber count and link. Buyers see 1 available. The link stays hidden until the deal."
-                : "Many similar accounts, written once. Example: 100 monetized YouTube channels. The available count sits at the top of the listing. Each sale takes one. Send that buyer’s link in the deal chat."}
+                ? isAiForm
+                  ? "One tool or subscription. Buyers see 1 available."
+                  : "One channel or page, with its audience count and link. Buyers see 1 available."
+                : isAiForm
+                  ? "Many similar tools, written once. Each sale takes one from stock."
+                  : "Many similar accounts, written once. Each sale takes one. Send that buyer’s link in the deal chat."}
             </p>
           </div>
         ) : null}
-        {listMode === "stock" && !isFreelanceForm ? (
+        {listMode === "stock" && sellSpec.stockMode ? (
           <>
             <label>Available stock</label>
             <input
@@ -360,19 +398,37 @@ export default function SellerDashboard() {
           placeholder={
             isFreelanceForm
               ? "e.g. YouTube Thumbnail Pack (5 designs)"
-              : listMode === "stock"
-                ? "e.g. Monetized YouTube channels"
-                : "e.g. YouTube channel — 1,000 subscribers"
+              : isAiForm
+                ? listMode === "stock"
+                  ? "e.g. ChatGPT Plus accounts"
+                  : "e.g. Midjourney account"
+                : listMode === "stock"
+                  ? "e.g. Monetized YouTube channels"
+                  : "e.g. YouTube channel — 1,000 subscribers"
           }
           required
         />
-        <label>{isFreelanceForm ? "Gig niche / skill" : "Niche"}</label>
+        <label>
+          {isFreelanceForm
+            ? "Gig niche / skill"
+            : isAiForm
+              ? "Tool type"
+              : "Niche"}
+        </label>
         <input
           value={form.niche}
           onChange={(e) => setForm({ ...form, niche: e.target.value })}
-          placeholder={isFreelanceForm ? "e.g. Thumbnail design" : ""}
+          placeholder={
+            isFreelanceForm
+              ? "e.g. Thumbnail design"
+              : isAiForm
+                ? "e.g. Image generation"
+                : form.cat === "youtube"
+                  ? "e.g. Gaming"
+                  : ""
+          }
         />
-        {isFreelanceForm ? (
+        {sellSpec.gigIdeas ? (
           <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
             {FREELANCE_GIG_IDEAS.map((idea) => (
               <button
@@ -392,39 +448,63 @@ export default function SellerDashboard() {
             ))}
           </div>
         ) : null}
-        {!isFreelanceForm ? (
+        {sellSpec.audience ? (
           <>
-            <label>Followers / subscribers</label>
+            <label>
+              {sellSpec.audience === "subscribers"
+                ? "Subscribers"
+                : "Followers"}
+            </label>
             <input
               value={form.followers}
               onChange={(e) => setForm({ ...form, followers: e.target.value })}
               placeholder={listMode === "stock" ? "e.g. 1,000 each" : "1,000"}
             />
+          </>
+        ) : null}
+        {sellSpec.monetized || showsMonetized(form.cat) ? (
+          <label>
+            <input
+              type="checkbox"
+              checked={form.monetized}
+              onChange={(e) =>
+                setForm({ ...form, monetized: e.target.checked })
+              }
+              style={{ width: "auto", marginRight: 8 }}
+            />
+            Monetized
+          </label>
+        ) : null}
+        {sellSpec.urlField ? (
+          <>
             <label>
-              <input
-                type="checkbox"
-                checked={form.monetized}
-                onChange={(e) =>
-                  setForm({ ...form, monetized: e.target.checked })
-                }
-                style={{ width: "auto", marginRight: 8 }}
-              />
-              Monetized
-            </label>
-            <label>
-              {listMode === "one"
-                ? t("listing.channelUrl")
-                : "Sample link (optional)"}
+              {listMode === "stock"
+                ? "Sample link (optional)"
+                : sellSpec.urlField === "product"
+                  ? "Product / login URL (optional)"
+                  : sellSpec.urlField === "channel"
+                    ? t("listing.channelUrl")
+                    : "Profile URL"}
             </label>
             <input
               value={form.privateHandle}
               onChange={(e) =>
                 setForm({ ...form, privateHandle: e.target.value })
               }
-              placeholder="https://youtube.com/@channel"
+              placeholder={
+                form.cat === "youtube"
+                  ? "https://youtube.com/@channel"
+                  : form.cat === "instagram"
+                    ? "https://instagram.com/username"
+                    : form.cat === "tiktok"
+                      ? "https://tiktok.com/@username"
+                      : form.cat === "facebook"
+                        ? "https://facebook.com/page"
+                        : "https://"
+              }
             />
-            {listMode === "one" ? (
-              <div className="handle-vis" role="radiogroup" aria-label={t("listing.channelUrl")}>
+            {listMode === "one" && sellSpec.urlVisibility ? (
+              <div className="handle-vis" role="radiogroup" aria-label="URL visibility">
                 <label className={`handle-vis-opt ${!form.handlePublic ? "on" : ""}`}>
                   <input
                     type="radio"
@@ -450,14 +530,15 @@ export default function SellerDashboard() {
                   </span>
                 </label>
               </div>
-            ) : (
+            ) : listMode === "stock" ? (
               <p className="sm mut">
                 Leave blank if each unit has its own link. After payment, send that
                 buyer’s link in the deal chat.
               </p>
-            )}
+            ) : null}
           </>
-        ) : (
+        ) : null}
+        {sellSpec.gigMeta ? (
           <>
             <label>Delivery time (days)</label>
             <input
@@ -477,24 +558,23 @@ export default function SellerDashboard() {
               value={form.revisions}
               onChange={(e) => setForm({ ...form, revisions: e.target.value })}
             />
+            <p className="sm mut">
+              No stock limit — buyers see how many times this gig was purchased
+              (total sold), not inventory.
+            </p>
           </>
-        )}
+        ) : null}
         <label>Teaser description</label>
         <textarea
           rows={2}
           value={form.teaser}
           onChange={(e) => setForm({ ...form, teaser: e.target.value })}
         />
-        {!isFreelanceForm ? (
-          listMode === "one" ? (
-            <p className="sm mut">Stock for this listing is 1. It is one account.</p>
-          ) : null
-        ) : (
+        {sellSpec.stockMode && listMode === "one" ? (
           <p className="sm mut">
-            No stock limit — buyers see how many times this gig was purchased
-            (total sold), not inventory.
+            Stock for this listing is 1.
           </p>
-        )}
+        ) : null}
         <label>Cover image (upload or leave blank for auto)</label>
         <input
           type="file"
@@ -558,6 +638,7 @@ export default function SellerDashboard() {
               <th>Price</th>
               <th>Stock / Sold</th>
               <th>Status</th>
+              <th />
             </tr>
           </thead>
           <tbody>
@@ -610,6 +691,16 @@ export default function SellerDashboard() {
                     {l.listed ? " · live" : ""}
                     {!freelance && (l.stock ?? 1) <= 0 ? " · sold out" : ""}
                   </span>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    className="btn s o"
+                    disabled={deletingId === l.id}
+                    onClick={() => deleteListing(l.id, l.title)}
+                  >
+                    {deletingId === l.id ? "…" : t("listing.delete")}
+                  </button>
                 </td>
               </tr>
             );

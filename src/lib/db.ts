@@ -832,12 +832,13 @@ export function matchWalletAsset(coin: string): "USDT_TRC20" | "USDT_BEP20" {
   return "USDT_TRC20";
 }
 
-function feedSafeImage(img: string | undefined, cat: string, title: string) {
-  const value = (img || "").trim();
-  if (!value) return listingCoverDataUrl(cat, title);
+/** Feed/card image: keep JSON small — real uploads go through /cover. */
+function feedSafeImage(l: Pick<Listing, "id" | "img" | "cat" | "title">) {
+  const value = (l.img || "").trim();
+  if (!value) return listingCoverDataUrl(l.cat, l.title);
   if (/^https?:\/\//i.test(value)) return value;
-  // Huge uploaded data URLs must not ride on marketplace feeds.
-  if (value.startsWith("data:")) return listingCoverDataUrl(cat, title);
+  // data: URLs (uploads or SVG placeholders) → dedicated cover route
+  if (value.startsWith("data:")) return `/api/listings/${l.id}/cover`;
   return value;
 }
 
@@ -871,7 +872,7 @@ export function publicListing(
     price: l.price,
     desc: lite ? "" : l.desc,
     img: lite
-      ? feedSafeImage(l.img, l.cat, l.title)
+      ? feedSafeImage(l)
       : l.img || listingCoverDataUrl(l.cat, l.title),
     images: lite ? [] : l.images || [],
     stock: freelance ? undefined : l.stock ?? 1,

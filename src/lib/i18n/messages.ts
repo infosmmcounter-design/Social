@@ -163,6 +163,9 @@ export type MsgKey =
   | "listing.successGigTitle"
   | "listing.successGigBody"
   | "listing.successOk"
+  | "listing.delete"
+  | "listing.deleteConfirm"
+  | "listing.deleted"
   | "listing.loadingMore"
   | "deal.escrowPay"
   | "deal.iPaid"
@@ -402,6 +405,9 @@ const en: Dict = {
   "listing.successGigBody":
     "Your freelance gig was posted successfully. Buyers can order it with escrow now.",
   "listing.successOk": "Done",
+  "listing.delete": "Delete",
+  "listing.deleteConfirm": "Delete this listing? Buyers will no longer see it.",
+  "listing.deleted": "Listing deleted.",
   "listing.loadingMore": "Loading more listings…",
   "deal.escrowPay": "Escrow crypto payment",
   "deal.iPaid": "I have made the payment",

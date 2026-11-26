@@ -150,32 +150,29 @@ export async function POST(req: Request) {
       ? body.images.map(String).filter(Boolean).slice(0, 8)
       : [];
     const stock = Math.max(0, Number(body.stock ?? 1));
-    const rawType = String(body.listingType || "").toLowerCase();
-    const listingType = isFreelanceCategory(cat)
+    const isFreelance = isFreelanceCategory(cat);
+    // Never accept freelance/service fields on social or AI boards.
+    const listingType = isFreelance
       ? "service"
-      : rawType === "service" || rawType === "freelance" || rawType === "gig"
-        ? "service"
-        : rawType === "tool"
-          ? "tool"
-          : cat === "other"
-            ? "tool"
-            : "account";
-    const isFreelance =
-      isFreelanceCategory(cat) || listingType === "service";
+      : cat === "ai" || cat === "other"
+        ? "tool"
+        : "account";
     const deliveryDays = isFreelance
       ? Math.min(60, Math.max(1, Math.floor(Number(body.deliveryDays) || 3)))
       : 0;
     const revisions = isFreelance
       ? Math.min(20, Math.max(0, Math.floor(Number(body.revisions) || 1)))
       : 0;
+    const allowMonetized = cat === "youtube" || cat === "tiktok";
+    const allowAudience = !isFreelance && cat !== "ai";
     data.listings.push({
       id: listingId,
       sellerId: isAdmin && body.sellerId ? Number(body.sellerId) : auth.user!.id,
       title,
       cat,
       niche: String(body.niche || ""),
-      followers: isFreelance ? "" : String(body.followers || ""),
-      monetized: isFreelance ? false : !!body.monetized,
+      followers: allowAudience ? String(body.followers || "") : "",
+      monetized: allowMonetized ? !!body.monetized : false,
       teaser: String(body.teaser || body.desc || "").slice(0, 180),
       privateHandle: isFreelance ? "" : privateHandle,
       handlePublic: isFreelance ? false : handlePublic && !!privateHandle,
