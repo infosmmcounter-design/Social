@@ -485,30 +485,29 @@ html[dir="rtl"] .chat-fab {
 .auth-google-slot {
   width: 100%;
 }
-.btn.google-btn {
+.google-btn-frame {
+  position: relative;
   width: 100%;
+  min-height: 54px;
+  padding: 8px;
+  border-radius: 14px;
+  border: 1.5px solid #e2b93d;
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba(201, 162, 39, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.google-btn-frame-loading {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  min-height: 54px;
-  padding: 12px 18px;
-  background: #ffffff;
+  gap: 12px;
+  min-height: 40px;
+  width: 100%;
   color: #1f1f1f;
-  border: 1.5px solid #e2b93d;
-  border-radius: 14px;
   font-weight: 800;
   font-size: 1.02rem;
-  letter-spacing: -0.01em;
-  box-shadow: 0 8px 22px rgba(201, 162, 39, 0.18);
-}
-.btn.google-btn:hover {
-  background: #fff8e4;
-  color: #111;
-  border-color: #c9a227;
-}
-.btn.google-btn:disabled {
-  opacity: 0.72;
 }
 .google-btn-ic {
   display: inline-flex;
@@ -521,11 +520,33 @@ html[dir="rtl"] .chat-fab {
   background: #fff;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
-.google-btn-label {
-  flex: 0 1 auto;
+.google-gsi-host {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  min-height: 40px;
 }
-.auth-google-err {
+.google-gsi-host.on {
+  opacity: 1;
+  pointer-events: auto;
+}
+.google-gsi-host iframe,
+.google-gsi-host > div {
+  margin: 0 auto !important;
+}
+.auth-google-err,
+.auth-google-busy {
   margin-top: 10px;
+  text-align: center;
+}
+html[data-theme="dark"] .google-btn-frame {
+  background: #221e16;
+  border-color: #8a7020;
+}
+html[data-theme="dark"] .google-btn-frame-loading {
+  color: #fff8e4;
 }
 .auth-email-toggle {
   display: block;
